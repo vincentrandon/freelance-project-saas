@@ -1,0 +1,293 @@
+{
+  "common": {
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "create": "Créer",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "export": "Exporter",
+    "import": "Importer",
+    "add": "Ajouter",
+    "remove": "Retirer",
+    "submit": "Soumettre",
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "loading": "Chargement...",
+    "noData": "Aucune donnée disponible",
+    "error": "Erreur",
+    "success": "Succès",
+    "confirm": "Confirmer",
+    "yes": "Oui",
+    "no": "Non",
+    "actions": "Actions",
+    "details": "Détails",
+    "status": "Statut",
+    "date": "Date",
+    "name": "Nom",
+    "email": "Email",
+    "phone": "Téléphone",
+    "company": "Entreprise",
+    "address": "Adresse",
+    "notes": "Notes",
+    "download": "Télécharger",
+    "upload": "Téléverser",
+    "view": "Voir",
+    "total": "Total",
+    "subtotal": "Sous-total",
+    "amount": "Montant",
+    "quantity": "Quantité",
+    "price": "Prix",
+    "description": "Description",
+    "required": "Requis",
+    "optional": "Optionnel"
+  },
+
+  "navigation": {
+    "dashboard": "Tableau de bord",
+    "customers": "Clients",
+    "leads": "Prospects",
+    "projects": "Projets",
+    "finance": "Finance",
+    "invoicing": "Facturation",
+    "invoices": "Factures",
+    "estimates": "Devis",
+    "documents": "Documents",
+    "settings": "Paramètres",
+    "profile": "Profil",
+    "logout": "Déconnexion",
+    "taskCatalogue": "Catalogue de tâches"
+  },
+
+  "customers": {
+    "title": "Clients",
+    "addCustomer": "Ajouter un client",
+    "editCustomer": "Modifier le client",
+    "deleteCustomer": "Supprimer le client",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ce client ?",
+    "searchPlaceholder": "Rechercher par nom, email ou entreprise...",
+    "noCustomers": "Aucun client trouvé",
+    "customerDetails": "Détails du client",
+    "customerInfo": "Informations client",
+    "attachments": "Pièces jointes",
+    "uploadAttachment": "Téléverser une pièce jointe"
+  },
+
+  "leads": {
+    "title": "Prospects",
+    "addLead": "Ajouter un prospect",
+    "editLead": "Modifier le prospect",
+    "deleteLead": "Supprimer le prospect",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ce prospect ?",
+    "searchPlaceholder": "Rechercher des prospects...",
+    "noLeads": "Aucun prospect trouvé",
+    "leadDetails": "Détails du prospect",
+    "value": "Valeur",
+    "probability": "Probabilité",
+    "source": "Source",
+    "expectedCloseDate": "Date de clôture prévue",
+    "status": {
+      "new": "Nouveau",
+      "contacted": "Contacté",
+      "qualified": "Qualifié",
+      "proposal": "Proposition envoyée",
+      "negotiation": "Négociation",
+      "won": "Gagné",
+      "lost": "Perdu"
+    },
+    "sources": {
+      "website": "Site web",
+      "referral": "Recommandation",
+      "linkedin": "LinkedIn",
+      "cold_outreach": "Prospection",
+      "event": "Événement",
+      "other": "Autre"
+    }
+  },
+
+  "projects": {
+    "title": "Projets",
+    "addProject": "Ajouter un projet",
+    "editProject": "Modifier le projet",
+    "deleteProject": "Supprimer le projet",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ce projet ?",
+    "searchPlaceholder": "Rechercher des projets...",
+    "noProjects": "Aucun projet trouvé",
+    "projectDetails": "Détails du projet",
+    "projectName": "Nom du projet",
+    "customer": "Client",
+    "startDate": "Date de début",
+    "endDate": "Date de fin",
+    "budget": "Budget",
+    "tasks": "Tâches",
+    "addTask": "Ajouter une tâche",
+    "notes": "Notes"
+  },
+
+  "invoices": {
+    "title": "Factures",
+    "createInvoice": "Créer une facture",
+    "editInvoice": "Modifier la facture",
+    "deleteInvoice": "Supprimer la facture",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cette facture ?",
+    "invoiceNumber": "Numéro de facture",
+    "issueDate": "Date d'émission",
+    "dueDate": "Date d'échéance",
+    "generatePDF": "Générer le PDF",
+    "sendEmail": "Envoyer par email",
+    "markAsPaid": "Marquer comme payée",
+    "lineItems": "Lignes de facturation",
+    "addLineItem": "Ajouter une ligne",
+    "taxRate": "Taux de TVA",
+    "taxAmount": "Montant TVA",
+    "status": {
+      "draft": "Brouillon",
+      "sent": "Envoyée",
+      "paid": "Payée",
+      "overdue": "En retard",
+      "cancelled": "Annulée",
+      "credit_note": "Facture d'avoir",
+      "partially_invoiced": "Partiellement facturée",
+      "deposit": "Facture d'acompte"
+    }
+  },
+
+  "estimates": {
+    "title": "Devis",
+    "createEstimate": "Créer un devis",
+    "editEstimate": "Modifier le devis",
+    "deleteEstimate": "Supprimer le devis",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ce devis ?",
+    "estimateNumber": "Numéro de devis",
+    "validUntil": "Valable jusqu'au",
+    "convertToInvoice": "Convertir en facture",
+    "generatePDF": "Générer le PDF",
+    "sendForSignature": "Envoyer pour signature",
+    "status": {
+      "draft": "Brouillon",
+      "sent": "Envoyé",
+      "accepted": "Accepté",
+      "declined": "Refusé",
+      "expired": "Expiré",
+      "converted": "Converti en facture"
+    },
+    "signatureStatus": {
+      "none": "Aucune",
+      "requested": "Demandée",
+      "signed": "Signé",
+      "declined": "Refusée"
+    }
+  },
+
+  "finance": {
+    "title": "Finance",
+    "bankAccounts": "Comptes bancaires",
+    "transactions": "Transactions",
+    "addBankAccount": "Ajouter un compte bancaire",
+    "syncAccount": "Synchroniser le compte",
+    "income": "Revenus",
+    "expenses": "Dépenses",
+    "balance": "Solde",
+    "category": "Catégorie",
+    "transactionDate": "Date de transaction"
+  },
+
+  "documents": {
+    "title": "Documents",
+    "importDocument": "Importer un document",
+    "uploadFile": "Téléverser un fichier",
+    "processing": "En cours de traitement",
+    "parseResult": "Résultat de l'analyse",
+    "preview": "Aperçu",
+    "approve": "Approuver",
+    "reject": "Rejeter",
+    "documentType": {
+      "invoice": "Facture",
+      "estimate": "Devis",
+      "unknown": "Inconnu"
+    },
+    "status": {
+      "uploaded": "Téléversé",
+      "processing": "En cours de traitement",
+      "parsed": "Analysé",
+      "approved": "Approuvé",
+      "rejected": "Rejeté",
+      "error": "Erreur"
+    }
+  },
+
+  "dashboard": {
+    "title": "Tableau de bord",
+    "welcome": "Bon retour",
+    "overview": "Vue d'ensemble",
+    "recentActivity": "Activité récente",
+    "quickActions": "Actions rapides",
+    "uploadDocument": "Téléverser un document",
+    "importInvoice": "Importer une facture/devis",
+    "generateAIEstimate": "Générer un devis IA",
+    "stats": {
+      "totalRevenue": "Chiffre d'affaires total",
+      "pendingInvoices": "Factures en attente",
+      "activeProjects": "Projets actifs",
+      "newLeads": "Nouveaux prospects"
+    }
+  },
+
+  "settings": {
+    "title": "Paramètres",
+    "account": "Compte",
+    "companyProfile": "Profil de l'entreprise",
+    "pricing": "Tarification",
+    "notifications": "Notifications",
+    "apps": "Applications",
+    "plans": "Plans",
+    "billing": "Facturation",
+    "language": "Langue",
+    "selectLanguage": "Sélectionner la langue"
+  },
+
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Tout marquer comme lu",
+    "noNotifications": "Aucune notification",
+    "types": {
+      "pdf_generated": "PDF généré",
+      "pdf_failed": "Échec de génération du PDF",
+      "import_completed": "Import terminé",
+      "import_failed": "Échec de l'import",
+      "email_sent": "Email envoyé",
+      "email_failed": "Échec d'envoi de l'email",
+      "entity_created": "Entité créée"
+    }
+  },
+
+  "validation": {
+    "required": "Ce champ est requis",
+    "invalidEmail": "Adresse email invalide",
+    "invalidPhone": "Numéro de téléphone invalide",
+    "invalidDate": "Date invalide",
+    "invalidNumber": "Nombre invalide",
+    "minLength": "La longueur minimale est de {{min}} caractères",
+    "maxLength": "La longueur maximale est de {{max}} caractères",
+    "min": "La valeur minimale est {{min}}",
+    "max": "La valeur maximale est {{max}}"
+  },
+
+  "messages": {
+    "saveSuccess": "Enregistré avec succès",
+    "saveError": "Erreur lors de l'enregistrement",
+    "deleteSuccess": "Supprimé avec succès",
+    "deleteError": "Erreur lors de la suppression",
+    "updateSuccess": "Mis à jour avec succès",
+    "updateError": "Erreur lors de la mise à jour",
+    "createSuccess": "Créé avec succès",
+    "createError": "Erreur lors de la création",
+    "uploadSuccess": "Téléversement réussi",
+    "uploadError": "Erreur lors du téléversement",
+    "networkError": "Erreur réseau. Veuillez réessayer.",
+    "unknownError": "Une erreur inconnue s'est produite"
+  }
+}

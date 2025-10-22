@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facture {{ invoice.invoice_number }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm 1.5cm;
+            @top-right {
+                content: "Page " counter(page) " sur " counter(pages);
+                font-size: 9pt;
+                color: #666;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 10pt;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid {{ profile.pdf_primary_color|default:'#3B82F6' }};
+        }
+
+        .company-info {
+            flex: 1;
+        }
+
+        .company-logo {
+            max-width: 200px;
+            max-height: 80px;
+            margin-bottom: 10px;
+        }
+
+        .company-name {
+            font-size: 18pt;
+            font-weight: bold;
+            color: {{ profile.pdf_primary_color|default:'#3B82F6' }};
+            margin-bottom: 5px;
+        }
+
+        .company-details {
+            font-size: 9pt;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .document-title {
+            text-align: right;
+            flex: 1;
+        }
+
+        .document-title h1 {
+            font-size: 28pt;
+            font-weight: bold;
+            color: {{ profile.pdf_primary_color|default:'#3B82F6' }};
+            margin-bottom: 10px;
+        }
+
+        .document-meta {
+            font-size: 10pt;
+            color: #666;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 16px;
+            font-size: 9pt;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .status-paid {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-sent {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-overdue {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .parties {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+        }
+
+        .party-box {
+            width: 48%;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid {{ profile.pdf_primary_color|default:'#3B82F6' }};
+        }
+
+        .party-box h3 {
+            font-size: 11pt;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: {{ profile.pdf_primary_color|default:'#3B82F6' }};
+        }
+
+        .party-box p {
+            font-size: 10pt;
+            margin: 3px 0;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            font-size: 10pt;
+        }
+
+        .items-table thead {
+            background: {{ profile.pdf_primary_color|default:'#3B82F6' }};
+            color: white;
+        }
+
+        .items-table th {
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 9pt;
+            text-transform: uppercase;
+        }
+
+        .items-table th.right {
+            text-align: right;
+        }
+
+        .items-table tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .items-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .items-table td {
+            padding: 10px 8px;
+        }
+
+        .items-table td.right {
+            text-align: right;
+            font-weight: 500;
+        }
+
+        .item-description {
+            color: #666;
+            font-size: 9pt;
+            margin-top: 3px;
+        }
+
+        .totals {
+            margin-left: auto;
+            width: 400px;
+            margin-bottom: 40px;
+        }
+
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .totals-row.subtotal {
+            background: #f8f9fa;
+            font-weight: 500;
+        }
+
+        .totals-row.total {
+            background: {{ profile.pdf_primary_color|default:'#3B82F6' }};
+            color: white;
+            font-size: 14pt;
+            font-weight: bold;
+            border: none;
+            margin-top: 5px;
+        }
+
+        .totals-label {
+            flex: 1;
+        }
+
+        .totals-value {
+            font-weight: 600;
+            min-width: 120px;
+            text-align: right;
+        }
+
+        .deposit-deductions {
+            margin-left: auto;
+            width: 400px;
+            margin-bottom: 20px;
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            border-radius: 4px;
+            padding: 12px;
+        }
+
+        .deposit-deductions h4 {
+            font-size: 10pt;
+            font-weight: bold;
+            color: #166534;
+            margin-bottom: 8px;
+        }
+
+        .deposit-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 8px;
+            font-size: 9pt;
+            color: #15803d;
+        }
+
+        .deposit-total {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            font-weight: bold;
+            font-size: 10pt;
+            color: #166534;
+            border-top: 1px solid #86efac;
+            margin-top: 6px;
+        }
+
+        .balance-due {
+            margin-left: auto;
+            width: 400px;
+            margin-bottom: 30px;
+            background: #fee2e2;
+            border: 2px solid #dc2626;
+            border-radius: 4px;
+            padding: 15px;
+        }
+
+        .balance-due-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .balance-due-label {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #991b1b;
+        }
+
+        .balance-due-value {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #dc2626;
+        }
+
+        .payment-info {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin-bottom: 30px;
+        }
+
+        .payment-info h4 {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #92400e;
+        }
+
+        .payment-info p {
+            font-size: 10pt;
+            margin: 5px 0;
+        }
+
+        .conditions {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+        }
+
+        .conditions h3 {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: {{ profile.pdf_primary_color|default:'#3B82F6' }};
+        }
+
+        .conditions p, .conditions ul {
+            font-size: 9pt;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .conditions ul {
+            margin-left: 20px;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-top: 2px solid {{ profile.pdf_primary_color|default:'#3B82F6' }};
+            font-size: 8pt;
+            color: #666;
+            text-align: center;
+        }
+
+        .notes {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 9pt;
+        }
+
+        .notes h4 {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="company-info">
+            {% if profile.pdf_show_logo and profile.company_logo %}
+            <img src="{{ profile.company_logo.url }}" alt="Logo" class="company-logo">
+            {% endif %}
+            <div class="company-name">{{ profile.company_name|default:'Votre Entreprise' }}</div>
+            <div class="company-details">
+                {% if profile.address %}{{ profile.address }}<br>{% endif %}
+                {% if profile.postal_code or profile.city %}{{ profile.postal_code }} {{ profile.city }}<br>{% endif %}
+                {% if profile.siret_siren %}SIRET: {{ profile.siret_siren }}<br>{% endif %}
+                {% if profile.tax_id %}TVA: {{ profile.tax_id }}<br>{% endif %}
+                {% if profile.phone %}Tél: {{ profile.phone }}<br>{% endif %}
+                {% if profile.get_business_email %}Email: {{ profile.get_business_email }}{% endif %}
+            </div>
+        </div>
+
+        <div class="document-title">
+            <h1>FACTURE</h1>
+            <div class="document-meta">
+                <strong>N° {{ invoice.invoice_number }}</strong><br>
+                Date: {{ invoice.issue_date|date:"d/m/Y" }}<br>
+                Échéance: {{ invoice.due_date|date:"d/m/Y" }}
+            </div>
+            {% if invoice.status == 'paid' %}
+            <span class="status-badge status-paid">✓ PAYÉE</span>
+            {% elif invoice.status == 'overdue' %}
+            <span class="status-badge status-overdue">⚠ EN RETARD</span>
+            {% else %}
+            <span class="status-badge status-sent">EN ATTENTE</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Parties -->
+    <div class="parties">
+        <div class="party-box">
+            <h3>CLIENT</h3>
+            <p><strong>{{ invoice.customer.name }}</strong></p>
+            {% if invoice.customer.company %}<p>{{ invoice.customer.company }}</p>{% endif %}
+            {% if invoice.customer.address %}<p>{{ invoice.customer.address }}</p>{% endif %}
+            {% if invoice.customer.city %}<p>{{ invoice.customer.postal_code }} {{ invoice.customer.city }}</p>{% endif %}
+            {% if invoice.customer.email %}<p>Email: {{ invoice.customer.email }}</p>{% endif %}
+            {% if invoice.customer.phone %}<p>Tél: {{ invoice.customer.phone }}</p>{% endif %}
+        </div>
+
+        <div class="party-box">
+            <h3>PROJET</h3>
+            {% if invoice.project %}
+            <p><strong>{{ invoice.project.name }}</strong></p>
+            {% if invoice.project.description %}<p>{{ invoice.project.description|truncatewords:20 }}</p>{% endif %}
+            {% else %}
+            <p>Prestation de services</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Notes (if any) -->
+    {% if invoice.notes %}
+    <div class="notes">
+        <h4>📝 Notes</h4>
+        {{ invoice.notes|linebreaks }}
+    </div>
+    {% endif %}
+
+    <!-- Items Table -->
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th style="width: 45%;">Désignation</th>
+                <th style="width: 15%;" class="right">Quantité</th>
+                <th style="width: 15%;" class="right">Prix Unitaire</th>
+                <th style="width: 25%;" class="right">Montant HT</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in invoice.items %}
+            <tr>
+                <td>
+                    <strong>{{ item.description }}</strong>
+                </td>
+                <td class="right">{{ item.quantity|floatformat:2 }}</td>
+                <td class="right">{{ item.rate|floatformat:2 }} {{ invoice.currency }}</td>
+                <td class="right"><strong>{{ item.amount|floatformat:2 }} {{ invoice.currency }}</strong></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Totals -->
+    <div class="totals">
+        <div class="totals-row subtotal">
+            <div class="totals-label">Sous-total HT</div>
+            <div class="totals-value">{{ invoice.subtotal|floatformat:2 }} {{ invoice.currency }}</div>
+        </div>
+
+        <div class="totals-row">
+            <div class="totals-label">TVA ({{ invoice.tax_rate|floatformat:0 }}%)</div>
+            <div class="totals-value">{{ invoice.tax_amount|floatformat:2 }} {{ invoice.currency }}</div>
+        </div>
+
+        <div class="totals-row total">
+            <div class="totals-label">TOTAL TTC</div>
+            <div class="totals-value">{{ invoice.total|floatformat:2 }} {{ invoice.currency }}</div>
+        </div>
+    </div>
+
+    <!-- Déductions (Acomptes versés) - Deposit Deductions -->
+    {% if invoice.deposit_invoices.exists %}
+    <div class="deposit-deductions">
+        <h4>Déductions (Acomptes versés):</h4>
+        {% for deposit in invoice.deposit_invoices.all %}
+        <div class="deposit-item">
+            <span>{{ deposit.invoice_number }} ({{ deposit.issue_date|date:"d/m/Y" }})</span>
+            <span>-{{ deposit.total|floatformat:2 }} {{ invoice.currency }}</span>
+        </div>
+        {% endfor %}
+        <div class="deposit-total">
+            <span>Total acomptes:</span>
+            <span>-{{ invoice.total_deposits_amount|floatformat:2 }} {{ invoice.currency }}</span>
+        </div>
+    </div>
+
+    <!-- SOLDE À PAYER - Remaining Balance -->
+    <div class="balance-due">
+        <div class="balance-due-row">
+            <div class="balance-due-label">SOLDE À PAYER:</div>
+            <div class="balance-due-value">{{ invoice.remaining_balance|floatformat:2 }} {{ invoice.currency }}</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Payment Info -->
+    <div class="payment-info">
+        <h4>💳 Informations de paiement</h4>
+        {% if invoice.deposit_invoices.exists %}
+        <p><strong>Montant dû (solde): {{ invoice.remaining_balance|floatformat:2 }} {{ invoice.currency }}</strong></p>
+        {% else %}
+        <p><strong>Montant dû: {{ invoice.total|floatformat:2 }} {{ invoice.currency }}</strong></p>
+        {% endif %}
+        <p>Date limite de paiement: <strong>{{ invoice.due_date|date:"d/m/Y" }}</strong></p>
+        {% if profile.iban %}
+        <p style="margin-top: 10px;">
+            IBAN: <strong>{{ profile.iban }}</strong><br>
+            {% if profile.bic %}BIC: <strong>{{ profile.bic }}</strong>{% endif %}
+        </p>
+        {% endif %}
+    </div>
+
+    <!-- Conditions -->
+    <div class="conditions">
+        <h3>Conditions de paiement</h3>
+        {% if profile.invoice_terms %}
+        {{ profile.invoice_terms|linebreaks }}
+        {% else %}
+        <ul>
+            <li>Paiement à {{ profile.payment_terms_days|default:30 }} jours par virement bancaire</li>
+            <li>En cas de retard de paiement, des pénalités de 3 fois le taux d'intérêt légal seront appliquées</li>
+            <li>Indemnité forfaitaire pour frais de recouvrement: 40€</li>
+            <li>Escompte pour paiement anticipé: néant</li>
+        </ul>
+        {% endif %}
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        {% if profile.pdf_footer_text %}
+        {{ profile.pdf_footer_text }}
+        {% else %}
+        {{ profile.company_name|default:'Votre Entreprise' }}
+        {% if profile.siret_siren %}- SIRET: {{ profile.siret_siren }}{% endif %}
+        {% if profile.tax_id %}- TVA: {{ profile.tax_id }}{% endif %}
+        {% endif %}
+    </div>
+</body>
+</html>

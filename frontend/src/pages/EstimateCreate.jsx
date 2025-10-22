@@ -1,0 +1,1064 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import {
+  useCreateEstimate,
+  useUpdateEstimate,
+  useFinalizeEstimate,
+  useEstimate,
+  useCustomers,
+  useProjects,
+  usePricingSettings,
+  useConvertToTJM,
+  useSuggestMargin,
+  useAIGenerateEstimate,
+  useHistoricalContext,
+} from '../api/hooks';
+import EstimatePDFPreview from '../components/EstimatePDFPreview';
+import LineItemSuggestions from '../components/LineItemSuggestions';
+import TaskSuggestionWidget from '../components/TaskSuggestionWidget';
+import CustomerProjectSelector from '../components/CustomerProjectSelector';
+import InlineCustomerForm from '../components/InlineCustomerForm';
+import InlineProjectForm from '../components/InlineProjectForm';
+
+const UNIT_OPTIONS = [
+  { value: 'hours', label: 'Heures', shortLabel: 'h' },
+  { value: 'days', label: 'Jours', shortLabel: 'j' },
+  { value: 'units', label: 'Unités', shortLabel: 'u' },
+  { value: 'fixed', label: 'Prix fixe', shortLabel: 'fixe' },
+];
+
+function EstimateCreate() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const isEditing = !!id;
+
+  const { data: estimate } = useEstimate(id, { enabled: isEditing });
+  const { data: customersData } = useCustomers();
+  const { data: projectsData } = useProjects();
+  const { data: pricingSettings } = usePricingSettings();
+  // Note: No longer fetching next estimate number - drafts use UUIDs
+  const { data: historicalContext } = useHistoricalContext(); // Load user's historical task data
+
+  const createMutation = useCreateEstimate();
+  const updateMutation = useUpdateEstimate();
+  const finalizeMutation = useFinalizeEstimate();
+  const suggestMarginMutation = useSuggestMargin();
+  const aiGenerateMutation = useAIGenerateEstimate();
+
+  const customers = customersData?.results || [];
+  const projects = projectsData?.results || [];
+
+  const [formData, setFormData] = useState({
+    customer: '',
+    project: '',
+    estimate_number: '',
+    issue_date: new Date().toISOString().split('T')[0],
+    valid_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    items: [],
+    subtotal: 0,
+    subtotal_before_margin: 0,
+    security_margin_percentage: pricingSettings?.default_security_margin || 10,
+    security_margin_amount: 0,
+    tjm_used: null,
+    total_days: null,
+    tax_rate: 20,
+    total: 0,
+    currency: 'EUR',
+    status: 'draft',
+    notes: '',
+    terms: '',
+    pricing_mode: 'hourly',
+  });
+
+  const [showAIPrompt, setShowAIPrompt] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [marginSuggestion, setMarginSuggestion] = useState(null);
+  const [activeItemSuggestion, setActiveItemSuggestion] = useState(null);
+  const [saveStatus, setSaveStatus] = useState('saved'); // 'saving', 'saved', 'unsaved', 'error'
+  const [lastSaved, setLastSaved] = useState(null);
+  const [draftId, setDraftId] = useState(isEditing ? id : null);
+  const [customerFormOpen, setCustomerFormOpen] = useState(false);
+  const [projectFormOpen, setProjectFormOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(null);
+
+  // Debug modal state
+  useEffect(() => {
+    console.log('EstimateCreate: customerFormOpen changed to:', customerFormOpen);
+  }, [customerFormOpen]);
+
+  useEffect(() => {
+    console.log('EstimateCreate: projectFormOpen changed to:', projectFormOpen);
+  }, [projectFormOpen]);
+
+  // Note: No longer auto-filling estimate number - drafts use UUIDs, finalized on submit
+
+  // Load estimate data if editing
+  useEffect(() => {
+    if (estimate) {
+      setFormData({
+        ...estimate,
+        pricing_mode: estimate.tjm_used ? 'tjm' : 'hourly',
+      });
+    }
+  }, [estimate]);
+
+  // Update default margin when pricing settings load
+  useEffect(() => {
+    if (pricingSettings && !isEditing) {
+      setFormData(prev => ({
+        ...prev,
+        security_margin_percentage: pricingSettings.default_security_margin,
+      }));
+    }
+  }, [pricingSettings, isEditing]);
+
+  // Autosave functionality - save draft every 3 seconds after changes
+  useEffect(() => {
+    // Skip autosave if editing an existing finalized estimate (not a draft)
+    if (isEditing && !draftId) {
+      return;
+    }
+
+    // Mark as unsaved when formData changes
+    setSaveStatus('unsaved');
+
+    // Debounce the save operation
+    const autoSaveTimer = setTimeout(async () => {
+      try {
+        setSaveStatus('saving');
+
+        // Prepare data with proper type conversion
+        // Customer can be null for drafts
+        // Don't send estimate_number - backend will assign UUID for drafts
+        const saveData = {
+          ...formData,
+          estimate_number: null, // Backend will generate UUID for drafts
+          customer: formData.customer ? parseInt(formData.customer) : null,
+          project: formData.project ? parseInt(formData.project) : null,
+          status: 'draft'
+        };
+
+        if (draftId) {
+          // Update existing draft
+          await updateMutation.mutateAsync({ id: draftId, data: saveData });
+        } else {
+          // Create new draft (will get UUID from backend)
+          const response = await createMutation.mutateAsync(saveData);
+          setDraftId(response.data.id);
+          // Update estimate_number display if returned
+          if (response.data.display_number) {
+            setFormData(prev => ({ ...prev, estimate_number: response.data.display_number }));
+          }
+        }
+
+        setSaveStatus('saved');
+        setLastSaved(new Date());
+        setErrorMessage(null); // Clear any previous errors
+      } catch (error) {
+        console.error('Autosave error:', error);
+        console.error('Error response:', error.response?.data);
+
+        // Extract validation errors
+        let errorMsg = 'Save failed';
+        if (error.response?.data) {
+          const errors = error.response.data;
+          // Format validation errors
+          if (typeof errors === 'object') {
+            const errorMessages = Object.entries(errors)
+              .map(([field, messages]) => {
+                const msgArray = Array.isArray(messages) ? messages : [messages];
+                return `${field}: ${msgArray.join(', ')}`;
+              })
+              .join(' | ');
+            errorMsg = errorMessages || errorMsg;
+          } else if (typeof errors === 'string') {
+            errorMsg = errors;
+          }
+        }
+
+        setErrorMessage(errorMsg);
+        setSaveStatus('error');
+      }
+    }, 3000); // 3 second debounce
+
+    return () => clearTimeout(autoSaveTimer);
+  }, [formData, draftId, isEditing]);
+
+  // Warn user before leaving page with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (saveStatus === 'unsaved' || saveStatus === 'saving') {
+        e.preventDefault();
+        e.returnValue = ''; // Chrome requires returnValue to be set
+        return ''; // Some browsers show this message
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [saveStatus]);
+
+  const handleAddItem = () => {
+    setFormData({
+      ...formData,
+      items: [...formData.items, {
+        name: '',
+        description: '',
+        quantity: 1,
+        rate: 0,
+        amount: 0,
+        unit: formData.pricing_mode === 'tjm' ? 'days' : 'hours'
+      }],
+    });
+  };
+
+  const handleRemoveItem = (index) => {
+    const newItems = formData.items.filter((_, i) => i !== index);
+    setFormData({ ...formData, items: newItems });
+    calculateTotals(newItems);
+  };
+
+  const handleItemChange = (index, field, value) => {
+    const newItems = [...formData.items];
+    newItems[index][field] = value;
+
+    if (field === 'quantity' || field === 'rate') {
+      newItems[index].amount = newItems[index].quantity * newItems[index].rate;
+    }
+
+    setFormData({ ...formData, items: newItems });
+    calculateTotals(newItems);
+  };
+
+  const calculateTotals = (items = formData.items, marginPercentage = formData.security_margin_percentage) => {
+    const subtotalBeforeMargin = items.reduce((sum, item) => sum + (item.amount || 0), 0);
+    const marginAmount = (subtotalBeforeMargin * marginPercentage) / 100;
+    const subtotal = subtotalBeforeMargin + marginAmount;
+    const tax = (subtotal * formData.tax_rate) / 100;
+    const total = subtotal + tax;
+
+    setFormData(prev => ({
+      ...prev,
+      items,
+      subtotal_before_margin: subtotalBeforeMargin,
+      security_margin_amount: marginAmount,
+      subtotal,
+      total
+    }));
+  };
+
+  const handleConvertToTJM = () => {
+    const tjmRate = pricingSettings?.tjm_default || 500;
+    const hoursPerDay = pricingSettings?.tjm_hours_per_day || 7;
+
+    const newItems = formData.items.map(item => {
+      const hours = item.quantity;
+      const days = hours / hoursPerDay;
+      return {
+        ...item,
+        quantity: parseFloat(days.toFixed(2)),
+        rate: tjmRate,
+        amount: parseFloat((days * tjmRate).toFixed(2)),
+        unit: 'days'
+      };
+    });
+
+    const totalDays = newItems.reduce((sum, item) => sum + item.quantity, 0);
+
+    setFormData({
+      ...formData,
+      items: newItems,
+      pricing_mode: 'tjm',
+      tjm_used: tjmRate,
+      total_days: totalDays,
+    });
+
+    calculateTotals(newItems);
+  };
+
+  const handleSuggestMargin = async () => {
+    try {
+      const result = await suggestMarginMutation.mutateAsync({
+        project_description: formData.notes,
+        items: formData.items,
+        customer_type: 'existing',
+      });
+      setMarginSuggestion(result.data);
+      if (result.data?.recommended_margin_percentage) {
+        setFormData({
+          ...formData,
+          security_margin_percentage: result.data.recommended_margin_percentage
+        });
+        calculateTotals();
+      }
+    } catch (err) {
+      console.error('Error suggesting margin:', err);
+    }
+  };
+
+  const handleAIGenerate = async (e) => {
+    e.preventDefault();
+    try {
+      const result = await aiGenerateMutation.mutateAsync({
+        prompt: aiPrompt,
+        customer: formData.customer,
+        project: formData.project,
+      });
+
+      const aiData = result.data;
+
+      // Map AI response to form data
+      const items = aiData.tasks?.map(task => ({
+        name: task.name,
+        description: task.description,
+        quantity: task.quantity || task.estimated_duration_days || 0,
+        unit: task.unit || (aiData.use_tjm_pricing ? 'days' : 'hours'),
+        rate: task.rate || aiData.tjm_rate || 0,
+        amount: task.amount || 0
+      })) || [];
+
+      setFormData({
+        ...formData,
+        items,
+        notes: aiData.project_description || formData.notes,
+        security_margin_percentage: aiData.recommended_security_margin || formData.security_margin_percentage,
+        tjm_used: aiData.tjm_rate || null,
+        total_days: aiData.total_days || null,
+        pricing_mode: aiData.use_tjm_pricing ? 'tjm' : 'hourly',
+      });
+
+      calculateTotals(items);
+      setShowAIPrompt(false);
+      setAiPrompt('');
+    } catch (err) {
+      console.error('Error generating estimate:', err);
+      console.error('Error response:', err.response?.data);
+
+      // Extract error message
+      let errorMsg = 'Failed to generate estimate';
+      if (err.response?.data?.error) {
+        errorMsg = err.response.data.error;
+      } else if (err.message) {
+        errorMsg += ': ' + err.message;
+      }
+
+      setErrorMessage(errorMsg);
+      setSaveStatus('error');
+
+      // Scroll to top to show error banner
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (draftId && !formData.estimate_number) {
+        // Finalize the draft (assign final DEVIS number)
+        await finalizeMutation.mutateAsync(draftId);
+      } else if (isEditing) {
+        // Update existing finalized estimate
+        await updateMutation.mutateAsync({ id, data: formData });
+      } else {
+        // This shouldn't happen with autosave, but handle it
+        const response = await createMutation.mutateAsync(formData);
+        if (response.data.id) {
+          await finalizeMutation.mutateAsync(response.data.id);
+        }
+      }
+      navigate('/invoicing');
+    } catch (err) {
+      console.error('Error saving estimate:', err);
+      console.error('Error response:', err.response?.data);
+
+      // Extract validation errors
+      let errorMsg = 'Failed to save estimate';
+      if (err.response?.data) {
+        const errors = err.response.data;
+        // Format validation errors
+        if (typeof errors === 'object') {
+          const errorMessages = Object.entries(errors)
+            .map(([field, messages]) => {
+              const msgArray = Array.isArray(messages) ? messages : [messages];
+              return `${field}: ${msgArray.join(', ')}`;
+            })
+            .join('\n');
+          errorMsg = errorMessages || errorMsg;
+        } else if (typeof errors === 'string') {
+          errorMsg = errors;
+        } else if (err.response?.data?.error) {
+          errorMsg = err.response.data.error;
+        }
+      }
+
+      setErrorMessage(errorMsg);
+      setSaveStatus('error');
+
+      // Scroll to top to show error banner
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleCustomerCreated = (newCustomer) => {
+    console.log('EstimateCreate: Customer created:', newCustomer);
+    // Auto-select the newly created customer
+    setFormData(prev => ({ ...prev, customer: newCustomer.id }));
+  };
+
+  const handleProjectCreated = (newProject) => {
+    console.log('EstimateCreate: Project created:', newProject);
+    // Auto-select the newly created project
+    setFormData(prev => ({ ...prev, project: newProject.id }));
+  };
+
+  const handleOpenCustomerForm = () => {
+    console.log('EstimateCreate: Opening customer form, current state:', customerFormOpen);
+    setCustomerFormOpen(true);
+    console.log('EstimateCreate: Set customer form to true');
+  };
+
+  const handleOpenProjectForm = () => {
+    console.log('EstimateCreate: Opening project form, current state:', projectFormOpen);
+    setProjectFormOpen(true);
+    console.log('EstimateCreate: Set project form to true');
+  };
+
+  const handleCloseCustomerForm = () => {
+    console.log('EstimateCreate: Closing customer form');
+    setCustomerFormOpen(false);
+  };
+
+  const handleCloseProjectForm = () => {
+    console.log('EstimateCreate: Closing project form');
+    setProjectFormOpen(false);
+  };
+
+  const selectedCustomer = customers.find(c => c.id === parseInt(formData.customer));
+  const selectedProject = projects.find(p => p.id === parseInt(formData.project));
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Top Navigation Bar */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40 shadow-sm">
+        <div className="max-w-screen-2xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate('/invoicing')}
+                className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back
+              </button>
+
+              <div className="h-8 w-px bg-gray-300 dark:bg-gray-600"></div>
+
+              <div>
+                <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                  {isEditing ? 'Edit Estimate' : 'Create New Estimate'}
+                </h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                  {formData.estimate_number || 'Not saved yet'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {/* Autosave Status Indicator */}
+              {formData.customer && formData.estimate_number && (
+                <div className="flex items-center gap-2 text-xs">
+                  {saveStatus === 'saving' && (
+                    <>
+                      <div className="animate-spin rounded-full h-3 w-3 border-2 border-violet-600 border-t-transparent"></div>
+                      <span className="text-gray-600 dark:text-gray-400">Saving...</span>
+                    </>
+                  )}
+                  {saveStatus === 'saved' && (
+                    <>
+                      <svg className="w-3.5 h-3.5 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Saved {lastSaved && `at ${lastSaved.toLocaleTimeString()}`}
+                      </span>
+                    </>
+                  )}
+                  {saveStatus === 'unsaved' && (
+                    <>
+                      <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                      <span className="text-gray-600 dark:text-gray-400">Unsaved changes</span>
+                    </>
+                  )}
+                  {saveStatus === 'error' && (
+                    <>
+                      <svg className="w-3.5 h-3.5 text-red-600 dark:text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                      <span className="text-red-600 dark:text-red-400" title={errorMessage}>
+                        Save failed {errorMessage && `- ${errorMessage}`}
+                      </span>
+                    </>
+                  )}
+                </div>
+              )}
+
+              <div className="h-5 w-px bg-gray-300 dark:bg-gray-600"></div>
+
+              <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium ${
+                formData.status === 'draft'
+                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                  : formData.status === 'sent'
+                  ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+                  : 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
+              }`}>
+                {formData.status}
+              </span>
+
+              <button
+                type="submit"
+                form="estimate-form"
+                disabled={createMutation.isPending || updateMutation.isPending}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {createMutation.isPending || updateMutation.isPending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    {isEditing ? 'Update Estimate' : 'Create Estimate'}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Error Banner */}
+      {errorMessage && (
+        <div className="max-w-screen-2xl mx-auto px-6 pt-4">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-start gap-3">
+            <svg className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-red-800 dark:text-red-300 mb-1">Save Error</h3>
+              <p className="text-sm text-red-700 dark:text-red-400 whitespace-pre-line">{errorMessage}</p>
+            </div>
+            <button
+              onClick={() => setErrorMessage(null)}
+              className="flex-shrink-0 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content - Two Column Layout */}
+      <div className="max-w-screen-2xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          {/* Left Column - Form (60%) */}
+          <div className="lg:col-span-3 space-y-6">
+            <form id="estimate-form" onSubmit={handleSubmit} className="space-y-6">
+              {/* AI Generation Section */}
+              {!isEditing && (
+                <div className="bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20 border border-violet-200 dark:border-violet-800 rounded-xl p-6 shadow-sm">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-10 h-10 bg-violet-100 dark:bg-violet-900 rounded-lg flex items-center justify-center">
+                      <span className="text-xl">✨</span>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">AI-Powered Generation</h3>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                        Describe your project and let AI create a detailed estimate based on your historical data, pricing patterns, and similar past projects.
+                      </p>
+
+                      {!showAIPrompt ? (
+                        <button
+                          type="button"
+                          onClick={() => setShowAIPrompt(true)}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          Generate with AI
+                        </button>
+                      ) : (
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              Describe what you want to quote *
+                            </label>
+                            <textarea
+                              required
+                              value={aiPrompt}
+                              onChange={(e) => setAiPrompt(e.target.value)}
+                              rows="4"
+                              placeholder="Example: Build a React dashboard with authentication, user management, and analytics. Estimate 3 weeks of work."
+                              className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-sm text-gray-900 dark:text-gray-100 transition-all duration-200"
+                            />
+                          </div>
+                          <div className="flex gap-3">
+                            <button
+                              type="button"
+                              onClick={handleAIGenerate}
+                              disabled={aiGenerateMutation.isPending}
+                              className="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm disabled:opacity-50"
+                            >
+                              {aiGenerateMutation.isPending ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                                  Generating...
+                                </>
+                              ) : (
+                                <>✨ Generate Estimate</>
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setShowAIPrompt(false)}
+                              className="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Customer & Project */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Customer & Project</h2>
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Customer selector with + button */}
+                  <div>
+                    <div className="flex items-end gap-2">
+                      <div className="flex-1">
+                        <CustomerProjectSelector
+                          type="customer"
+                          items={customers}
+                          value={formData.customer}
+                          onChange={(customerId) => setFormData({ ...formData, customer: customerId, project: '' })}
+                          placeholder="Select a customer"
+                          label="Customer"
+                          required
+                          isLoading={customersData?.isLoading}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleOpenCustomerForm}
+                        className="h-[42px] px-3 bg-violet-600 hover:bg-violet-700 text-white rounded-lg transition-colors flex items-center justify-center"
+                        title="Create new customer"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Project selector with + button */}
+                  <div>
+                    <div className="flex items-end gap-2">
+                      <div className="flex-1">
+                        <CustomerProjectSelector
+                          type="project"
+                          items={projects}
+                          value={formData.project}
+                          onChange={(projectId) => setFormData({ ...formData, project: projectId })}
+                          placeholder="No project"
+                          label="Project (Optional)"
+                          filterByCustomer={formData.customer}
+                          isLoading={projectsData?.isLoading}
+                          disabled={!formData.customer}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleOpenProjectForm}
+                        disabled={!formData.customer}
+                        className="h-[42px] px-3 bg-violet-600 hover:bg-violet-700 text-white rounded-lg transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Create new project"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dates & Number */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Estimate Details</h2>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Estimate Number *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.estimate_number || ''}
+                      onChange={(e) => setFormData({ ...formData, estimate_number: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-sm transition-all duration-200"
+                      placeholder="DEVIS-2025-0001"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Issue Date</label>
+                    <input
+                      type="date"
+                      value={formData.issue_date}
+                      onChange={(e) => setFormData({ ...formData, issue_date: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-sm transition-all duration-200"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Valid Until</label>
+                    <input
+                      type="date"
+                      value={formData.valid_until}
+                      onChange={(e) => setFormData({ ...formData, valid_until: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-sm transition-all duration-200"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Pricing Mode */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6 shadow-sm">
+                <div className="flex justify-between items-center mb-4">
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Pricing Mode</h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Choose between hourly or daily (TJM) pricing</p>
+                  </div>
+                  <div className="flex gap-2 bg-white dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700 shadow-sm">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, pricing_mode: 'hourly', tjm_used: null })}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                        formData.pricing_mode === 'hourly'
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      }`}
+                    >
+                      Hourly
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleConvertToTJM}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                        formData.pricing_mode === 'tjm'
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      }`}
+                    >
+                      TJM (Daily Rate)
+                    </button>
+                  </div>
+                </div>
+                {formData.pricing_mode === 'tjm' && formData.tjm_used && formData.total_days && (
+                  <div className="bg-blue-100 dark:bg-blue-900/30 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+                    <p className="text-blue-900 dark:text-blue-300 text-sm font-medium">
+                      Using TJM: {formData.tjm_used} {formData.currency}/day × {Number(formData.total_days).toFixed(1)} days = {(formData.tjm_used * Number(formData.total_days)).toFixed(2)} {formData.currency}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Line Items */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Line Items</h2>
+                  <button
+                    type="button"
+                    onClick={handleAddItem}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add Item
+                  </button>
+                </div>
+
+                {formData.items.length === 0 ? (
+                  <div className="text-center py-12 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50">
+                    <svg className="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p className="text-gray-600 dark:text-gray-400 font-medium mb-1">No items yet</p>
+                    <p className="text-sm text-gray-500">Click "Add Item" to get started</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {formData.items.map((item, index) => (
+                      <div key={index} className="relative bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700 hover:border-violet-300 transition-all duration-200">
+                        <div className="grid grid-cols-12 gap-4">
+                          <div className="col-span-5">
+                            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5 flex items-center gap-1.5">
+                              Description
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 text-[10px] font-semibold rounded">
+                                <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
+                                </svg>
+                                AI
+                              </span>
+                            </label>
+                            <div className="relative group">
+                              <textarea
+                                rows="2"
+                                placeholder="Service description (AI will suggest pricing as you type)"
+                                value={item.description}
+                                onChange={(e) => handleItemChange(index, 'description', e.target.value)}
+                                onFocus={() => setActiveItemSuggestion(index)}
+                                onBlur={() => setTimeout(() => setActiveItemSuggestion(null), 200)}
+                                className="w-full px-3 py-2 pr-9 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-sm transition-all duration-200 resize-none"
+                              />
+                              {/* AI indicator icon */}
+                              <div className="absolute right-2 top-2 pointer-events-none">
+                                <div className={`transition-all duration-200 ${
+                                  activeItemSuggestion === index
+                                    ? 'opacity-100 scale-100'
+                                    : 'opacity-40 scale-90 group-hover:opacity-70'
+                                }`}>
+                                  <svg className="w-5 h-5 text-violet-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
+                                  </svg>
+                                </div>
+                              </div>
+                              {activeItemSuggestion === index && (
+                                <LineItemSuggestions
+                                  description={item.description}
+                                  customerId={formData.customer}
+                                  projectContext={formData.notes}
+                                  historicalContext={historicalContext}
+                                  isVisible={true}
+                                  onApply={(suggestion) => {
+                                    handleItemChange(index, 'quantity', suggestion.quantity);
+                                    handleItemChange(index, 'rate', suggestion.rate);
+                                  }}
+                                  onApplyQuantity={(quantity) => {
+                                    handleItemChange(index, 'quantity', quantity);
+                                  }}
+                                  onApplyRate={(rate) => {
+                                    handleItemChange(index, 'rate', rate);
+                                  }}
+                                />
+                              )}
+                            </div>
+                          </div>
+                          <div className="col-span-2">
+                            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Quantity</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              placeholder="1"
+                              value={item.quantity}
+                              onChange={(e) => handleItemChange(index, 'quantity', parseFloat(e.target.value) || 0)}
+                              className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-sm transition-all duration-200"
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Unit</label>
+                            <select
+                              value={item.unit || 'hours'}
+                              onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
+                              className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-sm transition-all duration-200"
+                            >
+                              {UNIT_OPTIONS.map(opt => (
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="col-span-2">
+                            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Rate</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              placeholder="0"
+                              value={item.rate}
+                              onChange={(e) => handleItemChange(index, 'rate', parseFloat(e.target.value) || 0)}
+                              className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-sm transition-all duration-200"
+                            />
+                          </div>
+                          <div className="col-span-1 flex items-start pt-5">
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveItem(index)}
+                              className="w-full p-2 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg transition-all duration-200 border border-red-200 dark:border-red-800"
+                              title="Remove item"
+                            >
+                              <svg className="w-4 h-4 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                        <div className="mt-3 flex justify-end">
+                          <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                            Amount: €{item.amount.toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Task Catalogue Suggestions */}
+              <TaskSuggestionWidget
+                projectDescription={formData.notes}
+                customerName={customers.find(c => c.id === formData.customer)?.name || ''}
+                onAddTask={(taskItem) => {
+                  // Add task template to line items
+                  const newItems = [...formData.items, {
+                    description: taskItem.description,
+                    quantity: taskItem.quantity,
+                    unit: 'hours',
+                    rate: taskItem.unit_price,
+                    amount: taskItem.amount,
+                  }];
+                  setFormData({ ...formData, items: newItems });
+                  calculateTotals(newItems);
+                }}
+                compact={true}
+              />
+
+              {/* Security Margin */}
+              <div className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-6 shadow-sm">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="flex-shrink-0 w-8 h-8 bg-yellow-100 dark:bg-yellow-900 rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-yellow-700 dark:text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">Security Margin</h2>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                      Add a buffer to protect against scope creep and unexpected complexity.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Margin Percentage</label>
+                    <div className="flex gap-3 items-center">
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max="50"
+                        value={formData.security_margin_percentage}
+                        onChange={(e) => {
+                          const newMargin = parseFloat(e.target.value) || 0;
+                          setFormData({ ...formData, security_margin_percentage: newMargin });
+                          calculateTotals(formData.items, newMargin);
+                        }}
+                        className="flex-1 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-sm transition-all duration-200"
+                      />
+                      <span className="text-gray-700 dark:text-gray-300 font-medium">%</span>
+                      <button
+                        type="button"
+                        onClick={handleSuggestMargin}
+                        disabled={suggestMarginMutation.isPending}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm disabled:opacity-50"
+                      >
+                        {suggestMarginMutation.isPending ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                            Analyzing...
+                          </>
+                        ) : (
+                          <>✨ AI Suggest</>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {marginSuggestion && (
+                    <div className="bg-purple-100 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700 rounded-lg p-4">
+                      <p className="text-purple-900 dark:text-purple-300 font-semibold mb-2">
+                        AI Recommendation: {marginSuggestion.recommended_margin_percentage}%
+                      </p>
+                      <p className="text-sm text-purple-800 dark:text-purple-300">{marginSuggestion.reasoning}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Notes & Terms */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Additional Information</h2>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Notes</label>
+                    <textarea
+                      value={formData.notes || ''}
+                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                      rows="4"
+                      placeholder="Project description, scope, deliverables..."
+                      className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-sm transition-all duration-200"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Terms & Conditions</label>
+                    <textarea
+                      value={formData.terms || ''}
+                      onChange={(e) => setFormData({ ...formData, terms: e.target.value })}
+                      rows="3"
+                      placeholder="Payment terms, conditions..."
+                      className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-sm transition-all duration-200"
+                    />
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          {/* Right Column - PDF Preview (40%) */}
+          <div className="lg:col-span-2">
+            <EstimatePDFPreview
+              formData={formData}
+              customer={selectedCustomer}
+              project={selectedProject}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Inline Customer Creation Form */}
+      <InlineCustomerForm
+        isOpen={customerFormOpen}
+        onClose={handleCloseCustomerForm}
+        onSuccess={handleCustomerCreated}
+      />
+
+      {/* Inline Project Creation Form */}
+      <InlineProjectForm
+        isOpen={projectFormOpen}
+        onClose={handleCloseProjectForm}
+        onSuccess={handleProjectCreated}
+        preSelectedCustomer={formData.customer}
+      />
+    </div>
+  );
+}
+
+export default EstimateCreate;

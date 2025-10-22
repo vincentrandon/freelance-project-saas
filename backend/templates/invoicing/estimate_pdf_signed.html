@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devis {{ estimate.estimate_number }} - SIGNÉ</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm 1.5cm;
+            @top-right {
+                content: "Page " counter(page) " sur " counter(pages);
+                font-size: 9pt;
+                color: #666;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 10pt;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid {{ profile.pdf_primary_color|default:'#3B82F6' }};
+            position: relative;
+        }
+
+        .signed-badge {
+            position: absolute;
+            top: -10px;
+            right: 0;
+            background: #10b981;
+            color: white;
+            padding: 8px 16px;
+            font-size: 12pt;
+            font-weight: bold;
+            border-radius: 6px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .company-info {
+            flex: 1;
+        }
+
+        .company-logo {
+            max-width: 200px;
+            max-height: 80px;
+            margin-bottom: 10px;
+        }
+
+        .company-name {
+            font-size: 18pt;
+            font-weight: bold;
+            color: {{ profile.pdf_primary_color|default:'#3B82F6' }};
+            margin-bottom: 5px;
+        }
+
+        .company-details {
+            font-size: 9pt;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .document-title {
+            text-align: right;
+            flex: 1;
+        }
+
+        .document-title h1 {
+            font-size: 28pt;
+            font-weight: bold;
+            color: {{ profile.pdf_primary_color|default:'#3B82F6' }};
+            margin-bottom: 10px;
+        }
+
+        .document-meta {
+            font-size: 10pt;
+            color: #666;
+        }
+
+        .parties {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+        }
+
+        .party-box {
+            width: 48%;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid {{ profile.pdf_primary_color|default:'#3B82F6' }};
+        }
+
+        .party-box h3 {
+            font-size: 11pt;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: {{ profile.pdf_primary_color|default:'#3B82F6' }};
+        }
+
+        .party-box p {
+            font-size: 10pt;
+            margin: 3px 0;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            font-size: 10pt;
+        }
+
+        .items-table thead {
+            background: {{ profile.pdf_primary_color|default:'#3B82F6' }};
+            color: white;
+        }
+
+        .items-table th {
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 9pt;
+            text-transform: uppercase;
+        }
+
+        .items-table th.right {
+            text-align: right;
+        }
+
+        .items-table tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .items-table td {
+            padding: 10px 8px;
+        }
+
+        .items-table td.right {
+            text-align: right;
+            font-weight: 500;
+        }
+
+        .item-description {
+            color: #666;
+            font-size: 9pt;
+            margin-top: 3px;
+        }
+
+        .totals {
+            margin-left: auto;
+            width: 400px;
+            margin-bottom: 40px;
+        }
+
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .totals-row.subtotal {
+            background: #f8f9fa;
+            font-weight: 500;
+        }
+
+        .totals-row.margin {
+            background: #fef3c7;
+            color: #92400e;
+            font-style: italic;
+        }
+
+        .totals-row.total {
+            background: {{ profile.pdf_primary_color|default:'#3B82F6' }};
+            color: white;
+            font-size: 14pt;
+            font-weight: bold;
+            border: none;
+            margin-top: 5px;
+        }
+
+        .totals-label {
+            flex: 1;
+        }
+
+        .totals-value {
+            font-weight: 600;
+            min-width: 120px;
+            text-align: right;
+        }
+
+        .tjm-info {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin-bottom: 30px;
+            font-size: 10pt;
+        }
+
+        .tjm-info strong {
+            color: #1e40af;
+        }
+
+        .conditions {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+        }
+
+        .conditions h3 {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: {{ profile.pdf_primary_color|default:'#3B82F6' }};
+        }
+
+        .conditions p, .conditions ul {
+            font-size: 9pt;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .conditions ul {
+            margin-left: 20px;
+        }
+
+        .signature-section {
+            margin-top: 60px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .signature-box {
+            width: 45%;
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .signature-box.signed {
+            border: 3px solid #10b981;
+            background: #f0fdf4;
+        }
+
+        .signature-box h4 {
+            font-size: 10pt;
+            margin-bottom: 20px;
+            color: #047857;
+            font-weight: bold;
+        }
+
+        .signature-line {
+            border-top: 2px solid #333;
+            margin-top: 30px;
+            padding-top: 5px;
+            font-size: 9pt;
+            color: #666;
+        }
+
+        .signature-image {
+            max-width: 200px;
+            max-height: 80px;
+            border: 2px solid #10b981;
+            padding: 5px;
+            background: white;
+            margin: 10px auto;
+            display: block;
+        }
+
+        .signature-typed {
+            font-family: 'Brush Script MT', cursive, 'Lucida Handwriting', cursive;
+            font-size: 28pt;
+            color: #1e40af;
+            text-align: center;
+            padding: 20px;
+            border: 2px solid #10b981;
+            background: white;
+            margin: 10px auto;
+            font-style: italic;
+        }
+
+        .bon-pour-accord {
+            font-weight: bold;
+            color: #047857;
+            font-size: 11pt;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .signature-metadata {
+            background: #f0fdf4;
+            border: 2px solid #10b981;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 30px;
+            font-size: 9pt;
+            page-break-inside: avoid;
+        }
+
+        .signature-metadata h4 {
+            color: #047857;
+            font-size: 11pt;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .signature-metadata-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #d1fae5;
+        }
+
+        .signature-metadata-row:last-child {
+            border-bottom: none;
+        }
+
+        .signature-metadata-label {
+            font-weight: 600;
+            color: #065f46;
+        }
+
+        .signature-metadata-value {
+            color: #059669;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-top: 2px solid {{ profile.pdf_primary_color|default:'#3B82F6' }};
+            font-size: 8pt;
+            color: #666;
+            text-align: center;
+        }
+
+        .notes {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 9pt;
+        }
+
+        .notes h4 {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #92400e;
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: #e5e7eb;
+            color: #374151;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 8pt;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <span class="signed-badge">✓ DOCUMENT SIGNÉ</span>
+        <div class="company-info">
+            {% if profile.pdf_show_logo and profile.company_logo %}
+            <img src="{{ profile.company_logo.url }}" alt="Logo" class="company-logo">
+            {% endif %}
+            <div class="company-name">{{ profile.company_name|default:'Votre Entreprise' }}</div>
+            <div class="company-details">
+                {% if profile.address %}{{ profile.address }}<br>{% endif %}
+                {% if profile.postal_code or profile.city %}{{ profile.postal_code }} {{ profile.city }}<br>{% endif %}
+                {% if profile.siret_siren %}SIRET: {{ profile.siret_siren }}<br>{% endif %}
+                {% if profile.tax_id %}TVA: {{ profile.tax_id }}<br>{% endif %}
+                {% if profile.phone %}Tél: {{ profile.phone }}<br>{% endif %}
+                {% if profile.get_business_email %}Email: {{ profile.get_business_email }}{% endif %}
+            </div>
+        </div>
+
+        <div class="document-title">
+            <h1>DEVIS
+                {% if estimate.version > 1 %}
+                <span class="version-badge">v{{ estimate.version }}</span>
+                {% endif %}
+            </h1>
+            <div class="document-meta">
+                <strong>N° {{ estimate.estimate_number }}</strong><br>
+                Date: {{ estimate.issue_date|date:"d/m/Y" }}<br>
+                Valable jusqu'au: {{ estimate.valid_until|date:"d/m/Y" }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Parties -->
+    <div class="parties">
+        <div class="party-box">
+            <h3>CLIENT</h3>
+            <p><strong>{{ estimate.customer.name }}</strong></p>
+            {% if estimate.customer.company %}<p>{{ estimate.customer.company }}</p>{% endif %}
+            {% if estimate.customer.address %}<p>{{ estimate.customer.address }}</p>{% endif %}
+            {% if estimate.customer.city %}<p>{{ estimate.customer.postal_code }} {{ estimate.customer.city }}</p>{% endif %}
+            {% if estimate.customer.email %}<p>Email: {{ estimate.customer.email }}</p>{% endif %}
+            {% if estimate.customer.phone %}<p>Tél: {{ estimate.customer.phone }}</p>{% endif %}
+        </div>
+
+        <div class="party-box">
+            <h3>PROJET</h3>
+            {% if estimate.project %}
+            <p><strong>{{ estimate.project.name }}</strong></p>
+            {% if estimate.project.description %}<p>{{ estimate.project.description|truncatewords:20 }}</p>{% endif %}
+            {% else %}
+            <p>Nouveau projet</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- TJM Info (if TJM pricing used) -->
+    {% if estimate.tjm_used %}
+    <div class="tjm-info">
+        <strong>💼 Tarification au TJM (Taux Journalier Moyen)</strong><br>
+        Ce devis est basé sur un TJM de <strong>{{ estimate.tjm_used|floatformat:2 }} {{ estimate.currency }}</strong>
+        pour une durée estimée de <strong>{{ estimate.total_days|floatformat:1 }} jour{{ estimate.total_days|pluralize }}</strong>.
+    </div>
+    {% endif %}
+
+    <!-- Notes (if any) -->
+    {% if estimate.notes %}
+    <div class="notes">
+        <h4>📝 Notes importantes</h4>
+        {{ estimate.notes|linebreaks }}
+    </div>
+    {% endif %}
+
+    <!-- Items Table -->
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th style="width: 40%;">Désignation</th>
+                <th style="width: 15%;" class="right">Quantité</th>
+                <th style="width: 10%;">Unité</th>
+                <th style="width: 15%;" class="right">Prix Unitaire</th>
+                <th style="width: 20%;" class="right">Montant HT</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in estimate.items %}
+            <tr>
+                <td>
+                    <strong>{{ item.name|default:item.description }}</strong>
+                    {% if item.description and item.name != item.description %}
+                    <div class="item-description">{{ item.description }}</div>
+                    {% endif %}
+                </td>
+                <td class="right">{{ item.quantity|floatformat:2 }}</td>
+                <td>{{ item.unit|default:'unité' }}</td>
+                <td class="right">{{ item.rate|floatformat:2 }} {{ estimate.currency }}</td>
+                <td class="right"><strong>{{ item.amount|floatformat:2 }} {{ estimate.currency }}</strong></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Totals -->
+    <div class="totals">
+        <div class="totals-row subtotal">
+            <div class="totals-label">Sous-total HT (avant marge)</div>
+            <div class="totals-value">{{ estimate.subtotal_before_margin|floatformat:2 }} {{ estimate.currency }}</div>
+        </div>
+
+        {% if estimate.security_margin_percentage > 0 %}
+        <div class="totals-row margin">
+            <div class="totals-label">
+                {% if profile.show_security_margin_on_pdf %}
+                Marge de sécurité ({{ estimate.security_margin_percentage|floatformat:0 }}%)
+                {% else %}
+                Ajustement
+                {% endif %}
+            </div>
+            <div class="totals-value">{{ estimate.security_margin_amount|floatformat:2 }} {{ estimate.currency }}</div>
+        </div>
+        {% endif %}
+
+        <div class="totals-row subtotal">
+            <div class="totals-label">Sous-total HT</div>
+            <div class="totals-value">{{ estimate.subtotal|floatformat:2 }} {{ estimate.currency }}</div>
+        </div>
+
+        <div class="totals-row">
+            <div class="totals-label">TVA ({{ estimate.tax_rate|floatformat:0 }}%)</div>
+            <div class="totals-value">{{ estimate.tax_amount|floatformat:2 }} {{ estimate.currency }}</div>
+        </div>
+
+        <div class="totals-row total">
+            <div class="totals-label">TOTAL TTC</div>
+            <div class="totals-value">{{ estimate.total|floatformat:2 }} {{ estimate.currency }}</div>
+        </div>
+    </div>
+
+    <!-- Conditions -->
+    <div class="conditions">
+        <h3>Conditions générales</h3>
+        {% if estimate.terms %}
+        {{ estimate.terms|linebreaks }}
+        {% elif profile.estimate_terms %}
+        {{ profile.estimate_terms|linebreaks }}
+        {% else %}
+        <ul>
+            <li>Devis valable jusqu'au {{ estimate.valid_until|date:"d/m/Y" }}</li>
+            <li>Paiement à {{ profile.payment_terms_days|default:30 }} jours après réception de la facture</li>
+            <li>Acompte de 30% à la commande, solde à la livraison</li>
+            <li>Toute modification du cahier des charges fera l'objet d'un avenant</li>
+        </ul>
+        {% endif %}
+
+        {% if profile.iban %}
+        <p style="margin-top: 15px;">
+            <strong>Coordonnées bancaires:</strong><br>
+            IBAN: {{ profile.iban }}<br>
+            {% if profile.bic %}BIC: {{ profile.bic }}{% endif %}
+        </p>
+        {% endif %}
+    </div>
+
+    <!-- Signature Section -->
+    <div class="signature-section">
+        <div class="signature-box">
+            <h4>Le prestataire</h4>
+            <div class="signature-line">
+                {{ profile.company_name|default:'Signature' }}
+            </div>
+        </div>
+
+        <div class="signature-box signed">
+            <h4>Le client<br><em style="font-size: 9pt;">(Bon pour accord)</em></h4>
+
+            {% if signature_request.signature_method == 'typed' and signature_request.signature_metadata.typed_name %}
+            <div class="signature-typed">
+                {{ signature_request.signature_metadata.typed_name }}
+            </div>
+            {% elif signature_request.signature_metadata.signature_image %}
+            <img src="data:image/png;base64,{{ signature_request.signature_metadata.signature_image }}" class="signature-image" alt="Signature">
+            {% endif %}
+
+            <div class="bon-pour-accord">
+                ✓ Bon pour accord
+            </div>
+            <div style="border-top: none; margin-top: 10px; font-size: 9pt; color: #047857; font-weight: 600;">
+                Signé le {{ signature_request.signed_at|date:"d/m/Y à H:i" }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Signature Metadata -->
+    <div class="signature-metadata">
+        <h4>🔒 Informations de signature (Preuve légale)</h4>
+        <div class="signature-metadata-row">
+            <span class="signature-metadata-label">Signataire:</span>
+            <span class="signature-metadata-value">{{ signature_request.signer_name }}</span>
+        </div>
+        <div class="signature-metadata-row">
+            <span class="signature-metadata-label">Email:</span>
+            <span class="signature-metadata-value">{{ signature_request.signer_email }}</span>
+        </div>
+        {% if signature_request.signer_company %}
+        <div class="signature-metadata-row">
+            <span class="signature-metadata-label">Société:</span>
+            <span class="signature-metadata-value">{{ signature_request.signer_company }}</span>
+        </div>
+        {% endif %}
+        <div class="signature-metadata-row">
+            <span class="signature-metadata-label">Date et heure:</span>
+            <span class="signature-metadata-value">{{ signature_request.signed_at|date:"d/m/Y à H:i:s" }}</span>
+        </div>
+        <div class="signature-metadata-row">
+            <span class="signature-metadata-label">Méthode:</span>
+            <span class="signature-metadata-value">
+                {% if signature_request.signature_method == 'typed' %}Signature tapée
+                {% elif signature_request.signature_method == 'drawn' %}Signature dessinée
+                {% elif signature_request.signature_method == 'upload' %}Signature uploadée
+                {% else %}{{ signature_request.signature_method }}{% endif %}
+            </span>
+        </div>
+        {% if signature_request.ip_address %}
+        <div class="signature-metadata-row">
+            <span class="signature-metadata-label">Adresse IP:</span>
+            <span class="signature-metadata-value">{{ signature_request.ip_address }}</span>
+        </div>
+        {% endif %}
+        <div class="signature-metadata-row">
+            <span class="signature-metadata-label">ID Unique:</span>
+            <span class="signature-metadata-value" style="font-family: monospace; font-size: 8pt;">{{ signature_request.token }}</span>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        {% if profile.pdf_footer_text %}
+        {{ profile.pdf_footer_text }}
+        {% else %}
+        {{ profile.company_name|default:'Votre Entreprise' }}
+        {% if profile.siret_siren %}- SIRET: {{ profile.siret_siren }}{% endif %}
+        {% if profile.tax_id %}- TVA: {{ profile.tax_id }}{% endif %}
+        {% endif %}
+    </div>
+</body>
+</html>

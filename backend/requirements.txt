@@ -1,0 +1,31 @@
+Django==5.0.1
+djangorestframework==3.14.0
+djangorestframework-simplejwt==5.3.1
+dj-rest-auth==5.0.2
+django-allauth==0.61.1
+django-storages==1.14.2
+boto3==1.34.34
+psycopg2-binary==2.9.9  # Temporarily commented out due to installation issues
+celery==5.3.6
+redis==5.0.1
+django-cors-headers==4.3.1
+Pillow==10.2.0  # Temporarily commented out due to installation issues
+python-decouple==3.8
+gunicorn==21.2.0
+WeasyPrint==62.3
+drf-spectacular==0.27.1
+django-filter==24.1
+django-rosetta==0.10.0
+openai==1.58.0
+PyPDF2==3.0.1
+pdf2image==1.17.0
+python-magic==0.4.27
+fuzzywuzzy==0.18.0
+python-Levenshtein==0.25.0
+
+# Digital signature and enhanced PDF features
+pyhanko==0.21.0
+pyhanko-certvalidator==0.26.3
+qrcode==7.4.2
+reportlab==4.0.7
+
