@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils.translation import gettext_lazy as _
 from projects.models import Project
 
 
@@ -32,10 +33,10 @@ class Transaction(models.Model):
     """Model for bank transactions"""
     
     CATEGORY_CHOICES = [
-        ('income', 'Income'),
-        ('expense', 'Expense'),
-        ('transfer', 'Transfer'),
-        ('other', 'Other'),
+        ('income', _('Income')),
+        ('expense', _('Expense')),
+        ('transfer', _('Transfer')),
+        ('other', _('Other')),
     ]
 
     bank_account = models.ForeignKey(BankAccount, on_delete=models.CASCADE, related_name='transactions')

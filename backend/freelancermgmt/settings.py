@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'document_processing',
     'profiles',
     'notifications',
+    'cra',
 ]
 
 MIDDLEWARE = [

@@ -1,0 +1,102 @@
+{% extends "admin/change_list.html" %}
+{% load i18n static %}
+
+{% block content_title %}
+<h1>AI Model Training Dashboard</h1>
+{% endblock %}
+
+{% block result_list %}
+
+{# Training Statistics Panel #}
+<div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+    <h2 style="margin-top: 0; color: #333;">📊 Training Statistics</h2>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+        {# Total Feedback Card #}
+        <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #007bff;">
+            <div style="color: #6c757d; font-size: 12px; text-transform: uppercase; font-weight: bold;">Total Feedback</div>
+            <div style="font-size: 28px; font-weight: bold; color: #333;">{{ training_stats.total_feedback }}</div>
+            <div style="color: #6c757d; font-size: 13px;">All corrections captured</div>
+        </div>
+
+        {# Rated Feedback Card #}
+        <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #28a745;">
+            <div style="color: #6c757d; font-size: 12px; text-transform: uppercase; font-weight: bold;">Rated Feedback</div>
+            <div style="font-size: 28px; font-weight: bold; color: #333;">{{ training_stats.rated_feedback }}</div>
+            <div style="color: #6c757d; font-size: 13px;">With user ratings</div>
+        </div>
+
+        {# Unused Feedback Card #}
+        <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid {% if training_stats.ready_for_training %}#28a745{% else %}#ffc107{% endif %};">
+            <div style="color: #6c757d; font-size: 12px; text-transform: uppercase; font-weight: bold;">Ready for Training</div>
+            <div style="font-size: 28px; font-weight: bold; color: #333;">{{ training_stats.unused_feedback }}</div>
+            <div style="color: #6c757d; font-size: 13px;">
+                {% if training_stats.ready_for_training %}
+                    ✓ Ready (min: {{ training_stats.min_required }})
+                {% else %}
+                    Need {{ training_stats.min_required|add:"-"|add:training_stats.unused_feedback }} more
+                {% endif %}
+            </div>
+        </div>
+
+        {# Active Model Card #}
+        <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #6f42c1;">
+            <div style="color: #6c757d; font-size: 12px; text-transform: uppercase; font-weight: bold;">Active Model</div>
+            {% if active_model %}
+                <div style="font-size: 20px; font-weight: bold; color: #333;">{{ active_model.version }}</div>
+                <div style="color: #6c757d; font-size: 13px;">
+                    Accuracy: {{ active_model.accuracy_after|floatformat:1 }}%
+                </div>
+            {% else %}
+                <div style="font-size: 18px; font-weight: bold; color: #999;">No model active</div>
+                <div style="color: #6c757d; font-size: 13px;">Train your first model</div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# Training Action Button #}
+    {% if training_stats.ready_for_training %}
+    <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 6px; padding: 15px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 24px;">🚀</span>
+            <div style="flex: 1;">
+                <strong style="color: #155724;">Ready to train a new model!</strong><br>
+                <span style="color: #155724; font-size: 14px;">
+                    You have {{ training_stats.unused_feedback }} unused feedback items.
+                    Select any model below and choose "🚀 Start New AI Training Job" from the actions dropdown.
+                </span>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; padding: 15px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 24px;">⏳</span>
+            <div style="flex: 1;">
+                <strong style="color: #856404;">Collecting training data...</strong><br>
+                <span style="color: #856404; font-size: 14px;">
+                    {{ training_stats.unused_feedback }} / {{ training_stats.min_required }} feedback items collected.
+                    Keep using the document import system to generate more training data.
+                </span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {# Quick Instructions #}
+    <div style="margin-top: 15px; padding: 10px; background: #e7f3ff; border-radius: 6px;">
+        <strong style="color: #004085;">💡 How to start training:</strong>
+        <ol style="margin: 10px 0 0 0; padding-left: 20px; color: #004085;">
+            <li>Wait until you have at least 50 rated feedback items</li>
+            <li>Select any model in the list below (or select none - selection doesn't matter)</li>
+            <li>Choose "🚀 Start New AI Training Job" from the "Action" dropdown</li>
+            <li>Click "Go" - Training will start automatically</li>
+            <li>Monitor progress in the list below (auto-updates every 10 minutes)</li>
+        </ol>
+    </div>
+</div>
+
+{# Standard Django admin result list #}
+{{ block.super }}
+
+{% endblock %}

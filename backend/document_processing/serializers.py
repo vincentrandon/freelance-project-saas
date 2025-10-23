@@ -8,16 +8,33 @@ from invoicing.serializers import InvoiceSerializer, EstimateSerializer
 class ImportedDocumentSerializer(serializers.ModelSerializer):
     """Serializer for ImportedDocument model"""
 
+    # Include preview data for checking needs_clarification
+    preview = serializers.SerializerMethodField()
+
     class Meta:
         model = ImportedDocument
         fields = [
             'id', 'file', 'file_name', 'file_size', 'status', 'document_type',
-            'uploaded_at', 'processed_at', 'error_message', 'processing_time_seconds'
+            'uploaded_at', 'processed_at', 'error_message', 'processing_time_seconds',
+            'preview'
         ]
         read_only_fields = [
             'id', 'uploaded_at', 'processed_at', 'status', 'document_type',
-            'error_message', 'processing_time_seconds'
+            'error_message', 'processing_time_seconds', 'preview'
         ]
+
+    def get_preview(self, obj):
+        """Include minimal preview data for UI decisions"""
+        try:
+            preview = obj.preview
+            return {
+                'id': preview.id,
+                'needs_clarification': preview.needs_clarification,
+                'overall_task_quality_score': preview.overall_task_quality_score,
+                'auto_approve_eligible': preview.auto_approve_eligible
+            }
+        except ImportPreview.DoesNotExist:
+            return None
 
 
 class ImportedDocumentUploadSerializer(serializers.Serializer):
@@ -61,12 +78,15 @@ class ImportPreviewSerializer(serializers.ModelSerializer):
             'matched_customer', 'customer_match_confidence', 'customer_action',
             'matched_project', 'project_match_confidence', 'project_action',
             'conflicts', 'warnings',
+            'task_quality_scores', 'needs_clarification', 'clarification_completed_at',
+            'overall_task_quality_score', 'auto_approve_eligible',
             'created_customer', 'created_project', 'created_invoice', 'created_estimate',
             'created_at', 'reviewed_at'
         ]
         read_only_fields = [
             'id', 'document', 'parse_result', 'created_customer', 'created_project',
-            'created_invoice', 'created_estimate', 'created_at', 'reviewed_at'
+            'created_invoice', 'created_estimate', 'created_at', 'reviewed_at',
+            'task_quality_scores', 'overall_task_quality_score', 'auto_approve_eligible'
         ]
 
 

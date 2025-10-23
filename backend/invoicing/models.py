@@ -72,6 +72,16 @@ class Invoice(models.Model):
         help_text=_("Source estimate if this invoice was converted from an estimate")
     )
 
+    # Link to source CRA (if generated from activity report)
+    source_cra = models.ForeignKey(
+        'cra.CRA',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='generated_invoices',
+        help_text=_("Source CRA if this invoice was generated from an activity report")
+    )
+
     # Deposit invoice fields (Facture d'Acompte - French law)
     is_deposit_invoice = models.BooleanField(
         default=False,
@@ -351,17 +361,17 @@ class SignatureRequest(models.Model):
     """Model for tracking estimate signature requests"""
 
     STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('signed', 'Signed'),
-        ('expired', 'Expired'),
-        ('declined', 'Declined'),
+        ('pending', _('Pending')),
+        ('signed', _('Signed')),
+        ('expired', _('Expired')),
+        ('declined', _('Declined')),
     ]
 
     SIGNATURE_METHOD_CHOICES = [
-        ('draw', 'Drawn Signature'),
-        ('upload', 'Uploaded Image'),
-        ('type', 'Typed Name'),
-        ('digital', 'Digital Certificate'),
+        ('draw', _('Drawn Signature')),
+        ('upload', _('Uploaded Image')),
+        ('type', _('Typed Name')),
+        ('digital', _('Digital Certificate')),
     ]
 
     estimate = models.ForeignKey(

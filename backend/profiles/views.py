@@ -28,12 +28,21 @@ class UserProfileViewSet(viewsets.ModelViewSet):
         obj, created = UserProfile.objects.get_or_create(user=self.request.user)
         return obj
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get', 'patch'])
     def me(self, request):
-        """Get current user's profile"""
+        """Get or update current user's profile"""
         profile, created = UserProfile.objects.get_or_create(user=request.user)
-        serializer = self.get_serializer(profile)
-        return Response(serializer.data)
+
+        if request.method == 'GET':
+            serializer = self.get_serializer(profile)
+            return Response(serializer.data)
+
+        elif request.method == 'PATCH':
+            serializer = self.get_serializer(profile, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['get', 'patch'])
     def pricing_settings(self, request):

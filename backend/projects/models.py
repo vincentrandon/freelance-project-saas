@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models import Sum, F
+from django.utils.translation import gettext_lazy as _
 from customers.models import Customer
 
 
@@ -8,10 +9,10 @@ class Project(models.Model):
     """Model representing a project for a customer"""
     
     STATUS_CHOICES = [
-        ('active', 'Active'),
-        ('paused', 'Paused'),
-        ('completed', 'Completed'),
-        ('cancelled', 'Cancelled'),
+        ('active', _('Active')),
+        ('paused', _('Paused')),
+        ('completed', _('Completed')),
+        ('cancelled', _('Cancelled')),
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='projects')
@@ -70,21 +71,21 @@ class TaskTemplate(models.Model):
     """Model representing a reusable task template in the catalogue"""
 
     CATEGORY_CHOICES = [
-        ('development', 'Development'),
-        ('design', 'Design'),
-        ('testing', 'Testing'),
-        ('deployment', 'Deployment'),
-        ('consulting', 'Consulting'),
-        ('documentation', 'Documentation'),
-        ('maintenance', 'Maintenance'),
-        ('research', 'Research'),
-        ('other', 'Other'),
+        ('development', _('Development')),
+        ('design', _('Design')),
+        ('testing', _('Testing')),
+        ('deployment', _('Deployment')),
+        ('consulting', _('Consulting')),
+        ('documentation', _('Documentation')),
+        ('maintenance', _('Maintenance')),
+        ('research', _('Research')),
+        ('other', _('Other')),
     ]
 
     SOURCE_CHOICES = [
-        ('manual', 'Manual Creation'),
-        ('ai_import', 'AI Import'),
-        ('task_conversion', 'Converted from Task'),
+        ('manual', _('Manual Creation')),
+        ('ai_import', _('AI Import')),
+        ('task_conversion', _('Converted from Task')),
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='task_templates')
@@ -235,9 +236,9 @@ class Task(models.Model):
     """Model representing a task within a project"""
 
     STATUS_CHOICES = [
-        ('todo', 'To Do'),
-        ('in_progress', 'In Progress'),
-        ('completed', 'Completed'),
+        ('todo', _('To Do')),
+        ('in_progress', _('In Progress')),
+        ('completed', _('Completed')),
     ]
 
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='tasks')
@@ -247,6 +248,12 @@ class Task(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='todo')
     estimated_hours = models.DecimalField(max_digits=8, decimal_places=2, default=0, help_text="Estimated hours for this task")
     actual_hours = models.DecimalField(max_digits=8, decimal_places=2, default=0, help_text="Actual hours spent on this task")
+    worked_days = models.DecimalField(max_digits=8, decimal_places=2, default=0, help_text="Days worked on this task (for CRA)")
+    worked_dates = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Specific dates worked on this task for CRA (e.g., ['2025-10-01', '2025-10-05'])"
+    )
     hourly_rate = models.DecimalField(max_digits=8, decimal_places=2, default=0, help_text="Hourly rate for this task")
     order = models.IntegerField(default=0, help_text="Order of task in list")
     created_at = models.DateTimeField(auto_now_add=True)

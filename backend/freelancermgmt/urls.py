@@ -29,6 +29,7 @@ urlpatterns = [
     path('api/document-processing/', include('document_processing.urls')),
     path('api/profile/', include('profiles.urls')),
     path('api/notifications/', include('notifications.urls')),
+    path('api/cra/', include('cra.urls')),
 ]
 
 if settings.DEBUG:

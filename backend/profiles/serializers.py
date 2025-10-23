@@ -7,6 +7,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     user_username = serializers.CharField(source='user.username', read_only=True)
     user_email = serializers.EmailField(source='user.email', read_only=True)
+    user_first_name = serializers.CharField(source='user.first_name', required=False)
+    user_last_name = serializers.CharField(source='user.last_name', required=False)
     business_email = serializers.SerializerMethodField()
     calculated_hourly_rate = serializers.SerializerMethodField()
     profile_completeness = serializers.SerializerMethodField()
@@ -16,7 +18,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = [
-            'id', 'user', 'user_username', 'user_email', 'business_email',
+            'id', 'user', 'user_username', 'user_email', 'user_first_name', 'user_last_name', 'business_email',
 
             # Company info
             'company_name', 'company_logo', 'address', 'city', 'postal_code',
@@ -44,6 +46,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
             # Onboarding
             'onboarding_completed', 'onboarding_step',
+
+            # Language preference
+            'preferred_language',
 
             # Computed fields
             'profile_completeness', 'is_complete_for_invoicing', 'missing_required_fields',
@@ -75,6 +80,25 @@ class UserProfileSerializer(serializers.ModelSerializer):
     def get_missing_required_fields(self, obj):
         """Get missing required fields"""
         return obj.get_missing_required_fields()
+
+    def update(self, instance, validated_data):
+        """Custom update to handle nested user fields"""
+        # Extract user fields if present
+        user_data = {}
+        if 'user' in validated_data:
+            user_data = validated_data.pop('user')
+
+        # Update User model fields
+        if user_data:
+            user = instance.user
+            if 'first_name' in user_data:
+                user.first_name = user_data['first_name']
+            if 'last_name' in user_data:
+                user.last_name = user_data['last_name']
+            user.save()
+
+        # Update UserProfile fields
+        return super().update(instance, validated_data)
 
 
 class PricingSettingsSerializer(serializers.ModelSerializer):

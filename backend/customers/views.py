@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
+from django.utils.translation import gettext as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 
@@ -37,7 +38,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
         
         if not file:
             return Response(
-                {'error': 'No file provided'}, 
+                {'error': _('No file provided')},
                 status=status.HTTP_400_BAD_REQUEST
             )
         

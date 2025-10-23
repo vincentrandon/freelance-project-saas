@@ -12,6 +12,7 @@ from django.contrib.auth.models import User
 from .models import ImportedDocument, DocumentParseResult, ImportPreview
 from .services.openai_document_parser import OpenAIDocumentParser
 from .services.entity_matcher import EntityMatcher
+from .services.task_quality_analyzer import TaskQualityAnalyzer
 from customers.models import Customer
 from projects.models import Project, Task
 from invoicing.models import Invoice, Estimate
@@ -120,12 +121,43 @@ def parse_document_with_ai(document_id: int):
             project_match
         )
 
+        # NEW: Analyze task quality (cost-optimized with heuristics)
+        quality_analyzer = TaskQualityAnalyzer()
+        tasks_data = preview_data['tasks_data']
+        quality_analysis = quality_analyzer.analyze_all_tasks(tasks_data)
+
+        # Convert task_results list to dict keyed by task_index for easier lookup
+        task_quality_dict = {
+            result['task_index']: result
+            for result in quality_analysis['task_results']
+        }
+
+        # Determine auto-approve eligibility
+        # Criteria: >90% confidence + no conflicts + good task quality + existing customer
+        parse_confidence = parse_result.overall_confidence
+        has_conflicts = len(preview_data['conflicts']) > 0
+        task_quality_ok = quality_analysis['overall_score'] >= 80
+        auto_approve_eligible = (
+            parse_confidence >= 90 and
+            not has_conflicts and
+            task_quality_ok and
+            not quality_analysis['needs_clarification']
+        )
+
+        # Determine status: needs_clarification or pending_review
+        initial_status = 'needs_clarification' if quality_analysis['needs_clarification'] else 'pending_review'
+
+        # Add warnings about task quality if needed
+        warnings = preview_data['warnings'].copy()
+        if quality_analysis['vague_count'] > 0:
+            warnings.append(f"{quality_analysis['vague_count']} task(s) need clarification (too vague)")
+
         # Create or update ImportPreview (in case of reparse)
         preview, created = ImportPreview.objects.update_or_create(
             document=document,
             defaults={
                 'parse_result': parse_result,
-                'status': 'pending_review',
+                'status': initial_status,
                 'customer_data': preview_data['customer_data'],
                 'project_data': preview_data['project_data'],
                 'tasks_data': preview_data['tasks_data'],
@@ -137,8 +169,20 @@ def parse_document_with_ai(document_id: int):
                 'project_match_confidence': preview_data['project_match_confidence'],
                 'project_action': preview_data['project_action'],
                 'conflicts': preview_data['conflicts'],
-                'warnings': preview_data['warnings']
+                'warnings': warnings,
+                # NEW: Task quality fields
+                'task_quality_scores': task_quality_dict,
+                'needs_clarification': quality_analysis['needs_clarification'],
+                'overall_task_quality_score': quality_analysis['overall_score'],
+                'auto_approve_eligible': auto_approve_eligible,
             }
+        )
+
+        logger.info(
+            f"Preview {preview.id}: quality={quality_analysis['overall_score']}%, "
+            f"needs_clarification={quality_analysis['needs_clarification']}, "
+            f"auto_approve_eligible={auto_approve_eligible}, "
+            f"ai_calls={quality_analysis['ai_calls_used']}"
         )
 
         # Update document status
@@ -470,3 +514,96 @@ def parse_documents_batch(document_ids: list):
     """
     for doc_id in document_ids:
         parse_document_with_ai.delay(doc_id)
+
+
+@shared_task
+def monitor_training_jobs():
+    """
+    Monitor ongoing AI training jobs and update their status.
+    Should be run periodically (every 5-10 minutes).
+    """
+    from .models import AIModelVersion
+    from .services.ai_learning_service import AILearningService
+
+    # Get all training/evaluating models
+    training_models = AIModelVersion.objects.filter(
+        status__in=['training', 'evaluating']
+    )
+
+    logger.info(f"Monitoring {training_models.count()} training jobs")
+
+    for version in training_models:
+        try:
+            result = AILearningService.check_training_status(version.id)
+
+            if not result['success']:
+                logger.error(f"Failed to check training status for {version.version}: {result.get('error')}")
+                continue
+
+            # If training succeeded, evaluate the model
+            if version.status == 'evaluating' and version.fine_tuned_model:
+                logger.info(f"Starting evaluation for {version.version}")
+                eval_result = AILearningService.evaluate_model(version.id)
+
+                if eval_result['success']:
+                    logger.info(f"Evaluation complete for {version.version}: {eval_result}")
+
+                    # Auto-activate if better than current
+                    if version.is_better_than_current():
+                        logger.info(f"Auto-activating {version.version} (better performance)")
+                        activation_result = AILearningService.activate_model(version.id)
+
+                        if activation_result['success']:
+                            logger.info(f"Successfully activated {version.version}")
+                        else:
+                            logger.error(f"Failed to activate {version.version}: {activation_result.get('error')}")
+
+        except Exception as e:
+            logger.error(f"Error monitoring training job for {version.version}: {e}")
+
+
+@shared_task
+def monitor_model_performance():
+    """
+    Monitor active model performance and trigger rollback if degrading.
+    Should be run periodically (every hour or after N documents).
+    """
+    from .models import AIModelVersion, AIExtractionFeedback
+    from .services.ai_learning_service import AILearningService
+
+    # Get active model
+    active_model = AIModelVersion.objects.filter(is_active=True).first()
+
+    if not active_model:
+        logger.info("No active model to monitor")
+        return
+
+    # Get recent feedback (last 50 items)
+    recent_feedback = AIExtractionFeedback.objects.filter(
+        model_version_used=active_model,
+        user_rating__isnull=False
+    ).order_by('-created_at')[:50]
+
+    if recent_feedback.count() < 10:
+        logger.info(f"Insufficient feedback for monitoring (have {recent_feedback.count()}, need 10)")
+        return
+
+    # Calculate poor rating percentage
+    poor_count = recent_feedback.filter(
+        user_rating__in=['poor', 'needs_improvement']
+    ).count()
+
+    poor_percentage = (poor_count / recent_feedback.count()) * 100
+
+    logger.info(f"Active model {active_model.version} poor rating: {poor_percentage:.1f}% ({poor_count}/{recent_feedback.count()})")
+
+    # Trigger rollback if >30% poor ratings
+    if poor_percentage > 30:
+        logger.warning(f"Model {active_model.version} performing poorly ({poor_percentage:.1f}% poor ratings), triggering rollback")
+
+        rollback_result = AILearningService.rollback_to_previous()
+
+        if rollback_result['success']:
+            logger.info(f"Rolled back to {rollback_result['activated_version']}")
+        else:
+            logger.error(f"Rollback failed: {rollback_result.get('error')}")

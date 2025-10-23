@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRA {{ cra.period_display }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm 1.5cm;
+            @top-right {
+                content: "Page " counter(page) " sur " counter(pages);
+                font-size: 9pt;
+                color: #666;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 10pt;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid {{ profile.pdf_primary_color|default:'#3B82F6' }};
+        }
+
+        .company-info {
+            flex: 1;
+        }
+
+        .company-name {
+            font-size: 18pt;
+            font-weight: bold;
+            color: {{ profile.pdf_primary_color|default:'#3B82F6' }};
+            margin-bottom: 5px;
+        }
+
+        .company-details {
+            font-size: 9pt;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .document-title {
+            text-align: right;
+            flex: 1;
+        }
+
+        .document-title h1 {
+            font-size: 24pt;
+            font-weight: bold;
+            color: {{ profile.pdf_primary_color|default:'#3B82F6' }};
+            margin-bottom: 10px;
+        }
+
+        .document-meta {
+            font-size: 10pt;
+            color: #666;
+        }
+
+        .parties-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            gap: 30px;
+        }
+
+        .party-box {
+            flex: 1;
+            padding: 15px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+
+        .party-title {
+            font-size: 11pt;
+            font-weight: bold;
+            color: {{ profile.pdf_primary_color|default:'#3B82F6' }};
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .party-details {
+            font-size: 10pt;
+            line-height: 1.6;
+        }
+
+        .period-section {
+            background: {{ profile.pdf_primary_color|default:'#3B82F6' }};
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .period-section h2 {
+            font-size: 16pt;
+            font-weight: bold;
+        }
+
+        .tasks-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+
+        .tasks-table thead {
+            background: {{ profile.pdf_primary_color|default:'#3B82F6' }};
+            color: white;
+        }
+
+        .tasks-table th {
+            padding: 12px;
+            text-align: left;
+            font-size: 9pt;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .tasks-table th.text-right {
+            text-align: right;
+        }
+
+        .tasks-table tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .tasks-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .tasks-table td {
+            padding: 12px;
+            font-size: 10pt;
+        }
+
+        .tasks-table td.text-right {
+            text-align: right;
+        }
+
+        .task-description {
+            color: #666;
+            font-size: 9pt;
+            margin-top: 5px;
+            line-height: 1.4;
+        }
+
+        .task-description p {
+            margin: 3px 0;
+        }
+
+        .task-description ul,
+        .task-description ol {
+            margin: 5px 0 5px 20px;
+        }
+
+        .task-description li {
+            margin: 2px 0;
+        }
+
+        .task-description strong {
+            font-weight: bold;
+        }
+
+        .task-description em {
+            font-style: italic;
+        }
+
+        .task-description h1,
+        .task-description h2,
+        .task-description h3 {
+            font-weight: bold;
+            margin: 8px 0 4px 0;
+        }
+
+        .task-description h1 {
+            font-size: 11pt;
+        }
+
+        .task-description h2 {
+            font-size: 10.5pt;
+        }
+
+        .task-description h3 {
+            font-size: 10pt;
+        }
+
+        .task-description blockquote {
+            margin: 5px 0 5px 15px;
+            padding-left: 10px;
+            border-left: 3px solid #ccc;
+            font-style: italic;
+        }
+
+        .totals-section {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 40px;
+        }
+
+        .totals-box {
+            width: 300px;
+            border: 2px solid {{ profile.pdf_primary_color|default:'#3B82F6' }};
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .totals-row:last-child {
+            border-bottom: none;
+            background: {{ profile.pdf_primary_color|default:'#3B82F6' }};
+            color: white;
+            font-weight: bold;
+            font-size: 12pt;
+        }
+
+        .signature-section {
+            margin-top: 60px;
+            display: flex;
+            justify-content: space-between;
+            page-break-inside: avoid;
+        }
+
+        .signature-box {
+            width: 45%;
+            text-align: center;
+        }
+
+        .signature-label {
+            font-weight: bold;
+            font-size: 11pt;
+            margin-bottom: 10px;
+            color: {{ profile.pdf_primary_color|default:'#3B82F6' }};
+        }
+
+        .signature-line {
+            border-top: 2px solid #333;
+            margin: 80px 20px 10px 20px;
+        }
+
+        .signature-date {
+            font-size: 9pt;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 8pt;
+            color: #999;
+            text-align: center;
+        }
+
+        .notes-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #f9fafb;
+            border-left: 4px solid {{ profile.pdf_primary_color|default:'#3B82F6' }};
+        }
+
+        .notes-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: {{ profile.pdf_primary_color|default:'#3B82F6' }};
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="company-info">
+            {% if profile.company_logo %}
+                <img src="{{ profile.company_logo.path }}" alt="Logo" class="company-logo">
+            {% endif %}
+            <div class="company-name">{{ profile.company_name|default:cra.user.get_full_name }}</div>
+            <div class="company-details">
+                {% if profile.address %}{{ profile.address }}<br>{% endif %}
+                {% if profile.city %}{{ profile.postal_code }} {{ profile.city }}<br>{% endif %}
+                {% if profile.siret %}SIRET: {{ profile.siret }}<br>{% endif %}
+                {% if profile.phone %}Tél: {{ profile.phone }}<br>{% endif %}
+                Email: {{ profile.get_business_email|default:cra.user.email }}
+            </div>
+        </div>
+
+        <div class="document-title">
+            <h1>COMPTE RENDU D'ACTIVITÉ</h1>
+            <div class="document-meta">
+                Date d'émission: {{ cra.created_at|date:"d/m/Y" }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Parties -->
+    <div class="parties-section">
+        <div class="party-box">
+            <div class="party-title">Prestataire</div>
+            <div class="party-details">
+                <strong>{{ profile.company_name|default:cra.user.get_full_name }}</strong><br>
+                {% if profile.address %}{{ profile.address }}<br>{% endif %}
+                {% if profile.city %}{{ profile.postal_code }} {{ profile.city }}<br>{% endif %}
+                {% if profile.siret %}SIRET: {{ profile.siret }}{% endif %}
+            </div>
+        </div>
+
+        <div class="party-box">
+            <div class="party-title">Client</div>
+            <div class="party-details">
+                <strong>{{ cra.customer.name }}</strong><br>
+                {% if cra.customer.company %}{{ cra.customer.company }}<br>{% endif %}
+                {% if cra.customer.address %}{{ cra.customer.address }}<br>{% endif %}
+                {% if cra.customer.city %}{{ cra.customer.postal_code }} {{ cra.customer.city }}<br>{% endif %}
+                Email: {{ cra.customer.email }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Period -->
+    <div class="period-section">
+        <h2>Période : {{ cra.period_display }}</h2>
+    </div>
+
+    <!-- Tasks Table -->
+    <table class="tasks-table">
+        <thead>
+            <tr>
+                <th style="width: 50%;">Description</th>
+                <th style="width: 20%;">Projet</th>
+                <th class="text-right" style="width: 15%;">Jours</th>
+                <th class="text-right" style="width: 15%;">Montant HT</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in tasks %}
+            <tr>
+                <td>
+                    <strong>{{ task.name }}</strong>
+                    {% if task.description %}
+                    <div class="task-description">{{ task.description|safe }}</div>
+                    {% endif %}
+                </td>
+                <td>{{ task.project.name }}</td>
+                <td class="text-right">{{ task.worked_days|floatformat:1 }}</td>
+                <td class="text-right">{{ task.task_amount|floatformat:2 }} {{ cra.currency }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" style="text-align: center; padding: 30px; color: #999;">
+                    Aucune tâche dans ce CRA
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Totals -->
+    <div class="totals-section">
+        <div class="totals-box">
+            <div class="totals-row">
+                <span>Total jours travaillés:</span>
+                <strong>{{ cra.total_days|floatformat:1 }}</strong>
+            </div>
+            <div class="totals-row">
+                <span>Taux journalier (TJM):</span>
+                <strong>{{ cra.daily_rate|floatformat:2 }} {{ cra.currency }}</strong>
+            </div>
+            <div class="totals-row">
+                <span>TOTAL HT:</span>
+                <strong>{{ cra.total_amount|floatformat:2 }} {{ cra.currency }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notes -->
+    {% if cra.notes %}
+    <div class="notes-section">
+        <div class="notes-title">Notes:</div>
+        <div>{{ cra.notes|linebreaks }}</div>
+    </div>
+    {% endif %}
+
+    <!-- Signatures -->
+    <div class="signature-section">
+        <div class="signature-box">
+            <div class="signature-label">Signature Prestataire</div>
+            <div class="signature-date">Date: {{ cra.created_at|date:"d/m/Y" }}</div>
+            <div class="signature-line"></div>
+            <div>{{ profile.company_name|default:cra.user.get_full_name }}</div>
+        </div>
+
+        <div class="signature-box">
+            <div class="signature-label">Signature Client (Bon pour accord)</div>
+            <div class="signature-date">Date: _________________</div>
+            <div class="signature-line"></div>
+            <div>{{ cra.customer.name }}</div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        Ce document constitue un compte rendu d'activité et doit être signé par les deux parties.<br>
+        Généré le {{ cra.created_at|date:"d/m/Y à H:i" }}
+    </div>
+</body>
+</html>

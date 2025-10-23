@@ -152,6 +152,18 @@ class UserProfile(models.Model):
         help_text="Current step in onboarding process (1-4)"
     )
 
+    # Language Preference
+    preferred_language = models.CharField(
+        max_length=2,
+        default='en',
+        choices=[
+            ('en', 'English'),
+            ('fr', 'Français'),
+        ],
+        verbose_name="Langue préférée",
+        help_text="User's preferred language for the interface"
+    )
+
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

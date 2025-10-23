@@ -64,6 +64,7 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'project', 'template', 'template_name', 'name', 'description', 'status',
             'estimated_hours', 'actual_hours', 'hourly_rate', 'amount', 'variance_percentage',
+            'worked_days', 'worked_dates',
             'order', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'variance_percentage', 'created_at', 'updated_at']
