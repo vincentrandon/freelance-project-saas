@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useOnboardingStatus, useUpdateOnboarding } from '../../api/hooks';
 
 function CompanyProfilePanel() {
+  const { t } = useTranslation();
   const { data: profileData, isLoading } = useOnboardingStatus();
   const updateOnboarding = useUpdateOnboarding();
 
@@ -53,10 +55,10 @@ function CompanyProfilePanel() {
 
     try {
       await updateOnboarding.mutateAsync(formData);
-      setSuccessMessage('Company profile updated successfully!');
+      setSuccessMessage(t('settings.companyPanel.success'));
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
-      setErrorMessage(error.response?.data?.message || 'Failed to update profile. Please try again.');
+      setErrorMessage(error.response?.data?.message || t('settings.companyPanel.error'));
     }
   };
 
@@ -64,7 +66,7 @@ function CompanyProfilePanel() {
     return (
       <div className="grow">
         <div className="p-6">
-          <div className="text-center">Loading...</div>
+          <div className="text-center">{t('common.loading')}</div>
         </div>
       </div>
     );
@@ -78,11 +80,11 @@ function CompanyProfilePanel() {
       {/* Panel body */}
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-2xl text-gray-800 dark:text-gray-100 font-bold">Company Profile</h2>
+          <h2 className="text-2xl text-gray-800 dark:text-gray-100 font-bold">{t('settings.companyPanel.title')}</h2>
           {profileData && (
             <div className="flex items-center gap-2">
               <div className="text-sm text-gray-600 dark:text-gray-400">
-                Completeness: <span className="font-semibold">{completeness}%</span>
+                {t('settings.companyPanel.completeness')}: <span className="font-semibold">{completeness}%</span>
               </div>
               <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                 <div
@@ -109,7 +111,7 @@ function CompanyProfilePanel() {
         {!isComplete && profileData?.missing_required_fields?.length > 0 && (
           <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
             <p className="text-sm text-amber-800 dark:text-amber-200 font-medium mb-2">
-              Missing required fields for legal invoicing:
+              {t('settings.companyPanel.missingFields')}
             </p>
             <ul className="text-sm text-amber-700 dark:text-amber-300 list-disc list-inside">
               {profileData.missing_required_fields
@@ -125,15 +127,15 @@ function CompanyProfilePanel() {
           {/* Company Information */}
           <section>
             <h3 className="text-xl leading-snug text-gray-800 dark:text-gray-100 font-bold mb-1">
-              Company Information
+              {t('settings.companyPanel.companyInformation')}
             </h3>
             <div className="text-sm text-gray-600 dark:text-gray-400 mb-5">
-              Legal business information required for French invoicing
+              {t('settings.companyPanel.companyInformationDesc')}
             </div>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1" htmlFor="company_name">
-                  Company Name <span className="text-red-500">*</span>
+                  {t('settings.companyPanel.companyName')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="company_name"
@@ -149,7 +151,7 @@ function CompanyProfilePanel() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1" htmlFor="siret_siren">
-                    SIRET / SIREN <span className="text-red-500">*</span>
+                    {t('settings.companyPanel.siretSiren')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="siret_siren"
@@ -162,12 +164,12 @@ function CompanyProfilePanel() {
                     required
                   />
                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    14 digits for SIRET, 9 for SIREN
+                    {t('settings.companyPanel.siretHelp')}
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1" htmlFor="tax_id">
-                    TVA Intracommunautaire <span className="text-red-500">*</span>
+                    {t('settings.companyPanel.taxId')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="tax_id"
@@ -180,7 +182,7 @@ function CompanyProfilePanel() {
                     required
                   />
                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Format: FR + 11 digits
+                    {t('settings.companyPanel.taxIdHelp')}
                   </div>
                 </div>
               </div>
@@ -190,16 +192,16 @@ function CompanyProfilePanel() {
           {/* Contact Information */}
           <section className="mt-6">
             <h3 className="text-xl leading-snug text-gray-800 dark:text-gray-100 font-bold mb-1">
-              Contact Information
+              {t('settings.companyPanel.contactInformation')}
             </h3>
             <div className="text-sm text-gray-600 dark:text-gray-400 mb-5">
-              How clients can reach your company
+              {t('settings.companyPanel.contactInformationDesc')}
             </div>
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1" htmlFor="phone">
-                    Phone Number <span className="text-red-500">*</span>
+                    {t('settings.companyPanel.phoneNumber')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="phone"
@@ -214,7 +216,7 @@ function CompanyProfilePanel() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1" htmlFor="email">
-                    Company Email
+                    {t('settings.companyPanel.companyEmail')}
                   </label>
                   <input
                     id="email"
@@ -226,13 +228,13 @@ function CompanyProfilePanel() {
                     onChange={handleChange}
                   />
                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Will appear on invoices and estimates
+                    {t('settings.companyPanel.companyEmailHelp')}
                   </div>
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1" htmlFor="website">
-                  Website
+                  {t('settings.companyPanel.website')}
                 </label>
                 <input
                   id="website"
@@ -250,15 +252,15 @@ function CompanyProfilePanel() {
           {/* Business Address */}
           <section className="mt-6">
             <h3 className="text-xl leading-snug text-gray-800 dark:text-gray-100 font-bold mb-1">
-              Business Address
+              {t('settings.companyPanel.businessAddress')}
             </h3>
             <div className="text-sm text-gray-600 dark:text-gray-400 mb-5">
-              Your company's legal registered address
+              {t('settings.companyPanel.businessAddressDesc')}
             </div>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1" htmlFor="address">
-                  Street Address <span className="text-red-500">*</span>
+                  {t('settings.companyPanel.streetAddress')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="address"
@@ -274,7 +276,7 @@ function CompanyProfilePanel() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1" htmlFor="postal_code">
-                    Postal Code <span className="text-red-500">*</span>
+                    {t('settings.companyPanel.postalCode')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="postal_code"
@@ -289,7 +291,7 @@ function CompanyProfilePanel() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1" htmlFor="city">
-                    City <span className="text-red-500">*</span>
+                    {t('settings.companyPanel.city')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="city"
@@ -304,7 +306,7 @@ function CompanyProfilePanel() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1" htmlFor="country">
-                    Country
+                    {t('settings.companyPanel.country')}
                   </label>
                   <input
                     id="country"
@@ -330,7 +332,7 @@ function CompanyProfilePanel() {
               className="btn dark:bg-gray-800 border-gray-200 dark:border-gray-700/60 hover:border-gray-300 dark:hover:border-gray-600 text-gray-800 dark:text-gray-300"
               onClick={() => window.location.reload()}
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
@@ -338,7 +340,7 @@ function CompanyProfilePanel() {
               disabled={updateOnboarding.isPending}
               className="btn bg-gray-900 text-gray-100 hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-800 dark:hover:bg-white ml-3 disabled:opacity-50"
             >
-              {updateOnboarding.isPending ? 'Saving...' : 'Save Changes'}
+              {updateOnboarding.isPending ? t('common.saving') : t('common.saveChanges')}
             </button>
           </div>
         </div>

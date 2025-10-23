@@ -124,12 +124,12 @@ function PricingPanel() {
                     </div>
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {t('settings.pricingPanel.tjmHelp')}
+                    Your standard daily rate
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1" htmlFor="tjm_hours_per_day">
-                    {t('settings.pricingPanel.hoursPerDay')}
+                    Hours per Day
                   </label>
                   <input
                     id="tjm_hours_per_day"
@@ -143,12 +143,12 @@ function PricingPanel() {
                     onChange={handleChange}
                   />
                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {t('settings.pricingPanel.hoursPerDayHelp')}
+                    Standard working hours/day
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1" htmlFor="hourly_rate_default">
-                    {t('settings.pricingPanel.hourlyRateCalculated')}
+                    Hourly Rate (Calculated)
                   </label>
                   <div className="relative">
                     <input
@@ -166,7 +166,7 @@ function PricingPanel() {
                     </div>
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {t('settings.pricingPanel.hourlyRateHelp')}
+                    Auto-calculated from TJM
                   </div>
                 </div>
               </div>
@@ -176,16 +176,16 @@ function PricingPanel() {
           {/* Margins & Pricing Strategy */}
           <section className="mt-6">
             <h3 className="text-xl leading-snug text-gray-800 dark:text-gray-100 font-bold mb-1">
-              {t('settings.pricingPanel.marginsAndPricing')}
+              Margins & Pricing Strategy
             </h3>
             <div className="text-sm text-gray-600 dark:text-gray-400 mb-5">
-              {t('settings.pricingPanel.marginsAndPricingDesc')}
+              Default margins for estimates and invoices
             </div>
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1" htmlFor="default_security_margin">
-                    {t('settings.pricingPanel.securityMargin')}
+                    Security Margin
                   </label>
                   <div className="relative">
                     <input
@@ -205,12 +205,12 @@ function PricingPanel() {
                     </div>
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {t('settings.pricingPanel.securityMarginHelp')}
+                    Buffer for unexpected work (e.g., 20%)
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1" htmlFor="default_tax_rate">
-                    {t('settings.pricingPanel.defaultTaxRate')}
+                    Default Tax Rate (TVA)
                   </label>
                   <div className="relative">
                     <input
@@ -230,7 +230,7 @@ function PricingPanel() {
                     </div>
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {t('settings.pricingPanel.defaultTaxRateHelp')}
+                    Standard French TVA is 20%
                   </div>
                 </div>
               </div>
@@ -242,10 +242,11 @@ function PricingPanel() {
                   </svg>
                   <div>
                     <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">
-                      {t('settings.pricingPanel.aboutSecurityMargin')}
+                      About Security Margin
                     </h4>
                     <p className="text-sm text-blue-700 dark:text-blue-300">
-                      {t('settings.pricingPanel.aboutSecurityMarginDesc')}
+                      The security margin is added to your estimates to account for unexpected complexity, scope creep,
+                      or additional work. A 20% margin means if a task takes 10 hours, you'll quote 12 hours.
                     </p>
                   </div>
                 </div>
@@ -256,16 +257,16 @@ function PricingPanel() {
           {/* Currency & Payment Terms */}
           <section className="mt-6">
             <h3 className="text-xl leading-snug text-gray-800 dark:text-gray-100 font-bold mb-1">
-              {t('settings.pricingPanel.currencyAndPayment')}
+              Currency & Payment Terms
             </h3>
             <div className="text-sm text-gray-600 dark:text-gray-400 mb-5">
-              {t('settings.pricingPanel.currencyAndPaymentDesc')}
+              Default currency and payment conditions
             </div>
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1" htmlFor="currency">
-                    {t('settings.pricingPanel.currency')}
+                    Currency
                   </label>
                   <select
                     id="currency"
@@ -280,12 +281,12 @@ function PricingPanel() {
                     <option value="CHF">CHF</option>
                   </select>
                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {t('settings.pricingPanel.currencyHelp')}
+                    Used for all invoices and estimates
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1" htmlFor="payment_terms_days">
-                    {t('settings.pricingPanel.paymentTerms')}
+                    Payment Terms
                   </label>
                   <div className="relative">
                     <input
@@ -299,11 +300,11 @@ function PricingPanel() {
                       onChange={handleChange}
                     />
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                      <span className="text-gray-500 dark:text-gray-400">{t('settings.pricingPanel.days')}</span>
+                      <span className="text-gray-500 dark:text-gray-400">days</span>
                     </div>
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {t('settings.pricingPanel.paymentTermsHelp')}
+                    Standard is 30 days in France
                   </div>
                 </div>
               </div>
@@ -314,31 +315,31 @@ function PricingPanel() {
           <section className="mt-6">
             <div className="bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 rounded-lg p-6">
               <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                {t('settings.pricingPanel.quickCalculation')}
+                💡 Quick Calculation
               </h4>
               {formData.tjm_default && formData.tjm_hours_per_day ? (
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
-                      <div className="text-xs text-gray-600 dark:text-gray-400">{t('settings.pricingPanel.dailyRateCalc')}</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">Daily Rate</div>
                       <div className="text-xl font-bold text-violet-600 dark:text-violet-400">
                         {parseFloat(formData.tjm_default).toFixed(2)} {formData.currency}
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs text-gray-600 dark:text-gray-400">{t('settings.pricingPanel.hourlyRateCalc')}</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">Hourly Rate</div>
                       <div className="text-xl font-bold text-violet-600 dark:text-violet-400">
                         {formData.hourly_rate_default} {formData.currency}
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs text-gray-600 dark:text-gray-400">{t('settings.pricingPanel.weeklyCalc')}</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">Weekly (5 days)</div>
                       <div className="text-xl font-bold text-violet-600 dark:text-violet-400">
                         {(parseFloat(formData.tjm_default) * 5).toFixed(2)} {formData.currency}
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs text-gray-600 dark:text-gray-400">{t('settings.pricingPanel.monthlyCalc')}</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">Monthly (20 days)</div>
                       <div className="text-xl font-bold text-violet-600 dark:text-violet-400">
                         {(parseFloat(formData.tjm_default) * 20).toFixed(2)} {formData.currency}
                       </div>
@@ -347,22 +348,18 @@ function PricingPanel() {
                   {formData.default_security_margin && (
                     <div className="pt-3 border-t border-violet-200 dark:border-violet-800">
                       <div className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                        {t('settings.pricingPanel.withMargin', { margin: formData.default_security_margin })}
+                        With {formData.default_security_margin}% security margin:
                       </div>
                       <div className="text-sm text-gray-700 dark:text-gray-300">
-                        {t('settings.pricingPanel.hoursQuoted', {
-                          hours: 10,
-                          quotedHours: (10 * (1 + parseFloat(formData.default_security_margin) / 100)).toFixed(1),
-                          amount: (parseFloat(formData.hourly_rate_default) * 10 * (1 + parseFloat(formData.default_security_margin) / 100)).toFixed(2),
-                          currency: formData.currency
-                        })}
+                        10 hours = <span className="font-semibold">{(10 * (1 + parseFloat(formData.default_security_margin) / 100)).toFixed(1)} hours quoted</span>
+                        {' '}= <span className="font-semibold">{(parseFloat(formData.hourly_rate_default) * 10 * (1 + parseFloat(formData.default_security_margin) / 100)).toFixed(2)} {formData.currency}</span>
                       </div>
                     </div>
                   )}
                 </div>
               ) : (
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {t('settings.pricingPanel.enterTjm')}
+                  Enter your TJM and hours per day to see calculations
                 </p>
               )}
             </div>
@@ -379,7 +376,7 @@ function PricingPanel() {
               className="btn dark:bg-gray-800 border-gray-200 dark:border-gray-700/60 hover:border-gray-300 dark:hover:border-gray-600 text-gray-800 dark:text-gray-300"
               onClick={() => window.location.reload()}
             >
-              {t('common.cancel')}
+              Cancel
             </button>
             <button
               type="submit"
@@ -387,7 +384,7 @@ function PricingPanel() {
               disabled={updateOnboarding.isPending}
               className="btn bg-gray-900 text-gray-100 hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-800 dark:hover:bg-white ml-3 disabled:opacity-50"
             >
-              {updateOnboarding.isPending ? t('common.saving') : t('common.saveChanges')}
+              {updateOnboarding.isPending ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         </div>

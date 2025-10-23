@@ -602,10 +602,18 @@ export const useMarkEstimateAccepted = () => {
 };
 
 // Document Processing hooks
-export const useImportedDocuments = (options = {}) => {
+export const useImportedDocuments = (filters = {}, options = {}) => {
+  // Build query params from filters
+  const params = new URLSearchParams();
+  if (filters.status) params.append('status', filters.status);
+  if (filters.document_type) params.append('document_type', filters.document_type);
+
+  const queryString = params.toString();
+  const url = `/document-processing/documents/${queryString ? `?${queryString}` : ''}`;
+
   return useQuery({
-    queryKey: ['imported-documents'],
-    queryFn: () => client.get('/document-processing/documents/').then((res) => res.data.results || res.data),
+    queryKey: ['imported-documents', filters],
+    queryFn: () => client.get(url).then((res) => res.data.results || res.data),
     ...options,
   });
 };
@@ -717,6 +725,169 @@ export const useRejectPreview = () => {
   });
 };
 
+// Task Clarification hooks
+export const useGetClarificationQuestions = () => {
+  return useMutation({
+    mutationFn: ({ previewId, task_index }) =>
+      client.post(`/document-processing/previews/${previewId}/get_clarification_questions/`, { task_index })
+        .then((res) => res.data),
+  });
+};
+
+export const useRefineTask = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ previewId, task_index, questions, answers }) =>
+      client.post(`/document-processing/previews/${previewId}/refine_task/`, {
+        task_index,
+        questions,
+        answers,
+      }).then((res) => res.data),
+    onSuccess: (_, { previewId }) => {
+      queryClient.invalidateQueries({ queryKey: ['import-previews', previewId] });
+    },
+  });
+};
+
+export const useSkipClarification = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ previewId, task_index, skip_all }) =>
+      client.post(`/document-processing/previews/${previewId}/skip_clarification/`, {
+        task_index,
+        skip_all,
+      }).then((res) => res.data),
+    onSuccess: (_, { previewId }) => {
+      queryClient.invalidateQueries({ queryKey: ['import-previews', previewId] });
+    },
+  });
+};
+
+// New bulk clarification hooks
+export const useGetAllClarificationSuggestions = () => {
+  return useMutation({
+    mutationFn: (previewId) =>
+      client.get(`/document-processing/previews/${previewId}/get_all_clarification_suggestions/`)
+        .then((res) => res.data),
+  });
+};
+
+export const useBulkRefineTasks = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ previewId, tasks }) =>
+      client.post(`/document-processing/previews/${previewId}/bulk_refine_tasks/`, { tasks })
+        .then((res) => res.data),
+    onSuccess: (_, { previewId, documentId }) => {
+      // Invalidate all related queries to force refresh
+      queryClient.invalidateQueries({ queryKey: ['import-previews', previewId] });
+      queryClient.invalidateQueries({ queryKey: ['import-previews'] });
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      // Most importantly, invalidate the document preview that will be shown next
+      if (documentId) {
+        queryClient.invalidateQueries({ queryKey: ['document-preview', documentId] });
+      }
+    },
+  });
+};
+
+// Batch Processing hooks
+export const useBatchSummary = (options = {}) => {
+  return useQuery({
+    queryKey: ['batch-summary'],
+    queryFn: () => client.get('/document-processing/previews/batch_summary/').then((res) => res.data),
+    ...options,
+  });
+};
+
+export const useBatchList = (filters = {}, options = {}) => {
+  const queryParams = new URLSearchParams(filters).toString();
+  return useQuery({
+    queryKey: ['batch-list', filters],
+    queryFn: () => client.get(`/document-processing/previews/batch_list/?${queryParams}`).then((res) => res.data),
+    ...options,
+  });
+};
+
+export const useDetectPatterns = () => {
+  return useMutation({
+    mutationFn: (preview_ids) =>
+      client.post('/document-processing/previews/detect_patterns/', { preview_ids }).then((res) => res.data),
+  });
+};
+
+export const useBulkApprove = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (preview_ids) =>
+      client.post('/document-processing/previews/bulk_approve/', { preview_ids }).then((res) => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['import-previews'] });
+      queryClient.invalidateQueries({ queryKey: ['batch-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['batch-list'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['estimates'] });
+    },
+  });
+};
+
+export const useBulkReject = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (preview_ids) =>
+      client.post('/document-processing/previews/bulk_reject/', { preview_ids }).then((res) => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['import-previews'] });
+      queryClient.invalidateQueries({ queryKey: ['batch-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['batch-list'] });
+    },
+  });
+};
+
+export const useAutoApproveSafe = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (confidence_threshold = 90) =>
+      client.post('/document-processing/previews/auto_approve_safe/', { confidence_threshold }).then((res) => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['import-previews'] });
+      queryClient.invalidateQueries({ queryKey: ['batch-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['batch-list'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['estimates'] });
+    },
+  });
+};
+
+// AI Feedback & Learning hooks
+export const useRateExtraction = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ previewId, rating, comment, feedback_id }) =>
+      client.post(`/document-processing/previews/${previewId}/rate_extraction/`, {
+        rating,
+        comment,
+        feedback_id,
+      }).then((res) => res.data),
+    onSuccess: (_, { previewId }) => {
+      queryClient.invalidateQueries({ queryKey: ['feedback-summary', previewId] });
+    },
+  });
+};
+
+export const useFeedbackSummary = (previewId, options = {}) => {
+  return useQuery({
+    queryKey: ['feedback-summary', previewId],
+    queryFn: () => client.get(`/document-processing/previews/${previewId}/feedback_summary/`).then((res) => res.data),
+    enabled: !!previewId,
+    ...options,
+  });
+};
+
 // AI Assistant hooks
 export const useGenerateEstimateFromPrompt = () => {
   return useMutation({
@@ -758,6 +929,17 @@ export const useUpdateProfile = () => {
   return useMutation({
     mutationFn: (data) => client.patch('/profile/me/', data),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+    },
+  });
+};
+
+export const useUpdateUser = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data) => client.put('/auth/user/', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user'] });
       queryClient.invalidateQueries({ queryKey: ['profile'] });
     },
   });
@@ -1119,6 +1301,8 @@ export const useNotifications = (options = {}) => {
     queryKey: ['notifications'],
     queryFn: () => client.get('/notifications/').then((res) => res.data),
     refetchInterval: 3000, // Poll every 3 seconds
+    refetchOnWindowFocus: false, // Don't refetch when window gains focus
+    refetchOnMount: false, // Don't refetch when component mounts
     ...options,
   });
 };
@@ -1162,5 +1346,130 @@ export const useDeleteNotification = () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] });
     },
+  });
+};
+
+// CRA hooks
+export const useCRAs = (params = {}) => {
+  const queryString = new URLSearchParams(params).toString();
+  return useQuery({
+    queryKey: ['cras', params],
+    queryFn: () => client.get(`/cra/cras/${queryString ? `?${queryString}` : ''}`),
+  });
+};
+
+export const useCRA = (id) => {
+  return useQuery({
+    queryKey: ['cras', id],
+    queryFn: () => client.get(`/cra/cras/${id}/`),
+    enabled: !!id,
+  });
+};
+
+export const useMonthlyView = (month, year) => {
+  return useQuery({
+    queryKey: ['cras', 'monthly', month, year],
+    queryFn: () => client.get(`/cra/cras/monthly_view/?month=${month}&year=${year}`),
+    enabled: !!month && !!year,
+  });
+};
+
+export const useAvailableTasks = (customerId, month, year, craId = null) => {
+  return useQuery({
+    queryKey: ['cras', 'available-tasks', customerId, month, year, craId],
+    queryFn: () => {
+      const params = new URLSearchParams({
+        customer_id: customerId,
+        month,
+        year,
+      });
+      if (craId) params.append('cra_id', craId);
+      return client.get(`/cra/cras/available_tasks/?${params.toString()}`);
+    },
+    enabled: !!customerId && !!month && !!year,
+  });
+};
+
+export const useCreateCRA = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data) => client.post('/cra/cras/', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cras'] });
+    },
+  });
+};
+
+export const useUpdateCRA = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...data }) => client.patch(`/cra/cras/${id}/`, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['cras'] });
+      queryClient.invalidateQueries({ queryKey: ['cras', variables.id] });
+    },
+  });
+};
+
+export const useDeleteCRA = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => client.delete(`/cra/cras/${id}/`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cras'] });
+    },
+  });
+};
+
+export const useGenerateCRAPDF = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => client.post(`/cra/cras/${id}/generate_pdf/`),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['cras', id] });
+    },
+  });
+};
+
+export const useSendCRAForValidation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...data }) => client.post(`/cra/cras/${id}/send_for_validation/`, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['cras'] });
+      queryClient.invalidateQueries({ queryKey: ['cras', variables.id] });
+    },
+  });
+};
+
+export const useGenerateInvoiceFromCRA = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => client.post(`/cra/cras/${id}/generate_invoice/`),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['cras', id] });
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+    },
+  });
+};
+
+// CRA Signature hooks (public endpoints)
+export const useCRASignature = (token) => {
+  return useQuery({
+    queryKey: ['cra-signature', token],
+    queryFn: () => client.get(`/cra/public/sign/${token}/`),
+    enabled: !!token,
+  });
+};
+
+export const useSignCRA = () => {
+  return useMutation({
+    mutationFn: ({ token, ...data }) => client.post(`/cra/public/sign/${token}/sign/`, data),
+  });
+};
+
+export const useDeclineCRA = () => {
+  return useMutation({
+    mutationFn: ({ token, reason }) => client.post(`/cra/public/sign/${token}/decline/`, { reason }),
   });
 };

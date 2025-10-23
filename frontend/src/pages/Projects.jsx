@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   useProjects,
   useProject,
@@ -488,6 +489,7 @@ function TiptapEditor({ initialContent, onChange }) {
 }
 
 function Projects() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: projectsData, isLoading } = useProjects();
   const projects = projectsData?.results || [];
@@ -675,9 +677,9 @@ function Projects() {
             {/* Page Header */}
             <div className="mb-8">
               <div className="flex justify-between items-center">
-                <h1 className="text-2xl md:text-3xl text-gray-100 font-bold">Projects</h1>
+                <h1 className="text-2xl md:text-3xl text-gray-100 font-bold">{t('navigation.projects')}</h1>
                 <button onClick={handleOpenModal} className="btn bg-violet-500 hover:bg-violet-600 text-white">
-                  + New Project
+                  + {t('projects.newProject')}
                 </button>
               </div>
             </div>
@@ -689,17 +691,17 @@ function Projects() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search projects by name, description, or customer..."
+                placeholder={t('projects.searchPlaceholder')}
                 className="w-full max-w-md px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-sm text-gray-100 placeholder-gray-500 transition-all duration-200"
               />
 
               {/* Status Filter Tabs */}
               <div className="flex gap-2 overflow-x-auto no-scrollbar">
                 {[
-                  { key: 'all', label: 'All Projects' },
-                  { key: 'active', label: 'Active' },
-                  { key: 'paused', label: 'Paused' },
-                  { key: 'completed', label: 'Completed' },
+                  { key: 'all', label: t('projects.allProjects') },
+                  { key: 'active', label: t('projects.status.active') },
+                  { key: 'paused', label: t('projects.status.paused') },
+                  { key: 'completed', label: t('projects.status.completed') },
                 ].map(({ key, label }) => (
                   <button
                     key={key}

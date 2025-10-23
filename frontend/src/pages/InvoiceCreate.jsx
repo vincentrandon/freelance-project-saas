@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   useCreateInvoice,
   useUpdateInvoice,
@@ -11,17 +12,18 @@ import {
 import InvoicePDFPreview from '../components/InvoicePDFPreview';
 import CustomerProjectSelector from '../components/CustomerProjectSelector';
 
-const UNIT_OPTIONS = [
-  { value: 'hours', label: 'Heures', shortLabel: 'h' },
-  { value: 'days', label: 'Jours', shortLabel: 'j' },
-  { value: 'units', label: 'Unités', shortLabel: 'u' },
-  { value: 'fixed', label: 'Prix fixe', shortLabel: 'fixe' },
-];
-
 function InvoiceCreate() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const isEditing = !!id;
+
+  const UNIT_OPTIONS = [
+    { value: 'hours', label: t('invoices.form.units.hours'), shortLabel: 'h' },
+    { value: 'days', label: t('invoices.form.units.days'), shortLabel: 'j' },
+    { value: 'units', label: t('invoices.form.units.units'), shortLabel: 'u' },
+    { value: 'fixed', label: t('invoices.form.units.fixed'), shortLabel: t('invoices.form.units.fixedShort') },
+  ];
 
   const { data: invoice } = useInvoice(id, { enabled: isEditing });
   const { data: customersData } = useCustomers();
@@ -154,17 +156,17 @@ function InvoiceCreate() {
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
-                Back
+                {t('common.back')}
               </button>
 
               <div className="h-8 w-px bg-gray-300 dark:bg-gray-600"></div>
 
               <div>
                 <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                  {isEditing ? 'Edit Invoice' : 'Create New Invoice'}
+                  {isEditing ? t('invoices.form.editTitle') : t('invoices.form.newTitle')}
                 </h1>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                  {formData.invoice_number || 'Not saved yet'}
+                  {formData.invoice_number || t('invoices.form.notSavedYet')}
                 </p>
               </div>
             </div>
@@ -174,7 +176,7 @@ function InvoiceCreate() {
               {saveStatus === 'saving' && (
                 <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-2 border-violet-500 border-t-transparent"></div>
-                  Saving...
+                  {t('common.saving')}
                 </span>
               )}
               {saveStatus === 'saved' && (
@@ -182,7 +184,7 @@ function InvoiceCreate() {
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  Saved
+                  {t('invoices.form.saved')}
                 </span>
               )}
             </div>
@@ -198,7 +200,7 @@ function InvoiceCreate() {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Customer & Project Section */}
               <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Customer & Project</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('invoices.form.customerAndProject')}</h2>
 
                 <CustomerProjectSelector
                   customers={customers}
@@ -212,12 +214,12 @@ function InvoiceCreate() {
 
               {/* Invoice Details */}
               <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Invoice Details</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('invoices.form.invoiceDetails')}</h2>
 
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Invoice Number <span className="text-red-500">*</span>
+                      {t('invoices.form.invoiceNumber')} <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -225,14 +227,14 @@ function InvoiceCreate() {
                       value={formData.invoice_number}
                       onChange={(e) => setFormData({ ...formData, invoice_number: e.target.value })}
                       className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-gray-900 dark:text-gray-100"
-                      placeholder="FACT-2024-001"
+                      placeholder={t('invoices.form.invoiceNumberPlaceholder')}
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Issue Date
+                        {t('invoices.form.issueDate')}
                       </label>
                       <input
                         type="date"
@@ -244,7 +246,7 @@ function InvoiceCreate() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Due Date
+                        {t('invoices.form.dueDate')}
                       </label>
                       <input
                         type="date"
@@ -260,7 +262,7 @@ function InvoiceCreate() {
               {/* Line Items */}
               <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Line Items</h2>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('invoices.form.lineItems')}</h2>
                   <button
                     type="button"
                     onClick={handleAddItem}
@@ -269,7 +271,7 @@ function InvoiceCreate() {
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
-                    Add Item
+                    {t('invoices.form.addItem')}
                   </button>
                 </div>
 
@@ -280,7 +282,7 @@ function InvoiceCreate() {
                         <div>
                           <input
                             type="text"
-                            placeholder="Description"
+                            placeholder={t('invoices.form.description')}
                             value={item.description}
                             onChange={(e) => handleItemChange(index, 'description', e.target.value)}
                             className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100"
@@ -290,7 +292,7 @@ function InvoiceCreate() {
                         <div className="grid grid-cols-4 gap-2">
                           <input
                             type="number"
-                            placeholder="Qty"
+                            placeholder={t('invoices.form.quantity')}
                             value={item.quantity}
                             onChange={(e) => handleItemChange(index, 'quantity', parseFloat(e.target.value) || 0)}
                             className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100"
@@ -306,7 +308,7 @@ function InvoiceCreate() {
                           </select>
                           <input
                             type="number"
-                            placeholder="Rate"
+                            placeholder={t('invoices.form.rate')}
                             value={item.rate}
                             onChange={(e) => handleItemChange(index, 'rate', parseFloat(e.target.value) || 0)}
                             className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100"
@@ -332,13 +334,13 @@ function InvoiceCreate() {
 
                   {formData.items.length === 0 && (
                     <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                      <p className="text-sm">No items added yet</p>
+                      <p className="text-sm">{t('invoices.form.noItemsYet')}</p>
                       <button
                         type="button"
                         onClick={handleAddItem}
                         className="mt-2 text-sm text-violet-600 dark:text-violet-400 hover:underline"
                       >
-                        Add your first item
+                        {t('invoices.form.addFirstItem')}
                       </button>
                     </div>
                   )}
@@ -347,11 +349,11 @@ function InvoiceCreate() {
 
               {/* Totals */}
               <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Totals</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('invoices.form.totals')}</h2>
 
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Subtotal HT</span>
+                    <span className="text-gray-600 dark:text-gray-400">{t('invoices.form.subtotalHT')}</span>
                     <span className="font-medium text-gray-900 dark:text-gray-100">
                       €{(Number(formData.subtotal) || 0).toFixed(2)}
                     </span>
@@ -359,7 +361,7 @@ function InvoiceCreate() {
 
                   <div className="flex justify-between text-sm items-center">
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-600 dark:text-gray-400">TVA</span>
+                      <span className="text-gray-600 dark:text-gray-400">{t('invoices.form.tva')}</span>
                       <input
                         type="number"
                         value={formData.tax_rate}
@@ -377,7 +379,7 @@ function InvoiceCreate() {
                   </div>
 
                   <div className="flex justify-between text-lg font-bold pt-3 border-t-2 border-gray-300 dark:border-gray-600">
-                    <span className="text-gray-900 dark:text-gray-100">Total TTC</span>
+                    <span className="text-gray-900 dark:text-gray-100">{t('invoices.form.totalTTC')}</span>
                     <span className="text-violet-600 dark:text-violet-400">
                       €{(Number(formData.total) || 0).toFixed(2)}
                     </span>
@@ -387,44 +389,44 @@ function InvoiceCreate() {
 
               {/* Notes & Terms */}
               <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Additional Information</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('invoices.form.additionalInformation')}</h2>
 
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Payment Terms
+                      {t('invoices.form.paymentTerms')}
                     </label>
                     <input
                       type="text"
                       value={formData.payment_terms}
                       onChange={(e) => setFormData({ ...formData, payment_terms: e.target.value })}
-                      placeholder="Payment due within 30 days"
+                      placeholder={t('invoices.form.paymentTermsPlaceholder')}
                       className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Notes
+                      {t('invoices.form.notes')}
                     </label>
                     <textarea
                       value={formData.notes}
                       onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                       rows="3"
-                      placeholder="Additional notes for the customer..."
+                      placeholder={t('invoices.form.notesPlaceholder')}
                       className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Terms & Conditions
+                      {t('invoices.form.terms')}
                     </label>
                     <textarea
                       value={formData.terms}
                       onChange={(e) => setFormData({ ...formData, terms: e.target.value })}
                       rows="3"
-                      placeholder="Standard terms and conditions..."
+                      placeholder={t('invoices.form.termsPlaceholder')}
                       className="w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
                     />
                   </div>
@@ -438,7 +440,7 @@ function InvoiceCreate() {
                   onClick={() => navigate('/invoicing')}
                   className="px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
                 >
-                  Cancel
+                  {t('invoices.form.cancel')}
                 </button>
                 <button
                   type="submit"
@@ -448,14 +450,14 @@ function InvoiceCreate() {
                   {(createMutation.isPending || updateMutation.isPending) ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                      Saving...
+                      {t('invoices.form.saving')}
                     </>
                   ) : (
                     <>
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
-                      {isEditing ? 'Update Invoice' : 'Create Invoice'}
+                      {isEditing ? t('invoices.form.updateInvoice') : t('invoices.form.createInvoice')}
                     </>
                   )}
                 </button>

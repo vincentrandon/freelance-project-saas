@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useDocumentPreview, useApprovePreview, useRejectPreview, useUpdatePreviewData } from '../../api/hooks';
+import { useTranslation } from 'react-i18next';
+import { useDocumentPreview, useApprovePreview, useRejectPreview, useUpdatePreviewData, useFeedbackSummary } from '../../api/hooks';
 import Sidebar from '../../partials/Sidebar';
 import Header from '../../partials/Header';
 import ModalBlank from '../../components/ModalBlank';
+import FeedbackRatingModal from '../../components/FeedbackRatingModal';
+import { useToast } from '../../components/ToastNotification';
 
 function ImportPreview() {
+  const { t } = useTranslation();
   const { documentId } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { data: preview, isLoading, error } = useDocumentPreview(documentId);
   const approveMutation = useApprovePreview();
@@ -27,6 +32,12 @@ function ImportPreview() {
   const [errorMessage, setErrorMessage] = useState('');
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [ratingModalOpen, setRatingModalOpen] = useState(false);
+
+  // Fetch feedback summary to check if rating is needed
+  const { data: feedbackSummary } = useFeedbackSummary(preview?.id, {
+    enabled: !!preview?.id,
+  });
 
   // Initialize edited data when preview loads
   useEffect(() => {
@@ -50,14 +61,14 @@ function ImportPreview() {
         },
       });
       setIsEditing(false);
-      setSuccessMessage('Changes saved successfully!');
+      setSuccessMessage(t('documents.preview.changesSavedSuccess'));
       setTimeout(() => {
         setSuccessModalOpen(true);
       }, 0);
     } catch (error) {
       console.error('Save error:', error);
       // Extract error message from backend response
-      const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error saving changes. Please try again.';
+      const errorMsg = error.response?.data?.error || error.response?.data?.message || t('documents.preview.errorSavingChanges');
       setErrorMessage(errorMsg);
       setTimeout(() => {
         setErrorModalOpen(true);
@@ -78,16 +89,33 @@ function ImportPreview() {
     setApproveModalOpen(false);
     try {
       await approveMutation.mutateAsync(preview.id);
-      navigate('/documents/import');
+
+      // Show toast for implicit positive feedback
+      if (!feedbackSummary?.has_edits) {
+        toast.success(t('documents.preview.perfectExtraction'));
+      }
+
+      // Show rating modal if feedback needs rating
+      if (feedbackSummary?.needs_rating) {
+        setRatingModalOpen(true);
+      } else {
+        // Navigate immediately if no rating needed
+        navigate('/documents/import');
+      }
     } catch (error) {
       console.error('Approval error:', error);
       // Extract error message from backend response
-      const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error approving import. Please try again.';
+      const errorMsg = error.response?.data?.error || error.response?.data?.message || t('documents.preview.errorApprovingImport');
       setErrorMessage(errorMsg);
       setTimeout(() => {
         setErrorModalOpen(true);
       }, 0);
     }
+  };
+
+  const handleRatingModalClose = () => {
+    setRatingModalOpen(false);
+    navigate('/documents/import');
   };
 
   const handleReject = async () => {
@@ -98,7 +126,7 @@ function ImportPreview() {
     } catch (error) {
       console.error('Rejection error:', error);
       // Extract error message from backend response
-      const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error rejecting import. Please try again.';
+      const errorMsg = error.response?.data?.error || error.response?.data?.message || t('documents.preview.errorRejectingImport');
       setErrorMessage(errorMsg);
       setTimeout(() => {
         setErrorModalOpen(true);
@@ -118,7 +146,7 @@ function ImportPreview() {
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500 mx-auto"></div>
-            <p className="mt-4 text-gray-400">Loading preview...</p>
+            <p className="mt-4 text-gray-400">{t('documents.preview.loadingPreview')}</p>
           </div>
         </div>
       );
@@ -133,7 +161,7 @@ function ImportPreview() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div>
-                <h3 className="text-red-400 font-semibold mb-2">Error loading preview</h3>
+                <h3 className="text-red-400 font-semibold mb-2">{t('documents.preview.errorLoadingPreview')}</h3>
                 <p className="text-red-300">{error.message}</p>
                 <button
                   onClick={() => navigate('/documents/import')}
@@ -142,7 +170,7 @@ function ImportPreview() {
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                   </svg>
-                  Back to import
+                  {t('documents.preview.backToImport')}
                 </button>
               </div>
             </div>
@@ -160,8 +188,8 @@ function ImportPreview() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
               <div>
-                <h3 className="text-yellow-400 font-semibold mb-2">No preview available</h3>
-                <p className="text-yellow-300">Document may still be processing.</p>
+                <h3 className="text-yellow-400 font-semibold mb-2">{t('documents.preview.noPreviewAvailable')}</h3>
+                <p className="text-yellow-300">{t('documents.preview.documentStillProcessing')}</p>
                 <button
                   onClick={() => navigate('/documents/import')}
                   className="mt-4 inline-flex items-center text-violet-400 hover:text-violet-300"
@@ -169,7 +197,7 @@ function ImportPreview() {
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                   </svg>
-                  Back to import
+                  {t('documents.preview.backToImport')}
                 </button>
               </div>
             </div>
@@ -189,12 +217,12 @@ function ImportPreview() {
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Back to import
+            {t('documents.preview.backToImport')}
           </button>
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl md:text-3xl text-gray-100 font-bold">Import Preview</h1>
+                <h1 className="text-2xl md:text-3xl text-gray-100 font-bold">{t('documents.preview.title')}</h1>
                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                   preview.status === 'pending_review' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
                   preview.status === 'approved' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
@@ -203,9 +231,14 @@ function ImportPreview() {
                 }`}>
                   {preview.status?.replace('_', ' ').toUpperCase()}
                 </span>
+                {preview.needs_clarification && (
+                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                    {t('documents.preview.needsClarification')}
+                  </span>
+                )}
               </div>
               <p className="mt-2 text-sm text-gray-400">
-                {isEditing ? 'Editing AI-extracted data' : 'Review the AI-extracted data before approving the import'}
+                {isEditing ? t('documents.preview.editingData') : t('documents.preview.reviewData')}
               </p>
             </div>
             {!isEditing && (
@@ -216,7 +249,7 @@ function ImportPreview() {
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
-                Edit Data
+                {t('documents.preview.editData')}
               </button>
             )}
           </div>
@@ -232,7 +265,7 @@ function ImportPreview() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-red-400 mb-2">Conflicts Detected</h3>
+                    <h3 className="font-semibold text-red-400 mb-2">{t('documents.preview.conflictsDetected')}</h3>
                     <ul className="list-disc list-inside space-y-1 text-red-300 text-sm">
                       {preview.conflicts.map((conflict, idx) => (
                         <li key={idx}>{conflict}</li>
@@ -249,7 +282,7 @@ function ImportPreview() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-yellow-400 mb-2">Warnings</h3>
+                    <h3 className="font-semibold text-yellow-400 mb-2">{t('documents.preview.warnings')}</h3>
                     <ul className="list-disc list-inside space-y-1 text-yellow-300 text-sm">
                       {preview.warnings.map((warning, idx) => (
                         <li key={idx}>{warning}</li>
@@ -262,23 +295,78 @@ function ImportPreview() {
           </div>
         )}
 
+        {/* Tasks Needing Clarification */}
+        {preview.needs_clarification && preview.task_quality_scores && (
+          <div className="mb-6">
+            <div className="bg-amber-900/20 border border-amber-700 rounded-lg p-4">
+              <div className="flex items-start justify-between">
+                <div className="flex items-start flex-1">
+                  <svg className="h-5 w-5 text-amber-400 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-amber-400 mb-3">{t('documents.preview.tasksNeedClarification')}</h3>
+                    <p className="text-amber-200 text-sm mb-4">
+                      {t('documents.preview.tasksTooVague', {
+                        count: Object.values(preview.task_quality_scores).filter(q => q.needs_clarification).length
+                      })}
+                    </p>
+                    <div className="space-y-2 mb-4">
+                      {Object.entries(preview.task_quality_scores)
+                        .filter(([_, quality]) => quality.needs_clarification)
+                        .map(([index, quality]) => (
+                          <div key={index} className="bg-gray-800/50 rounded-lg p-3 border border-amber-700/30">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <p className="text-white font-medium">{quality.task_name}</p>
+                                <div className="flex items-center mt-1 space-x-2">
+                                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                    quality.score >= 70 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'
+                                  }`}>
+                                    {quality.score}% clarity
+                                  </span>
+                                  <span className="text-gray-400 text-xs">
+                                    {quality.clarity_level}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                    <button
+                      onClick={() => navigate(`/documents/clarify/${documentId}`)}
+                      className="inline-flex items-center px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium transition-colors"
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                      {t('documents.preview.clarifyTasksNow')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Customer Section */}
         <div className="bg-gray-800 shadow-lg rounded-lg border border-gray-700 p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-100">Customer Information</h2>
+            <h2 className="text-lg font-semibold text-gray-100">{t('documents.preview.customerInformation')}</h2>
             <div className="flex items-center space-x-2">
               <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getConfidenceBadge(preview.customer_match_confidence)}`}>
-                {preview.customer_match_confidence}% confidence
+                {preview.customer_match_confidence}% {t('documents.preview.confidence')}
               </span>
               <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-violet-500/20 text-violet-300 border border-violet-500/30">
-                {preview.customer_action === 'create_new' ? 'Create New' : preview.customer_action === 'use_existing' ? 'Use Existing' : 'Merge'}
+                {preview.customer_action === 'create_new' ? t('documents.preview.createNew') : preview.customer_action === 'use_existing' ? t('documents.preview.useExisting') : t('documents.preview.merge')}
               </span>
             </div>
           </div>
 
           <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <dt className="text-sm font-medium text-gray-400">Name</dt>
+              <dt className="text-sm font-medium text-gray-400">{t('common.name')}</dt>
               {isEditing ? (
                 <input
                   type="text"
@@ -291,7 +379,7 @@ function ImportPreview() {
               )}
             </div>
             <div>
-              <dt className="text-sm font-medium text-gray-400">Company</dt>
+              <dt className="text-sm font-medium text-gray-400">{t('common.company')}</dt>
               {isEditing ? (
                 <input
                   type="text"
@@ -304,7 +392,7 @@ function ImportPreview() {
               )}
             </div>
             <div>
-              <dt className="text-sm font-medium text-gray-400">Email</dt>
+              <dt className="text-sm font-medium text-gray-400">{t('common.email')}</dt>
               {isEditing ? (
                 <input
                   type="email"
@@ -317,7 +405,7 @@ function ImportPreview() {
               )}
             </div>
             <div>
-              <dt className="text-sm font-medium text-gray-400">Phone</dt>
+              <dt className="text-sm font-medium text-gray-400">{t('common.phone')}</dt>
               {isEditing ? (
                 <input
                   type="text"
@@ -330,7 +418,7 @@ function ImportPreview() {
               )}
             </div>
             <div className="md:col-span-2">
-              <dt className="text-sm font-medium text-gray-400">Address</dt>
+              <dt className="text-sm font-medium text-gray-400">{t('common.address')}</dt>
               {isEditing ? (
                 <textarea
                   value={editedCustomer.address || ''}
@@ -347,7 +435,7 @@ function ImportPreview() {
           {preview.matched_customer && (
             <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
               <p className="text-sm text-blue-300">
-                <strong>Matched Customer:</strong> {preview.matched_customer.name} ({preview.matched_customer.email})
+                <strong>{t('documents.preview.matchedCustomer')}</strong> {preview.matched_customer.name} ({preview.matched_customer.email})
               </p>
             </div>
           )}
@@ -356,20 +444,20 @@ function ImportPreview() {
       {/* Project Section */}
       <div className="bg-gray-800 shadow-lg rounded-lg border border-gray-700 p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-100">Project Information</h2>
+          <h2 className="text-lg font-semibold text-gray-100">{t('documents.preview.projectInformation')}</h2>
           <div className="flex items-center space-x-2">
             <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getConfidenceBadge(preview.project_match_confidence)}`}>
-              {preview.project_match_confidence}% confidence
+              {preview.project_match_confidence}% {t('documents.preview.confidence')}
             </span>
             <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-violet-500/20 text-violet-300 border border-violet-500/30">
-              {preview.project_action === 'create_new' ? 'Create New' : 'Merge Tasks'}
+              {preview.project_action === 'create_new' ? t('documents.preview.createNew') : t('documents.preview.mergeTasks')}
             </span>
           </div>
         </div>
 
         <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
-            <dt className="text-sm font-medium text-gray-400">Project Name</dt>
+            <dt className="text-sm font-medium text-gray-400">{t('documents.preview.projectName')}</dt>
             {isEditing ? (
               <input
                 type="text"
@@ -382,7 +470,7 @@ function ImportPreview() {
             )}
           </div>
           <div className="md:col-span-2">
-            <dt className="text-sm font-medium text-gray-400">Description</dt>
+            <dt className="text-sm font-medium text-gray-400">{t('common.description')}</dt>
             {isEditing ? (
               <textarea
                 value={editedProject.description || ''}
@@ -395,7 +483,7 @@ function ImportPreview() {
             )}
           </div>
           <div>
-            <dt className="text-sm font-medium text-gray-400">Start Date</dt>
+            <dt className="text-sm font-medium text-gray-400">{t('documents.preview.startDate')}</dt>
             {isEditing ? (
               <input
                 type="date"
@@ -408,7 +496,7 @@ function ImportPreview() {
             )}
           </div>
           <div>
-            <dt className="text-sm font-medium text-gray-400">End Date</dt>
+            <dt className="text-sm font-medium text-gray-400">{t('documents.preview.endDate')}</dt>
             {isEditing ? (
               <input
                 type="date"
@@ -425,7 +513,7 @@ function ImportPreview() {
         {preview.matched_project && (
           <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
             <p className="text-sm text-blue-300">
-              <strong>Matched Project:</strong> {preview.matched_project.name}
+              <strong>{t('documents.preview.matchedProject')}</strong> {preview.matched_project.name}
             </p>
           </div>
         )}
@@ -435,7 +523,7 @@ function ImportPreview() {
       <div className="bg-gray-800 shadow-lg rounded-lg border border-gray-700 overflow-hidden mb-6">
         <div className="p-6 border-b border-gray-700">
           <h2 className="text-lg font-semibold text-gray-100">
-            Tasks ({editedTasks.length || 0})
+            {t('documents.preview.tasksCount', { count: editedTasks.length || 0 })}
           </h2>
         </div>
 
@@ -444,10 +532,10 @@ function ImportPreview() {
             <table className="w-full">
               <thead className="bg-gray-900 border-b border-gray-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Task Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Hours</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Rate</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Amount</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">{t('documents.preview.taskName')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">{t('documents.preview.hours')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">{t('documents.preview.rate')}</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">{t('documents.preview.amount')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-700">
@@ -530,7 +618,7 @@ function ImportPreview() {
             <svg className="mx-auto h-12 w-12 text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
-            <p>No tasks found</p>
+            <p>{t('documents.preview.noTasks')}</p>
           </div>
         )}
       </div>
@@ -538,12 +626,12 @@ function ImportPreview() {
       {/* Invoice/Estimate Section */}
       <div className="bg-gray-800 shadow-lg rounded-lg border border-gray-700 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-100 mb-4">
-          {preview.document?.document_type === 'invoice' ? 'Invoice' : 'Estimate'} Details
+          {preview.document?.document_type === 'invoice' ? t('documents.preview.invoice') : t('documents.preview.estimate')} {t('common.details')}
         </h2>
 
         <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <dt className="text-sm font-medium text-gray-400">Number</dt>
+            <dt className="text-sm font-medium text-gray-400">{t('documents.preview.number')}</dt>
             {isEditing ? (
               <input
                 type="text"
@@ -556,7 +644,7 @@ function ImportPreview() {
             )}
           </div>
           <div>
-            <dt className="text-sm font-medium text-gray-400">Issue Date</dt>
+            <dt className="text-sm font-medium text-gray-400">{t('documents.preview.issueDate')}</dt>
             {isEditing ? (
               <input
                 type="date"
@@ -569,7 +657,7 @@ function ImportPreview() {
             )}
           </div>
           <div>
-            <dt className="text-sm font-medium text-gray-400">Subtotal</dt>
+            <dt className="text-sm font-medium text-gray-400">{t('documents.preview.subtotal')}</dt>
             {isEditing ? (
               <input
                 type="number"
@@ -583,7 +671,7 @@ function ImportPreview() {
             )}
           </div>
           <div>
-            <dt className="text-sm font-medium text-gray-400">Tax Rate (%)</dt>
+            <dt className="text-sm font-medium text-gray-400">{t('documents.preview.taxRate')}</dt>
             {isEditing ? (
               <input
                 type="number"
@@ -597,7 +685,7 @@ function ImportPreview() {
             )}
           </div>
           <div>
-            <dt className="text-sm font-medium text-gray-400">Currency</dt>
+            <dt className="text-sm font-medium text-gray-400">{t('documents.preview.currency')}</dt>
             {isEditing ? (
               <select
                 value={editedInvoice.currency || 'EUR'}
@@ -613,7 +701,7 @@ function ImportPreview() {
             )}
           </div>
           <div>
-            <dt className="text-sm font-medium text-gray-400">Total</dt>
+            <dt className="text-sm font-medium text-gray-400">{t('documents.preview.total')}</dt>
             {isEditing ? (
               <input
                 type="number"
@@ -637,14 +725,14 @@ function ImportPreview() {
                 onClick={handleCancel}
                 className="btn bg-gray-700 hover:bg-gray-600 text-gray-100 transition-colors"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleSave}
                 disabled={updateMutation.isPending}
                 className="btn bg-green-500 hover:bg-green-600 text-white disabled:bg-gray-600 disabled:opacity-50 transition-colors"
               >
-                {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+                {updateMutation.isPending ? t('documents.preview.saving') : t('documents.preview.saveChanges')}
               </button>
             </>
           ) : (
@@ -659,7 +747,7 @@ function ImportPreview() {
                 disabled={rejectMutation.isPending}
                 className="btn bg-gray-700 hover:bg-gray-600 text-gray-100 disabled:bg-gray-600 disabled:opacity-50 transition-colors"
               >
-                Reject
+                {t('documents.preview.rejectImport')}
               </button>
               <button
                 onClick={() => {
@@ -671,7 +759,7 @@ function ImportPreview() {
                 disabled={approveMutation.isPending}
                 className="btn bg-violet-500 hover:bg-violet-600 text-white disabled:bg-gray-600 disabled:opacity-50 transition-colors"
               >
-                Approve & Import
+                {t('documents.preview.approveImport')}
               </button>
             </>
           )}
@@ -712,18 +800,18 @@ function ImportPreview() {
               <div className="flex-1">
                 {/* Modal header */}
                 <div className="mb-2">
-                  <div className="text-lg font-semibold text-gray-800 dark:text-gray-100">Approve Import?</div>
+                  <div className="text-lg font-semibold text-gray-800 dark:text-gray-100">{t('documents.preview.approveConfirmTitle')}</div>
                 </div>
                 {/* Modal content */}
                 <div className="text-sm mb-10">
                   <div className="space-y-2">
-                    <p className="text-gray-700 dark:text-gray-300">Are you sure you want to approve this import? This will create the customer, project, tasks, and invoice/estimate.</p>
+                    <p className="text-gray-700 dark:text-gray-300">{t('documents.preview.approveConfirmMessage')}</p>
                     {preview?.tasks_data && (
                       <ul className="list-disc list-inside text-gray-600 dark:text-gray-400 mt-3">
-                        <li>{preview.customer_action === 'create_new' ? 'Create new customer' : 'Use existing customer'}</li>
-                        <li>{preview.project_action === 'create_new' ? 'Create new project' : 'Merge tasks into existing project'}</li>
-                        <li>Create {preview.tasks_data.length} task(s)</li>
-                        <li>Create {preview.document?.document_type === 'invoice' ? 'invoice' : 'estimate'}</li>
+                        <li>{preview.customer_action === 'create_new' ? t('documents.preview.createCustomerAction') : t('documents.preview.useExistingCustomerAction')}</li>
+                        <li>{preview.project_action === 'create_new' ? t('documents.preview.createProjectAction') : t('documents.preview.mergeProjectAction')}</li>
+                        <li>{t('documents.preview.createTasksAction', { count: preview.tasks_data.length })}</li>
+                        <li>{t('documents.preview.createInvoiceAction', { type: preview.document?.document_type === 'invoice' ? t('documents.preview.invoice') : t('documents.preview.estimate') })}</li>
                       </ul>
                     )}
                   </div>
@@ -738,14 +826,14 @@ function ImportPreview() {
                     }}
                     disabled={approveMutation.isPending}
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
-                  <button 
+                  <button
                     className="btn-sm bg-violet-500 hover:bg-violet-600 text-white disabled:bg-gray-600 disabled:opacity-50"
                     onClick={handleApprove}
                     disabled={approveMutation.isPending}
                   >
-                    {approveMutation.isPending ? 'Approving...' : 'Yes, Approve & Import'}
+                    {approveMutation.isPending ? t('documents.preview.approving') : t('documents.preview.yesApprove')}
                   </button>
                 </div>
               </div>
@@ -765,12 +853,12 @@ function ImportPreview() {
               <div>
                 {/* Modal header */}
                 <div className="mb-2">
-                  <div className="text-lg font-semibold text-gray-800 dark:text-gray-100">Reject Import?</div>
+                  <div className="text-lg font-semibold text-gray-800 dark:text-gray-100">{t('documents.preview.rejectConfirmTitle')}</div>
                 </div>
                 {/* Modal content */}
                 <div className="text-sm mb-10">
                   <div className="space-y-2">
-                    <p>Are you sure you want to reject this import? The document will be marked as rejected and no data will be imported.</p>
+                    <p>{t('documents.preview.rejectConfirmMessage')}</p>
                   </div>
                 </div>
                 {/* Modal footer */}
@@ -783,14 +871,14 @@ function ImportPreview() {
                     }}
                     disabled={rejectMutation.isPending}
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
-                  <button 
+                  <button
                     className="btn-sm bg-red-500 hover:bg-red-600 text-white disabled:bg-gray-600 disabled:opacity-50"
                     onClick={handleReject}
                     disabled={rejectMutation.isPending}
                   >
-                    {rejectMutation.isPending ? 'Rejecting...' : 'Yes, Reject it'}
+                    {rejectMutation.isPending ? t('documents.preview.rejecting') : t('documents.preview.yesReject')}
                   </button>
                 </div>
               </div>
@@ -810,7 +898,7 @@ function ImportPreview() {
               <div className="flex-1">
                 {/* Modal header */}
                 <div className="mb-2">
-                  <div className="text-lg font-semibold text-gray-800 dark:text-gray-100">Error</div>
+                  <div className="text-lg font-semibold text-gray-800 dark:text-gray-100">{t('common.error')}</div>
                 </div>
                 {/* Modal content */}
                 <div className="text-sm mb-10">
@@ -820,14 +908,14 @@ function ImportPreview() {
                 </div>
                 {/* Modal footer */}
                 <div className="flex flex-wrap justify-end space-x-2">
-                  <button 
+                  <button
                     className="btn-sm bg-gray-700 hover:bg-gray-600 text-white"
                     onClick={(e) => {
                       e.stopPropagation();
                       setErrorModalOpen(false);
                     }}
                   >
-                    Close
+                    {t('common.close')}
                   </button>
                 </div>
               </div>
@@ -847,7 +935,7 @@ function ImportPreview() {
               <div className="flex-1">
                 {/* Modal header */}
                 <div className="mb-2">
-                  <div className="text-lg font-semibold text-gray-800 dark:text-gray-100">Success</div>
+                  <div className="text-lg font-semibold text-gray-800 dark:text-gray-100">{t('common.success')}</div>
                 </div>
                 {/* Modal content */}
                 <div className="text-sm mb-10">
@@ -857,19 +945,27 @@ function ImportPreview() {
                 </div>
                 {/* Modal footer */}
                 <div className="flex flex-wrap justify-end space-x-2">
-                  <button 
+                  <button
                     className="btn-sm bg-green-500 hover:bg-green-600 text-white"
                     onClick={(e) => {
                       e.stopPropagation();
                       setSuccessModalOpen(false);
                     }}
                   >
-                    OK
+                    {t('common.confirm')}
                   </button>
                 </div>
               </div>
             </div>
           </ModalBlank>
+
+          {/* Feedback Rating Modal */}
+          <FeedbackRatingModal
+            isOpen={ratingModalOpen}
+            onClose={handleRatingModalClose}
+            previewId={preview?.id}
+            documentName={preview?.document?.file_name || 'Document'}
+          />
         </>
       )}
     </div>

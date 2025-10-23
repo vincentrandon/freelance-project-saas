@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useCreateCustomer, useUpdateCustomer, useCustomer } from '../api/hooks';
 import Header from '../partials/Header';
 import Sidebar from '../partials/Sidebar';
@@ -9,6 +10,7 @@ import Sidebar from '../partials/Sidebar';
  * Similar design to EstimateCreate with clean layout and autosave
  */
 function CustomerCreate() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditing = !!id;
@@ -60,7 +62,7 @@ function CustomerCreate() {
   };
 
   const handleCancel = () => {
-    if (confirm('Are you sure? Any unsaved changes will be lost.')) {
+    if (confirm(t('customers.form.confirmCancel'))) {
       navigate('/customers');
     }
   };
@@ -88,11 +90,11 @@ function CustomerCreate() {
                   </svg>
                 </button>
                 <h1 className="text-2xl md:text-3xl text-gray-900 dark:text-gray-100 font-bold">
-                  {isEditing ? 'Edit Customer' : 'New Customer'}
+                  {isEditing ? t('customers.form.editTitle') : t('customers.form.newTitle')}
                 </h1>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400 ml-14">
-                {isEditing ? 'Update customer information' : 'Add a new customer to your contact list'}
+                {isEditing ? t('customers.form.editSubtitle') : t('customers.form.newSubtitle')}
               </p>
             </div>
 
@@ -111,12 +113,12 @@ function CustomerCreate() {
                   {/* Basic Information Section */}
                   <div className="p-6 border-b border-gray-200 dark:border-gray-700">
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                      Basic Information
+                      {t('customers.form.basicInformation')}
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div className="md:col-span-2">
                         <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Customer Name <span className="text-red-500">*</span>
+                          {t('customers.form.name')} <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -124,14 +126,14 @@ function CustomerCreate() {
                           required
                           value={formData.name}
                           onChange={(e) => handleChange('name', e.target.value)}
-                          placeholder="John Doe"
+                          placeholder={t('customers.form.namePlaceholder')}
                           className="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-gray-900 dark:text-gray-100 placeholder-gray-400"
                         />
                       </div>
 
                       <div>
                         <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Email Address <span className="text-red-500">*</span>
+                          {t('customers.form.email')} <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="email"
@@ -139,35 +141,35 @@ function CustomerCreate() {
                           required
                           value={formData.email}
                           onChange={(e) => handleChange('email', e.target.value)}
-                          placeholder="john@example.com"
+                          placeholder={t('customers.form.emailPlaceholder')}
                           className="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-gray-900 dark:text-gray-100 placeholder-gray-400"
                         />
                       </div>
 
                       <div>
                         <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Phone Number
+                          {t('customers.form.phone')}
                         </label>
                         <input
                           type="tel"
                           id="phone"
                           value={formData.phone}
                           onChange={(e) => handleChange('phone', e.target.value)}
-                          placeholder="+1 (555) 123-4567"
+                          placeholder={t('customers.form.phonePlaceholder')}
                           className="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-gray-900 dark:text-gray-100 placeholder-gray-400"
                         />
                       </div>
 
                       <div className="md:col-span-2">
                         <label htmlFor="company" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Company Name
+                          {t('customers.form.company')}
                         </label>
                         <input
                           type="text"
                           id="company"
                           value={formData.company}
                           onChange={(e) => handleChange('company', e.target.value)}
-                          placeholder="Acme Corporation"
+                          placeholder={t('customers.form.companyPlaceholder')}
                           className="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-gray-900 dark:text-gray-100 placeholder-gray-400"
                         />
                       </div>
@@ -177,18 +179,18 @@ function CustomerCreate() {
                   {/* Address Section */}
                   <div className="p-6 border-b border-gray-200 dark:border-gray-700">
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                      Address
+                      {t('customers.form.addressSection')}
                     </h2>
                     <div>
                       <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Full Address
+                        {t('customers.form.address')}
                       </label>
                       <textarea
                         id="address"
                         rows={3}
                         value={formData.address}
                         onChange={(e) => handleChange('address', e.target.value)}
-                        placeholder="123 Main Street&#10;New York, NY 10001&#10;United States"
+                        placeholder={t('customers.form.addressPlaceholder')}
                         className="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-gray-900 dark:text-gray-100 placeholder-gray-400 resize-none"
                       />
                     </div>
@@ -197,18 +199,18 @@ function CustomerCreate() {
                   {/* Notes Section */}
                   <div className="p-6">
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                      Notes
+                      {t('customers.form.notesSection')}
                     </h2>
                     <div>
                       <label htmlFor="notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Additional Notes
+                        {t('customers.form.notes')}
                       </label>
                       <textarea
                         id="notes"
                         rows={4}
                         value={formData.notes}
                         onChange={(e) => handleChange('notes', e.target.value)}
-                        placeholder="Add any additional information about this customer..."
+                        placeholder={t('customers.form.notesPlaceholder')}
                         className="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-gray-900 dark:text-gray-100 placeholder-gray-400 resize-none"
                       />
                     </div>
@@ -224,10 +226,10 @@ function CustomerCreate() {
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        Saving...
+                        {t('common.saving')}
                       </span>
                     ) : (
-                      <span>* Required fields</span>
+                      <span>{t('customers.form.requiredFields')}</span>
                     )}
                   </div>
                   <div className="flex items-center gap-3">
@@ -237,14 +239,14 @@ function CustomerCreate() {
                       disabled={isSaving}
                       className="px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
                     >
-                      Cancel
+                      {t('common.cancel')}
                     </button>
                     <button
                       type="submit"
                       disabled={isSaving}
                       className="px-5 py-2.5 text-sm font-medium text-white bg-violet-600 hover:bg-violet-700 rounded-lg shadow-sm hover:shadow transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isSaving ? 'Saving...' : isEditing ? 'Update Customer' : 'Create Customer'}
+                      {isSaving ? t('common.saving') : isEditing ? t('customers.form.updateButton') : t('customers.form.createButton')}
                     </button>
                   </div>
                 </div>

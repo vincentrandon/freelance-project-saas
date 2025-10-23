@@ -1,4 +1,5 @@
 # Byte-compiled / optimized / DLL files
+backend/__pycache__/
 __pycache__/
 *.py[cod]
 *$py.class
@@ -7,6 +8,10 @@ __pycache__/
 *.so
 
 # Virtual environments
+backend/venv/
+frontend/.v
+frontend/.v
+frontend/.v
 env/
 venv/
 ENV/

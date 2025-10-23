@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useCustomers, useDeleteCustomer } from '../api/hooks';
 import Header from '../partials/Header';
 import Sidebar from '../partials/Sidebar';
@@ -8,6 +9,7 @@ import EmptyState from '../components/EmptyState';
 import StatusBadge from '../components/StatusBadge';
 
 function Customers() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { data: customersData, isLoading, error } = useCustomers();
@@ -35,7 +37,7 @@ function Customers() {
   };
 
   const handleDelete = async (id) => {
-    if (confirm('Are you sure you want to delete this customer?')) {
+    if (confirm(t('customers.deleteConfirm'))) {
       try {
         await deleteMutation.mutateAsync(id);
       } catch (err) {
@@ -61,7 +63,7 @@ function Customers() {
             {/* Page Header */}
             <div className="mb-8">
               <div className="flex justify-between items-center">
-                <h1 className="text-2xl md:text-3xl text-gray-100 font-bold">Customers</h1>
+                <h1 className="text-2xl md:text-3xl text-gray-100 font-bold">{t('navigation.customers')}</h1>
                 <button
                   onClick={() => navigate('/customers/create')}
                   className="btn bg-violet-500 hover:bg-violet-600 text-white"
@@ -69,7 +71,7 @@ function Customers() {
                   <svg className="fill-current shrink-0 mr-2" width="16" height="16" viewBox="0 0 16 16">
                     <path d="M15 7H9V1c0-.6-.4-1-1-1S7 .4 7 1v6H1c-.6 0-1 .4-1 1s.4 1 1 1h6v6c0 .6.4 1 1 1s1-.4 1-1V9h6c.6 0 1-.4 1-1s-.4-1-1-1z" />
                   </svg>
-                  <span>Add Customer</span>
+                  <span>{t('customers.addCustomer')}</span>
                 </button>
               </div>
             </div>

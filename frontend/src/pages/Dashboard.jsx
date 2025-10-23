@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Sidebar from '../partials/Sidebar';
 import Header from '../partials/Header';
@@ -28,6 +29,7 @@ import {
 } from '../api/hooks';
 
 function Dashboard() {
+  const { t } = useTranslation();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -73,7 +75,7 @@ function Dashboard() {
 
               {/* Left: Title */}
               <div className="mb-4 sm:mb-0">
-                <h1 className="text-2xl md:text-3xl text-gray-800 dark:text-gray-100 font-bold">Dashboard</h1>
+                <h1 className="text-2xl md:text-3xl text-gray-800 dark:text-gray-100 font-bold">{t('dashboard.title')}</h1>
               </div>
 
               {/* Right: Actions */}
@@ -87,7 +89,7 @@ function Dashboard() {
                   <svg className="fill-current shrink-0 xs:hidden" width="16" height="16" viewBox="0 0 16 16">
                     <path d="M15 7H9V1c0-.6-.4-1-1-1S7 .4 7 1v6H1c-.6 0-1 .4-1 1s.4 1 1 1h6v6c0 .6.4 1 1 1s1-.4 1-1V9h6c.6 0 1-.4 1-1s-.4-1-1-1z" />
                   </svg>
-                  <span className="max-xs:sr-only">Add View</span>
+                  <span className="max-xs:sr-only">{t('common.add')} {t('common.view', { defaultValue: 'View' })}</span>
                 </button>                
               </div>
 
@@ -98,7 +100,7 @@ function Dashboard() {
 
               {isLoading ? (
                 <div className="col-span-full text-center py-8">
-                  <div className="text-gray-500">Loading dashboard data...</div>
+                  <div className="text-gray-500">{t('common.loading')}</div>
                 </div>
               ) : (
                 <>

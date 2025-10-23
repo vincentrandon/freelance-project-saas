@@ -52,11 +52,8 @@ import Calendar from './pages/Calendar';
 import Account from './pages/settings/Account';
 import CompanyProfileSettings from './pages/settings/CompanyProfile';
 import Pricing from './pages/settings/Pricing';
-import Notifications from './pages/settings/Notifications';
-import Apps from './pages/settings/Apps';
 import Plans from './pages/settings/Plans';
 import Billing from './pages/settings/Billing';
-import Feedback from './pages/settings/Feedback';
 import Changelog from './pages/utility/Changelog';
 import Roadmap from './pages/utility/Roadmap';
 import Faqs from './pages/utility/Faqs';
@@ -87,6 +84,8 @@ import IconsPage from './pages/component/IconsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import DocumentImport from './pages/documents/DocumentImport';
 import ImportPreview from './pages/documents/ImportPreview';
+import TaskClarification from './pages/documents/TaskClarification';
+import BatchReview from './pages/documents/BatchReview';
 import PublicSignature from './pages/PublicSignature';
 import EstimateCreate from './pages/EstimateCreate';
 import EstimateDetail from './pages/EstimateDetail';
@@ -95,12 +94,28 @@ import ProjectDetail from './pages/ProjectDetail';
 import ProjectCreate from './pages/ProjectCreate';
 import InvoiceDetail from './pages/InvoiceDetail';
 import InvoiceCreate from './pages/InvoiceCreate';
+import CRAMonthly from './pages/cra/CRAMonthly';
+import CRAForm from './pages/cra/CRAForm';
+import CRADetail from './pages/cra/CRADetail';
+import CRASignature from './pages/cra/CRASignature';
 
 // Notification Polling Component
 function NotificationPoller() {
   const toast = useToast();
-  const prevNotificationsRef = useRef([]);
   const isAuthenticated = !!localStorage.getItem('access_token');
+
+  // Initialize shown notification IDs from sessionStorage
+  const shownNotificationIdsRef = useRef(null);
+
+  // Initialize the Set once on mount
+  if (shownNotificationIdsRef.current === null) {
+    try {
+      const stored = sessionStorage.getItem('shownNotificationIds');
+      shownNotificationIdsRef.current = stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch {
+      shownNotificationIdsRef.current = new Set();
+    }
+  }
 
   const { data: notifications } = useNotifications({
     enabled: isAuthenticated,
@@ -110,11 +125,11 @@ function NotificationPoller() {
     if (!notifications?.results) return;
 
     const currentNotifications = notifications.results;
-    const prevNotifications = prevNotificationsRef.current;
+    const shownIds = shownNotificationIdsRef.current;
 
-    // Find new notifications (not in previous list)
+    // Find notifications that haven't been shown yet
     const newNotifications = currentNotifications.filter(
-      (current) => !prevNotifications.some((prev) => prev.id === current.id)
+      (notification) => !shownIds.has(notification.id)
     );
 
     // Show toast for each new notification
@@ -126,10 +141,24 @@ function NotificationPoller() {
       } else {
         toast.info(notification.title, 5000);
       }
+
+      // Mark this notification as shown
+      shownIds.add(notification.id);
     });
 
-    // Update previous notifications reference
-    prevNotificationsRef.current = currentNotifications;
+    // Clean up old IDs (keep only the last 100 to prevent memory leak)
+    if (shownIds.size > 100) {
+      const idsArray = Array.from(shownIds);
+      const idsToRemove = idsArray.slice(0, idsArray.length - 100);
+      idsToRemove.forEach(id => shownIds.delete(id));
+    }
+
+    // Persist to sessionStorage
+    try {
+      sessionStorage.setItem('shownNotificationIds', JSON.stringify(Array.from(shownIds)));
+    } catch {
+      // Ignore storage errors
+    }
   }, [notifications, toast]);
 
   return null; // This component doesn't render anything
@@ -187,7 +216,15 @@ function AppContent() {
 
         {/* Document Processing & AI Import routes */}
         <Route path="/documents/import" element={<ProtectedRoute><DocumentImport /></ProtectedRoute>} />
+        <Route path="/documents/batch-review" element={<ProtectedRoute><BatchReview /></ProtectedRoute>} />
+        <Route path="/documents/clarify/:documentId" element={<ProtectedRoute><TaskClarification /></ProtectedRoute>} />
         <Route path="/documents/preview/:documentId" element={<ProtectedRoute><ImportPreview /></ProtectedRoute>} />
+        {/* CRA routes */}
+        <Route path="/cra" element={<ProtectedRoute><CRAMonthly /></ProtectedRoute>} />
+        <Route path="/cra/create" element={<ProtectedRoute><CRAForm /></ProtectedRoute>} />
+        <Route path="/cra/:id" element={<ProtectedRoute><CRADetail /></ProtectedRoute>} />
+        <Route path="/cra/:id/edit" element={<ProtectedRoute><CRAForm /></ProtectedRoute>} />
+        <Route path="/cra/sign/:token" element={<CRASignature />} />
         {/* Template routes */}
         <Route path="/ecommerce/customers" element={<CustomersTemplate />} />
         <Route path="/ecommerce/orders" element={<Orders />} />
@@ -224,10 +261,7 @@ function AppContent() {
         <Route path="/settings/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
         <Route path="/settings/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
         <Route path="/settings/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
-        <Route path="/settings/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-        <Route path="/settings/apps" element={<ProtectedRoute><Apps /></ProtectedRoute>} />
         <Route path="/settings/plans" element={<ProtectedRoute><Plans /></ProtectedRoute>} />
-        <Route path="/settings/feedback" element={<ProtectedRoute><Feedback /></ProtectedRoute>} />
         <Route path="/utility/changelog" element={<Changelog />} />
         <Route path="/utility/roadmap" element={<Roadmap />} />
         <Route path="/utility/faqs" element={<Faqs />} />

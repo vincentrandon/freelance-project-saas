@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useCreateProject, useUpdateProject, useProject, useCustomers } from '../api/hooks';
 import Header from '../partials/Header';
 import Sidebar from '../partials/Sidebar';
 
 function ProjectCreate() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -78,13 +80,13 @@ function ProjectCreate() {
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
-                Back to Projects
+                {t('projects.form.backToProjects')}
               </button>
               <h1 className="text-2xl md:text-3xl text-gray-100 font-bold">
-                {isEditing ? 'Edit Project' : 'New Project'}
+                {isEditing ? t('projects.form.editTitle') : t('projects.form.newTitle')}
               </h1>
               <p className="text-gray-400 mt-1">
-                {isEditing ? 'Update project information and settings' : 'Create a new project for your customer'}
+                {isEditing ? t('projects.form.editSubtitle') : t('projects.form.newSubtitle')}
               </p>
             </div>
 
@@ -92,10 +94,10 @@ function ProjectCreate() {
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* Customer Selection */}
               <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
-                <h2 className="text-lg font-semibold text-gray-100 mb-4">Customer</h2>
+                <h2 className="text-lg font-semibold text-gray-100 mb-4">{t('projects.form.customerSection')}</h2>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Customer <span className="text-red-400">*</span>
+                    {t('projects.form.customer')} <span className="text-red-400">*</span>
                   </label>
                   <select
                     required
@@ -103,7 +105,7 @@ function ProjectCreate() {
                     onChange={(e) => setFormData({ ...formData, customer: e.target.value })}
                     className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-gray-100"
                   >
-                    <option value="">Select a customer</option>
+                    <option value="">{t('projects.form.selectCustomer')}</option>
                     {customers.map((customer) => (
                       <option key={customer.id} value={customer.id}>
                         {customer.name}
@@ -111,37 +113,37 @@ function ProjectCreate() {
                     ))}
                   </select>
                   <p className="text-xs text-gray-500 mt-1">
-                    Select the customer this project belongs to
+                    {t('projects.form.customerHelp')}
                   </p>
                 </div>
               </div>
 
               {/* Basic Information */}
               <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
-                <h2 className="text-lg font-semibold text-gray-100 mb-4">Basic Information</h2>
+                <h2 className="text-lg font-semibold text-gray-100 mb-4">{t('projects.form.basicInformation')}</h2>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Project Name <span className="text-red-400">*</span>
+                      {t('projects.form.projectName')} <span className="text-red-400">*</span>
                     </label>
                     <input
                       type="text"
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="e.g., Website Redesign, Mobile App Development"
+                      placeholder={t('projects.form.projectNamePlaceholder')}
                       className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-gray-100 placeholder-gray-500"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Description
+                      {t('projects.form.description')}
                     </label>
                     <textarea
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="Brief description of the project scope and objectives"
+                      placeholder={t('projects.form.descriptionPlaceholder')}
                       rows="4"
                       className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-gray-100 placeholder-gray-500"
                     />
@@ -149,17 +151,17 @@ function ProjectCreate() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Status
+                      {t('common.status')}
                     </label>
                     <select
                       value={formData.status}
                       onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                       className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-gray-100"
                     >
-                      <option value="active">Active</option>
-                      <option value="paused">Paused</option>
-                      <option value="completed">Completed</option>
-                      <option value="archived">Archived</option>
+                      <option value="active">{t('projects.status.active')}</option>
+                      <option value="paused">{t('projects.status.paused')}</option>
+                      <option value="completed">{t('projects.status.completed')}</option>
+                      <option value="archived">{t('projects.status.archived')}</option>
                     </select>
                   </div>
                 </div>
@@ -167,11 +169,11 @@ function ProjectCreate() {
 
               {/* Budget & Dates */}
               <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
-                <h2 className="text-lg font-semibold text-gray-100 mb-4">Budget & Timeline</h2>
+                <h2 className="text-lg font-semibold text-gray-100 mb-4">{t('projects.form.budgetAndTimeline')}</h2>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Estimated Budget (€)
+                      {t('projects.form.estimatedBudget')}
                     </label>
                     <input
                       type="number"
@@ -182,14 +184,14 @@ function ProjectCreate() {
                       className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-gray-100 placeholder-gray-500"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Initial budget estimate for the project
+                      {t('projects.form.budgetHelp')}
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">
-                        Start Date
+                        {t('projects.form.startDate')}
                       </label>
                       <input
                         type="date"
@@ -201,7 +203,7 @@ function ProjectCreate() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">
-                        End Date
+                        {t('projects.form.endDate')}
                       </label>
                       <input
                         type="date"
@@ -222,7 +224,7 @@ function ProjectCreate() {
                     onClick={handleCancel}
                     className="px-4 py-2 text-sm font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                   <button
                     type="submit"
@@ -235,14 +237,14 @@ function ProjectCreate() {
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        Saving...
+                        {t('common.saving')}
                       </>
                     ) : (
                       <>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
-                        {isEditing ? 'Update Project' : 'Create Project'}
+                        {isEditing ? t('projects.form.updateButton') : t('projects.form.createButton')}
                       </>
                     )}
                   </button>

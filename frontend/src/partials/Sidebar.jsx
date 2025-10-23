@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 
 import SidebarLinkGroup from "./SidebarLinkGroup";
 
@@ -8,6 +9,7 @@ function Sidebar({
   setSidebarOpen,
   variant = 'default',
 }) {
+  const { t } = useTranslation();
   const location = useLocation();
   const { pathname } = location;
 
@@ -73,7 +75,7 @@ function Sidebar({
             aria-controls="sidebar"
             aria-expanded={sidebarOpen}
           >
-            <span className="sr-only">Close sidebar</span>
+            <span className="sr-only">{t('navigation.closeSidebar')}</span>
             <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path d="M10.7 18.7l1.4-1.4L7.8 13H20v-2H7.8l4.3-4.3-1.4-1.4L4 12z" />
             </svg>
@@ -88,6 +90,47 @@ function Sidebar({
 
         {/* Links */}
         <div className="space-y-8">
+          {/* AI Import - Featured */}
+          <div className="mb-6 px-2">
+            <NavLink
+              end
+              to="/documents/import"
+              className="block group"
+            >
+              <div className={`relative overflow-hidden rounded-lg bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:shadow-lg hover:shadow-violet-500/50 transition-all duration-300 ${pathname.includes("documents") ? 'shadow-lg shadow-violet-500/50' : ''}`}>
+                {/* Collapsed state - just icon with AI badge */}
+                <div className="lg:flex lg:sidebar-expanded:hidden 2xl:hidden items-center justify-center p-3 relative">
+                  <div className="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm group-hover:bg-white/30 group-hover:scale-110 transition-all duration-300">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[9px] font-bold bg-white text-violet-600 rounded-full shadow-sm">
+                    AI
+                  </span>
+                </div>
+                {/* Expanded state - full button */}
+                <div className="hidden lg:sidebar-expanded:flex 2xl:flex items-center gap-3 p-3">
+                  <div className="flex-shrink-0 w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm group-hover:bg-white/30 group-hover:scale-110 transition-all duration-300">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-bold text-white whitespace-nowrap">
+                        {t('documents.importDocument')}
+                      </span>
+                    </div>
+                  </div>
+                  <svg className="flex-shrink-0 w-4 h-4 text-white group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+            </NavLink>
+          </div>
+
           {/* Pages group */}
           <div>
             <h3 className="text-xs uppercase text-gray-400 dark:text-gray-500 font-semibold pl-3">
@@ -112,7 +155,7 @@ function Sidebar({
                       <path d="M6.068 7.482A2.003 2.003 0 0 0 8 10a2 2 0 1 0-.518-3.932L3.707 2.293a1 1 0 0 0-1.414 1.414l3.775 3.775Z" />
                     </svg>
                     <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                      Dashboard
+                      {t('navigation.dashboard')}
                     </span>
                   </div>
                 </NavLink>
@@ -131,26 +174,7 @@ function Sidebar({
                       <path d="M8 8c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4Zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4Z" />
                     </svg>
                     <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                      Customers
-                    </span>
-                  </div>
-                </NavLink>
-              </li>
-              {/* Leads */}
-              <li className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${pathname.includes("leads") && "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"}`}>
-                <NavLink
-                  end
-                  to="/leads"
-                  className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                    pathname.includes("leads") ? "" : "hover:text-gray-900 dark:hover:text-white"
-                  }`}
-                >
-                  <div className="flex items-center">
-                    <svg className={`shrink-0 fill-current ${pathname.includes('leads') ? 'text-violet-500' : 'text-gray-400 dark:text-gray-500'}`} xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-                      <path d="M10.5 2a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm-2 5.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0ZM3.5 11a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm9-8a3.5 3.5 0 0 0-1.41 6.7L9.17 13.2a3.5 3.5 0 1 0 1.65 1.3l1.92-3.5A3.5 3.5 0 1 0 12.5 3Zm-5 7a3.52 3.52 0 0 0-1.41-.3c-.2 0-.4.02-.59.05L4.58 6.3A3.5 3.5 0 1 0 2.92 4.7l.92 1.65A3.48 3.48 0 0 0 3.5 7.5a3.5 3.5 0 0 0 4 3.45Z" />
-                    </svg>
-                    <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                      Leads
+                      {t('navigation.customers')}
                     </span>
                   </div>
                 </NavLink>
@@ -177,7 +201,7 @@ function Sidebar({
                               <path d="M14 0H2C.9 0 .01.9.01 2L0 14c0 1.1.89 2 1.99 2H14c1.1 0 2-.9 2-2V2c0-1.1-.9-2-2-2ZM7 11.5 3.5 8 5 6.5l2 2 4-4L12.5 6 7 11.5Z" />
                             </svg>
                             <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                              Projects
+                              {t('navigation.projects')}
                             </span>
                           </div>
                           {/* Icon */}
@@ -199,7 +223,7 @@ function Sidebar({
                               }
                             >
                               <span className="text-sm font-medium lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                                All Projects
+                                {t('navigation.allProjects')}
                               </span>
                             </NavLink>
                           </li>
@@ -212,7 +236,7 @@ function Sidebar({
                               }
                             >
                               <span className="text-sm font-medium lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                                Task Catalogue
+                                {t('navigation.taskCatalogue')}
                               </span>
                             </NavLink>
                           </li>
@@ -222,26 +246,6 @@ function Sidebar({
                   );
                 }}
               </SidebarLinkGroup>
-              {/* Finance */}
-              <li className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${pathname.includes("finance") && "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"}`}>
-                <NavLink
-                  end
-                  to="/finance"
-                  className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                    pathname.includes("finance") ? "" : "hover:text-gray-900 dark:hover:text-white"
-                  }`}
-                >
-                  <div className="flex items-center">
-                    <svg className={`shrink-0 fill-current ${pathname.includes('finance') ? 'text-violet-500' : 'text-gray-400 dark:text-gray-500'}`} xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-                      <path d="M6 0a6 6 0 0 0-6 6c0 1.077.304 2.062.78 2.912a1 1 0 1 0 1.745-.976A3.945 3.945 0 0 1 2 6a4 4 0 0 1 4-4c.693 0 1.344.194 1.936.525A1 1 0 1 0 8.912.779 5.944 5.944 0 0 0 6 0Z" />
-                      <path d="M10 4a6 6 0 1 0 0 12 6 6 0 0 0 0-12Zm-4 6a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" />
-                    </svg>
-                    <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                      Finance
-                    </span>
-                  </div>
-                </NavLink>
-              </li>
               {/* Invoicing */}
               <li className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${pathname.includes("invoicing") && "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"}`}>
                 <NavLink
@@ -256,27 +260,26 @@ function Sidebar({
                       <path d="M14 0H2C.89 0 .01.89.01 2L0 14c0 1.11.89 2 2 2h12c1.11 0 2-.89 2-2V2c0-1.11-.89-2-2-2Zm0 14H2V4h12v10Zm-9-8h6v2H5V6Zm0 3h6v2H5V9Zm0 3h4v2H5v-2Z" />
                     </svg>
                     <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                      Invoicing
+                      {t('navigation.invoicing')}
                     </span>
                   </div>
                 </NavLink>
               </li>
-              {/* AI Import */}
-              <li className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${pathname.includes("documents") && "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"}`}>
+              {/* CRA */}
+              <li className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${pathname.includes("cra") && !pathname.includes("sign") && "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"}`}>
                 <NavLink
                   end
-                  to="/documents/import"
+                  to="/cra"
                   className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                    pathname.includes("documents") ? "" : "hover:text-gray-900 dark:hover:text-white"
+                    pathname.includes("cra") && !pathname.includes("sign") ? "" : "hover:text-gray-900 dark:hover:text-white"
                   }`}
                 >
                   <div className="flex items-center">
-                    <svg className={`shrink-0 fill-current ${pathname.includes('documents') ? 'text-violet-500' : 'text-gray-400 dark:text-gray-500'}`} xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-                      <path d="M8 0a1 1 0 0 1 1 1v6h6a1 1 0 1 1 0 2H9v6a1 1 0 1 1-2 0V9H1a1 1 0 0 1 0-2h6V1a1 1 0 0 1 1-1Z" opacity=".3" />
-                      <path d="M8 0a1 1 0 0 1 1 1v2.686a6.013 6.013 0 0 1 3.657 1.657A5.99 5.99 0 0 1 14 9a1 1 0 1 1-2 0 4 4 0 1 0-4 4 1 1 0 1 1 0 2 6 6 0 0 1-5.657-8.343A5.99 5.99 0 0 1 6 3.686V1a1 1 0 0 1 1-1Z" />
+                    <svg className={`shrink-0 fill-current ${pathname.includes('cra') && !pathname.includes('sign') ? 'text-violet-500' : 'text-gray-400 dark:text-gray-500'}`} xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                      <path d="M14 0H2C.9 0 0 .9 0 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V2c0-1.1-.9-2-2-2zM5 14H3V7h2v7zm3 0H6V3h2v11zm3 0H9V9h2v5zm3 0h-2V5h2v9z" />
                     </svg>
                     <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                      AI Import
+                      {t('navigation.cra')}
                     </span>
                   </div>
                 </NavLink>
@@ -303,7 +306,7 @@ function Sidebar({
                               <path d="M10.5 1a3.502 3.502 0 0 1 3.355 2.5H15a1 1 0 1 1 0 2h-1.145a3.502 3.502 0 0 1-6.71 0H1a1 1 0 0 1 0-2h6.145A3.502 3.502 0 0 1 10.5 1ZM9 4.5a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0ZM5.5 9a3.502 3.502 0 0 1 3.355 2.5H15a1 1 0 1 1 0 2H8.855a3.502 3.502 0 0 1-6.71 0H1a1 1 0 1 1 0-2h1.145A3.502 3.502 0 0 1 5.5 9ZM4 12.5a1.5 1.5 0 1 0 3 0 1.5 1.5 0 0 0-3 0Z" fillRule="evenodd" />
                             </svg>
                             <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                              Settings
+                              {t('navigation.settings')}
                             </span>
                           </div>
                           {/* Icon */}
@@ -325,33 +328,7 @@ function Sidebar({
                               }
                             >
                               <span className="text-sm font-medium lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                                My Account
-                              </span>
-                            </NavLink>
-                          </li>
-                          <li className="mb-1 last:mb-0">
-                            <NavLink
-                              end
-                              to="/settings/notifications"
-                              className={({ isActive }) =>
-                                "block transition duration-150 truncate " + (isActive ? "text-violet-500" : "text-gray-500/90 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200")
-                              }
-                            >
-                              <span className="text-sm font-medium lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                                My Notifications
-                              </span>
-                            </NavLink>
-                          </li>
-                          <li className="mb-1 last:mb-0">
-                            <NavLink
-                              end
-                              to="/settings/apps"
-                              className={({ isActive }) =>
-                                "block transition duration-150 truncate " + (isActive ? "text-violet-500" : "text-gray-500/90 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200")
-                              }
-                            >
-                              <span className="text-sm font-medium lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                                Connected Apps
+                                {t('navigation.myAccount')}
                               </span>
                             </NavLink>
                           </li>
@@ -364,7 +341,7 @@ function Sidebar({
                               }
                             >
                               <span className="text-sm font-medium lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                                Plans
+                                {t('navigation.plans')}
                               </span>
                             </NavLink>
                           </li>
@@ -377,20 +354,7 @@ function Sidebar({
                               }
                             >
                               <span className="text-sm font-medium lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                                Billing & Invoices
-                              </span>
-                            </NavLink>
-                          </li>
-                          <li className="mb-1 last:mb-0">
-                            <NavLink
-                              end
-                              to="/settings/feedback"
-                              className={({ isActive }) =>
-                                "block transition duration-150 truncate " + (isActive ? "text-violet-500" : "text-gray-500/90 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200")
-                              }
-                            >
-                              <span className="text-sm font-medium lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                                Give Feedback
+                                {t('navigation.billingInvoices')}
                               </span>
                             </NavLink>
                           </li>
@@ -400,6 +364,67 @@ function Sidebar({
                   );
                 }}
               </SidebarLinkGroup>
+            </ul>
+          </div>
+
+          {/* Coming Soon group */}
+          <div className="mt-8">
+            <h3 className="text-xs uppercase text-gray-400 dark:text-gray-500 font-semibold pl-3">
+              <span className="hidden lg:block lg:sidebar-expanded:hidden 2xl:hidden text-center w-6" aria-hidden="true">
+                •••
+              </span>
+              <span className="lg:hidden lg:sidebar-expanded:block 2xl:block">{t('navigation.comingSoon')}</span>
+            </h3>
+            <ul className="mt-3">
+              {/* Leads */}
+              <li className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${pathname.includes("leads") && "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"}`}>
+                <NavLink
+                  end
+                  to="/leads"
+                  className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
+                    pathname.includes("leads") ? "" : "hover:text-gray-900 dark:hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <svg className={`shrink-0 fill-current ${pathname.includes('leads') ? 'text-violet-500' : 'text-gray-400 dark:text-gray-500'}`} xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                        <path d="M10.5 2a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm-2 5.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0ZM3.5 11a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm9-8a3.5 3.5 0 0 0-1.41 6.7L9.17 13.2a3.5 3.5 0 1 0 1.65 1.3l1.92-3.5A3.5 3.5 0 1 0 12.5 3Zm-5 7a3.52 3.52 0 0 0-1.41-.3c-.2 0-.4.02-.59.05L4.58 6.3A3.5 3.5 0 1 0 2.92 4.7l.92 1.65A3.48 3.48 0 0 0 3.5 7.5a3.5 3.5 0 0 0 4 3.45Z" />
+                      </svg>
+                      <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                        {t('navigation.leads')}
+                      </span>
+                    </div>
+                    <span className="px-2 py-0.5 text-[10px] font-semibold bg-violet-500/20 text-violet-400 rounded-full lg:hidden lg:sidebar-expanded:inline-flex 2xl:inline-flex">
+                      {t('navigation.soon')}
+                    </span>
+                  </div>
+                </NavLink>
+              </li>
+              {/* Finance */}
+              <li className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${pathname.includes("finance") && "from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]"}`}>
+                <NavLink
+                  end
+                  to="/finance"
+                  className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
+                    pathname.includes("finance") ? "" : "hover:text-gray-900 dark:hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <svg className={`shrink-0 fill-current ${pathname.includes('finance') ? 'text-violet-500' : 'text-gray-400 dark:text-gray-500'}`} xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                        <path d="M6 0a6 6 0 0 0-6 6c0 1.077.304 2.062.78 2.912a1 1 0 1 0 1.745-.976A3.945 3.945 0 0 1 2 6a4 4 0 0 1 4-4c.693 0 1.344.194 1.936.525A1 1 0 1 0 8.912.779 5.944 5.944 0 0 0 6 0Z" />
+                        <path d="M10 4a6 6 0 1 0 0 12 6 6 0 0 0 0-12Zm-4 6a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" />
+                      </svg>
+                      <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                        {t('navigation.finance')}
+                      </span>
+                    </div>
+                    <span className="px-2 py-0.5 text-[10px] font-semibold bg-violet-500/20 text-violet-400 rounded-full lg:hidden lg:sidebar-expanded:inline-flex 2xl:inline-flex">
+                      {t('navigation.soon')}
+                    </span>
+                  </div>
+                </NavLink>
+              </li>
             </ul>
           </div>
         </div>
