@@ -1,0 +1,19 @@
+# Testing dependencies for comprehensive pytest coverage
+
+# Core pytest framework
+pytest==8.3.4
+pytest-django==4.9.0
+pytest-cov==6.0.0
+pytest-xdist==3.6.1          # Parallel test execution
+pytest-mock==3.14.0
+
+# Test data generation
+factory-boy==3.3.1           # Model factories
+faker==33.1.0                # Fake data generation
+
+# Mocking and time control
+freezegun==1.5.1             # Time/date mocking
+responses==0.25.3            # HTTP request mocking
+
+# Code quality
+coverage==7.6.9              # Coverage reporting

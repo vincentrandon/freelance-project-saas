@@ -9,7 +9,6 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('rosetta/', include('rosetta.urls')),
 
     # API Documentation
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
@@ -30,7 +29,15 @@ urlpatterns = [
     path('api/profile/', include('profiles.urls')),
     path('api/notifications/', include('notifications.urls')),
     path('api/cra/', include('cra.urls')),
+    path('api/ai-actions/', include('ai_actions.urls')),
 ]
+
+try:
+    import rosetta  # noqa: F401
+except ImportError:
+    pass
+else:
+    urlpatterns.insert(1, path('rosetta/', include('rosetta.urls')))
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -979,5 +979,123 @@
     "feature3": "Rappels de suivi automatisés",
     "feature4": "Analyses et rapports sur les sources de prospects",
     "feature5": "Conversion transparente en clients"
+  },
+
+  "landing": {
+    "seo": {
+      "title": "Plateforme de gestion freelance | Gestion client et facturation IA",
+      "description": "Simplifiez votre activité de freelance avec facturation automatisée, gestion client et suivi de projet. Le traitement IA de documents vous fait gagner des heures chaque semaine. Essayez gratuitement !",
+      "keywords": "gestion freelance, facturation automatisée, CRM client, gestion de projet freelance, traitement IA documents, suivi temps, tableau de bord financier",
+      "author": "Plateforme de gestion freelance"
+    },
+    "header": {
+      "siteName": "FreelanceHub",
+      "features": "Fonctionnalités",
+      "benefits": "Avantages",
+      "pricing": "Tarifs",
+      "signIn": "Connexion",
+      "signUp": "Inscription",
+      "menu": "Menu"
+    },
+    "hero": {
+      "title": "Plateforme de gestion freelance - Optimisez votre activité",
+      "subtitle": "Gérez clients, projets, factures et finances dans une seule plateforme alimentée par l'IA. Gagnez du temps avec le traitement automatisé de documents et des workflows intelligents.",
+      "imageAlt": "Tableau de bord de la plateforme de gestion freelance",
+      "cta": {
+        "primary": "Essai gratuit",
+        "secondary": "En savoir plus"
+      }
+    },
+    "features": {
+      "badge": "Fonctionnalités puissantes",
+      "title": "Conçu pour les freelances et consultants",
+      "subtitle": "L'IA lit et comprend vos documents, et avec un simple téléchargement, vous pouvez automatiser l'ensemble de votre workflow du client au paiement.",
+      "imageAlt": "Vue d'ensemble des fonctionnalités de la plateforme",
+      "clientManagement": {
+        "title": "Gestion client",
+        "description": "Organisez tous vos clients au même endroit avec un CRM puissant conçu pour les freelances. Suivez l'historique des contacts, pièces jointes et relations projets."
+      },
+      "projectTracking": {
+        "title": "Suivi de projet",
+        "description": "Gérez les projets avec des tableaux Kanban, jalons et notes enrichies. Suivez facilement les délais et livrables."
+      },
+      "aiInvoicing": {
+        "title": "Traitement IA des factures",
+        "description": "Téléchargez des factures PDF et laissez l'IA extraire automatiquement les données client, détails projet et lignes. Gagnez des heures de saisie chaque semaine."
+      },
+      "financeDashboard": {
+        "title": "Tableau de bord financier",
+        "description": "Intégration compte bancaire, gestion transactions et rapprochement. Obtenez des insights en temps réel sur votre santé financière avec des rapports puissants."
+      },
+      "leadPipeline": {
+        "title": "Pipeline de prospects",
+        "description": "Convertissez les prospects en clients avec un pipeline visuel. Suivez le statut des prospects du premier contact au contrat signé et au-delà."
+      },
+      "timeTracking": {
+        "title": "Suivi du temps",
+        "description": "Suivez les heures facturables et générez des relevés précis. Parfait pour les consultants qui facturent à l'heure ou ont besoin de rapports d'activité."
+      }
+    },
+    "benefits": {
+      "badge": "Pourquoi nous choisir",
+      "title": "Gagnez du temps, soyez payé plus vite, restez organisé",
+      "subtitle": "Rejoignez des centaines de freelances qui ont transformé leurs opérations commerciales avec notre plateforme.",
+      "items": {
+        "timeSaved": {
+          "unit": "heures/semaine",
+          "description": "Gagnées sur les tâches admin"
+        },
+        "fasterPayments": {
+          "unit": "plus rapide",
+          "description": "Soyez payé avec facturation automatisée"
+        },
+        "organized": {
+          "unit": "",
+          "description": "Ne manquez plus jamais de délai"
+        }
+      },
+      "testimonial": {
+        "name": "Jean Dupont",
+        "title": "Consultant freelance",
+        "quote": "Cette plateforme a transformé la façon dont je gère mon entreprise. J'économise au moins 10 heures chaque semaine sur le travail administratif, et je ne manque plus jamais de délai. Le traitement IA des factures change vraiment la donne!"
+      }
+    },
+    "cta": {
+      "badge": "Commencer",
+      "title": "Prêt à transformer votre activité de freelance ?",
+      "subtitle": "Rejoignez des milliers de freelances qui ont rationalisé leurs opérations et augmenté leur productivité. Commencez votre essai gratuit aujourd'hui - aucune carte de crédit requise.",
+      "primary": "Essai gratuit",
+      "secondary": "Connexion",
+      "trustText": "Utilisé par des freelances du monde entier"
+    },
+    "footer": {
+      "siteName": "FreelanceHub",
+      "description": "La plateforme tout-en-un pour les freelances pour gérer clients, projets, factures et finances avec automatisation IA.",
+      "copyright": "Tous droits réservés.",
+      "product": {
+        "title": "Produit",
+        "features": "Fonctionnalités",
+        "pricing": "Tarifs",
+        "signIn": "Connexion",
+        "signUp": "Inscription"
+      },
+      "company": {
+        "title": "Entreprise",
+        "about": "À propos",
+        "contact": "Contact",
+        "blog": "Blog"
+      },
+      "support": {
+        "title": "Support",
+        "helpCenter": "Centre d'aide",
+        "documentation": "Documentation",
+        "api": "API"
+      },
+      "legal": {
+        "title": "Légal",
+        "privacy": "Politique de confidentialité",
+        "terms": "Conditions d'utilisation"
+      }
+    }
   }
 }

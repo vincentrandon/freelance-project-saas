@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=fallback');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=fallback');
 
 @import 'tailwindcss';
 @import './additional-styles/utility-patterns.css' layer(components);
@@ -86,6 +87,7 @@
   --color-yellow-950: #342809;
 
   --font-inter: "Inter", "sans-serif";
+  --font-nacelle: "Outfit", "sans-serif";
 
   --text-xs: 0.75rem;
   --text-xs--line-height: 1.5;
@@ -217,4 +219,82 @@
   .ProseMirror:focus {
     @apply outline-none;
   }
+
+  /* Landing Page Button Styles */
+  .btn,
+  .btn-sm {
+    @apply inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium transition-all;
+  }
+
+  .btn {
+    @apply px-4 py-[11px];
+  }
+
+  .btn-sm {
+    @apply px-3 py-[7px];
+  }
+
+  .btn-primary {
+    @apply bg-gradient-to-t from-indigo-600 to-indigo-500 text-white shadow-lg hover:shadow-xl;
+    background-size: 100% 100%;
+    background-position: bottom;
+  }
+
+  .btn-primary:hover {
+    background-size: 100% 150%;
+  }
+
+  .btn-secondary {
+    @apply bg-gradient-to-b from-gray-800 to-gray-800/60 text-gray-300;
+    background-size: 100% 100%;
+    background-position: bottom;
+  }
+
+  .btn-secondary:hover {
+    background-size: 100% 150%;
+  }
+}
+
+/* Landing Page Animations */
+@keyframes gradient {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient {
+  animation: gradient 6s linear infinite;
+  background-size: 200% auto;
+}
+
+/* Backdrop blur utility */
+.backdrop-blur-xs {
+  backdrop-filter: blur(2px);
+}
+
+/* Custom blur utilities for background effects */
+.blur-extreme {
+  filter: blur(150px);
+}
+
+.blur-large {
+  filter: blur(120px);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(to right, var(--color-gray-200), var(--color-indigo-200), var(--color-gray-50), var(--color-indigo-300), var(--color-gray-200));
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient 6s linear infinite;
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
 }

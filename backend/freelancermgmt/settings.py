@@ -57,7 +57,15 @@ INSTALLED_APPS = [
     'profiles',
     'notifications',
     'cra',
+    'ai_actions',
 ]
+
+# Optional apps --------------------------------------------------------------
+try:
+    import rosetta  # noqa: F401
+except ImportError:
+    if 'rosetta' in INSTALLED_APPS:
+        INSTALLED_APPS.remove('rosetta')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

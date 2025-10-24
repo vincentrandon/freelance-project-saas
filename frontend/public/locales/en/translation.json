@@ -979,5 +979,123 @@
     "feature3": "Automated follow-up reminders",
     "feature4": "Lead source analytics and reporting",
     "feature5": "Seamless conversion to customers"
+  },
+
+  "landing": {
+    "seo": {
+      "title": "Freelancer Management Platform | AI-Powered Client & Invoice Management",
+      "description": "Streamline your freelance business with automated invoicing, client management, and project tracking. AI-powered document processing saves hours every week. Try free!",
+      "keywords": "freelancer management, invoice automation, client CRM, project management for freelancers, AI document processing, time tracking, financial dashboard",
+      "author": "Freelancer Management Platform"
+    },
+    "header": {
+      "siteName": "FreelanceHub",
+      "features": "Features",
+      "benefits": "Benefits",
+      "pricing": "Pricing",
+      "signIn": "Sign In",
+      "signUp": "Sign Up",
+      "menu": "Menu"
+    },
+    "hero": {
+      "title": "Freelancer Management Platform - Streamline Your Business",
+      "subtitle": "Manage clients, projects, invoices, and finances in one AI-powered platform. Save time with automated document processing and intelligent workflows.",
+      "imageAlt": "Freelancer Management Platform Dashboard",
+      "cta": {
+        "primary": "Start Free Trial",
+        "secondary": "Learn More"
+      }
+    },
+    "features": {
+      "badge": "Powerful Features",
+      "title": "Built for Freelancers & Consultants",
+      "subtitle": "AI reads and understands your documents, and with nothing more than a single upload, you can automate your entire workflow from client to payment.",
+      "imageAlt": "Platform Features Overview",
+      "clientManagement": {
+        "title": "Client Management",
+        "description": "Organize all your clients in one place with a powerful CRM designed for freelancers. Track contact history, attachments, and project relationships."
+      },
+      "projectTracking": {
+        "title": "Project Tracking",
+        "description": "Manage projects with Kanban boards, milestones, and rich-text notes. Keep track of deadlines and deliverables with ease."
+      },
+      "aiInvoicing": {
+        "title": "AI Invoice Processing",
+        "description": "Upload PDF invoices and let AI automatically extract client data, project details, and line items. Save hours on data entry every week."
+      },
+      "financeDashboard": {
+        "title": "Financial Dashboard",
+        "description": "Bank account integration, transaction management, and reconciliation. Get real-time insights into your financial health with powerful reports."
+      },
+      "leadPipeline": {
+        "title": "Lead Pipeline",
+        "description": "Convert prospects to clients with a visual pipeline. Track lead status from first contact to signed contract and beyond."
+      },
+      "timeTracking": {
+        "title": "Time Tracking",
+        "description": "Track billable hours and generate accurate timesheets. Perfect for consultants who bill by the hour or need activity reports."
+      }
+    },
+    "benefits": {
+      "badge": "Why Choose Us",
+      "title": "Save Time, Get Paid Faster, Stay Organized",
+      "subtitle": "Join hundreds of freelancers who have transformed their business operations with our platform.",
+      "items": {
+        "timeSaved": {
+          "unit": "hours/week",
+          "description": "Save time on admin tasks"
+        },
+        "fasterPayments": {
+          "unit": "faster",
+          "description": "Get paid with automated invoicing"
+        },
+        "organized": {
+          "unit": "",
+          "description": "Never lose track of deadlines"
+        }
+      },
+      "testimonial": {
+        "name": "John Doe",
+        "title": "Freelance Consultant",
+        "quote": "This platform has transformed how I manage my business. I save at least 10 hours every week on admin work, and I never miss a deadline anymore. The AI invoice processing is absolutely game-changing!"
+      }
+    },
+    "cta": {
+      "badge": "Get Started",
+      "title": "Ready to Transform Your Freelance Business?",
+      "subtitle": "Join thousands of freelancers who have streamlined their operations and increased their productivity. Start your free trial today - no credit card required.",
+      "primary": "Start Free Trial",
+      "secondary": "Sign In",
+      "trustText": "Trusted by freelancers worldwide"
+    },
+    "footer": {
+      "siteName": "FreelanceHub",
+      "description": "The all-in-one platform for freelancers to manage clients, projects, invoices, and finances with AI-powered automation.",
+      "copyright": "All rights reserved.",
+      "product": {
+        "title": "Product",
+        "features": "Features",
+        "pricing": "Pricing",
+        "signIn": "Sign In",
+        "signUp": "Sign Up"
+      },
+      "company": {
+        "title": "Company",
+        "about": "About Us",
+        "contact": "Contact",
+        "blog": "Blog"
+      },
+      "support": {
+        "title": "Support",
+        "helpCenter": "Help Center",
+        "documentation": "Documentation",
+        "api": "API"
+      },
+      "legal": {
+        "title": "Legal",
+        "privacy": "Privacy Policy",
+        "terms": "Terms of Service"
+      }
+    }
   }
 }

@@ -148,6 +148,31 @@ gunicorn freelancermgmt.wsgi:application --bind 0.0.0.0:8000
 - `POST /api/invoices/estimates/{id}/send_email/` - Send estimate email
 - `GET /api/invoices/estimates/expired/` - Get expired estimates
 
+### AI Actions (OpenAI App Integration)
+All endpoints live under `POST /api/ai-actions/...` and require an AI service token.
+
+Context (read-only, scope `context:*`):
+- `GET /api/ai-actions/context/` – Dashboard counts
+- `GET /api/ai-actions/context/customers/` – Recent customers (`context:customers`)
+- `GET /api/ai-actions/context/projects/` – Recent projects (`context:projects`)
+- `GET /api/ai-actions/context/estimates/` – Recent estimates (`context:estimates`)
+- `GET /api/ai-actions/context/invoices/` – Recent invoices (`context:invoices`)
+- `GET /api/ai-actions/context/cras/` – Recent CRA summaries (`context:cras`)
+
+Mutations (scope `actions:*`):
+- `POST /api/ai-actions/actions/customers/` – Create customer (`actions:customers.create`)
+- `POST /api/ai-actions/actions/estimates/` – Create estimate draft (`actions:estimates.create`)
+- `POST /api/ai-actions/actions/invoices/` – Create invoice (`actions:invoices.create`)
+- `POST /api/ai-actions/actions/cras/` – Create CRA (`actions:cra.create`)
+- `POST /api/ai-actions/actions/import-customer/` – Approve import preview and create entities (`actions:customers.import`)
+
+Token provisioning:
+1. Create an `AIServiceToken` from Django admin (AI Actions → AI Service Tokens) or via shell.
+2. Call `token.set_token(raw_value)` before saving; share the raw value with OpenAI once.
+3. Assign only the scopes the OpenAI App should access (see list above). Tokens can be revoked or rotated at any time.
+
+For OpenAI Apps, include the raw token in requests via `Authorization: Bearer <token>` or `X-AI-Service-Token: <token>`.
+
 ## Database Models
 
 ### Customers

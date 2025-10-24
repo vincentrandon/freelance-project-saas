@@ -4,12 +4,14 @@ import {
   Route,
   useLocation
 } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 
 import './css/style.css';
 import { ToastProvider, useToast } from './components/ToastNotification';
 import { useNotifications } from './api/hooks';
 
 // Import pages
+import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
 import Analytics from './pages/Analytics';
 import Fintech from './pages/Fintech';
@@ -178,6 +180,7 @@ function AppContent() {
       <NotificationPoller />
       <Routes>
         {/* Public routes */}
+        <Route path="/" element={<Landing />} />
         <Route path="/signin" element={<Signin />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/reset-password" element={<ResetPassword />} />
@@ -191,7 +194,7 @@ function AppContent() {
         <Route path="/onboarding-04" element={<ProtectedRoute skipOnboardingCheck={true}><Onboarding04 /></ProtectedRoute>} />
 
         {/* Protected routes */}
-        <Route exact path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/dashboard/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
         <Route path="/dashboard/fintech" element={<ProtectedRoute><Fintech /></ProtectedRoute>} />
         
@@ -292,9 +295,11 @@ function AppContent() {
 
 function App() {
   return (
-    <ToastProvider>
-      <AppContent />
-    </ToastProvider>
+    <HelmetProvider>
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
+    </HelmetProvider>
   );
 }
 
