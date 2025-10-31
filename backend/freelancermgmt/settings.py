@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'notifications',
     'cra',
     'ai_actions',
+    'subscriptions.apps.SubscriptionsConfig',
 ]
 
 # Optional apps --------------------------------------------------------------
@@ -132,6 +133,14 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
+]
+
+# Authentication Backends
+AUTHENTICATION_BACKENDS = [
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+    # `allauth` specific authentication methods, such as login by e-mail
+    'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
 
@@ -249,6 +258,18 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'finance.tasks.sync_all_bank_accounts',
         'schedule': timedelta(hours=24),
     },
+    'check-trial-expirations-daily': {
+        'task': 'subscriptions.tasks.check_trial_expirations',
+        'schedule': timedelta(hours=24),
+    },
+    'send-trial-ending-reminders-daily': {
+        'task': 'subscriptions.tasks.send_trial_ending_reminders',
+        'schedule': timedelta(hours=24),
+    },
+    'sync-stripe-subscriptions-hourly': {
+        'task': 'subscriptions.tasks.sync_stripe_subscriptions',
+        'schedule': timedelta(hours=1),
+    },
 }
 
 # AWS S3 Settings (for production)
@@ -283,11 +304,11 @@ EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@freelancermgmt.com')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@kiik.app')
 
 # DRF Spectacular Settings (API Documentation)
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Freelancer Management API',
+    'TITLE': 'kiik.app API',
     'DESCRIPTION': 'API for managing customers, leads, projects, finances, and invoicing',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
@@ -350,3 +371,17 @@ SIGNATURE_LINK_EXPIRY_DAYS = config('SIGNATURE_LINK_EXPIRY_DAYS', default=30, ca
 ESTIMATE_DEFAULT_VALID_DAYS = config('ESTIMATE_DEFAULT_VALID_DAYS', default=30, cast=int)
 ESTIMATE_NUMBER_PREFIX = config('ESTIMATE_NUMBER_PREFIX', default='DEVIS')
 INVOICE_NUMBER_PREFIX = config('INVOICE_NUMBER_PREFIX', default='FACT')
+
+# Stripe Settings (Subscription & Billing)
+STRIPE_PUBLISHABLE_KEY = config('STRIPE_PUBLISHABLE_KEY', default='')
+STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY', default='')
+STRIPE_WEBHOOK_SECRET = config('STRIPE_WEBHOOK_SECRET', default='')
+
+# Subscription & Trial Settings
+FREE_TRIAL_DAYS = config('FREE_TRIAL_DAYS', default=7, cast=int)
+FREE_TRIAL_TIER = config('FREE_TRIAL_TIER', default='CORE')
+
+# FREE Tier Usage Limits (per calendar month)
+FREE_INVOICE_LIMIT = config('FREE_INVOICE_LIMIT', default=25, cast=int)
+FREE_ESTIMATE_LIMIT = config('FREE_ESTIMATE_LIMIT', default=25, cast=int)
+FREE_IMPORT_LIMIT = config('FREE_IMPORT_LIMIT', default=10, cast=int)

@@ -211,7 +211,7 @@ def send_invoice_email(invoice_id):
         send_mail(
             subject=subject,
             message=plain_message,
-            from_email='noreply@freelancermgmt.com',
+            from_email='noreply@kiik.app',
             recipient_list=[invoice.customer.email],
             html_message=html_message,
             fail_silently=False,

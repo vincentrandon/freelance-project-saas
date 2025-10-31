@@ -30,6 +30,7 @@ urlpatterns = [
     path('api/notifications/', include('notifications.urls')),
     path('api/cra/', include('cra.urls')),
     path('api/ai-actions/', include('ai_actions.urls')),
+    path('api/subscriptions/', include('subscriptions.urls')),
 ]
 
 try:

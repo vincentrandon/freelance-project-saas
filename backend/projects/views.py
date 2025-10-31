@@ -14,6 +14,7 @@ from .serializers import (
 )
 from .services.task_catalogue_service import TaskCatalogueService
 from invoicing.serializers import InvoiceSerializer, EstimateSerializer
+from subscriptions.permissions import RequireCoreOrElite
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
@@ -153,10 +154,10 @@ class TaskViewSet(viewsets.ModelViewSet):
 
 class TaskCatalogueViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for managing task catalogue (task templates).
+    ViewSet for managing task catalogue (task templates) - requires CORE or ELITE tier.
     Provides search, suggestions, analytics, and template management.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, RequireCoreOrElite]
     pagination_class = None  # Disable pagination for task catalogue
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['category', 'created_from', 'is_active']

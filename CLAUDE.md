@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Freelancer Management Platform - A full-stack web application for managing customers, leads, projects, finances, and invoicing with AI-powered document processing.
+kiik.app - A full-stack web application for managing customers, leads, projects, finances, and invoicing with AI-powered document processing.
 
 **Stack:**
 - **Backend**: Django 5.0 + Django REST Framework + Celery

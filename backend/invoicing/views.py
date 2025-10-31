@@ -12,6 +12,7 @@ from .serializers import (
     EstimateSerializer, EstimateListSerializer,
     SignatureRequestSerializer, PublicSignatureRequestSerializer
 )
+from subscriptions.decorators import check_usage_limit_method, require_feature
 
 
 def create_final_balance_invoice(user, parent_invoice, final_deposit):
@@ -117,6 +118,10 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             return InvoiceListSerializer
         return InvoiceSerializer
 
+    @check_usage_limit_method('invoice_creation')
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
     def perform_create(self, serializer):
         # Auto-generate invoice_number if not provided
         if 'invoice_number' not in serializer.validated_data or not serializer.validated_data.get('invoice_number'):
@@ -165,13 +170,14 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         })
     
     @action(detail=True, methods=['post'])
+    @require_feature('email_sending')
     def send_email(self, request, pk=None):
-        """Send invoice via email"""
+        """Send invoice via email (requires CORE tier)"""
         invoice = self.get_object()
         # This will trigger a Celery task to send email
         from .tasks import send_invoice_email
         send_invoice_email.delay(invoice.id)
-        
+
         return Response({
             'message': 'Email sent',
             'invoice_id': invoice.id,
@@ -581,6 +587,10 @@ class EstimateViewSet(viewsets.ModelViewSet):
             return EstimateListSerializer
         return EstimateSerializer
 
+    @check_usage_limit_method('estimate_creation')
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
     def perform_create(self, serializer):
         # Generate UUID for drafts (no estimate_number yet)
         if 'estimate_number' not in serializer.validated_data or not serializer.validated_data.get('estimate_number'):
@@ -674,8 +684,9 @@ class EstimateViewSet(viewsets.ModelViewSet):
         })
     
     @action(detail=True, methods=['post'])
+    @require_feature('email_sending')
     def send_email(self, request, pk=None):
-        """Send estimate via email"""
+        """Send estimate via email (requires CORE tier)"""
         estimate = self.get_object()
         # This will trigger a Celery task to send email
         from .tasks import send_estimate_email
@@ -807,9 +818,10 @@ class EstimateViewSet(viewsets.ModelViewSet):
         })
 
     @action(detail=False, methods=['post'])
+    @require_feature('ai_suggestions')
     def suggest_items(self, request):
         """
-        Get AI suggestions for line items based on description.
+        Get AI suggestions for line items based on description (requires ELITE tier).
 
         POST data:
         {
@@ -887,9 +899,10 @@ class EstimateViewSet(viewsets.ModelViewSet):
             )
 
     @action(detail=False, methods=['post'])
+    @require_feature('ai_generation')
     def ai_generate(self, request):
         """
-        Generate estimate using AI from natural language description.
+        Generate estimate using AI from natural language description (requires ELITE tier).
 
         POST data:
         {
@@ -989,9 +1002,10 @@ class EstimateViewSet(viewsets.ModelViewSet):
             )
 
     @action(detail=False, methods=['post'])
+    @require_feature('ai_suggestions')
     def suggest_margin(self, request):
         """
-        Get AI suggestion for appropriate security margin (standalone - no estimate ID required).
+        Get AI suggestion for appropriate security margin (standalone - no estimate ID required, requires ELITE tier).
 
         POST data:
         {
@@ -1028,9 +1042,10 @@ class EstimateViewSet(viewsets.ModelViewSet):
             )
 
     @action(detail=True, methods=['post'])
+    @require_feature('ai_suggestions')
     def suggest_margin_for_estimate(self, request, pk=None):
         """
-        Get AI suggestion for appropriate security margin for an existing estimate.
+        Get AI suggestion for appropriate security margin for an existing estimate (requires ELITE tier).
 
         POST data:
         {
@@ -1229,9 +1244,10 @@ class EstimateViewSet(viewsets.ModelViewSet):
             )
 
     @action(detail=True, methods=['post'])
+    @require_feature('signature_request')
     def request_signature(self, request, pk=None):
         """
-        Create a signature request for this estimate.
+        Create a signature request for this estimate (requires CORE tier).
 
         POST data:
         {

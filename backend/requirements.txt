@@ -29,3 +29,6 @@ pyhanko==0.21.0
 pyhanko-certvalidator==0.26.3
 qrcode==7.4.2
 reportlab==4.0.7
+
+# Subscription & Billing
+stripe==11.3.0

@@ -164,6 +164,26 @@ class UserProfile(models.Model):
         help_text="User's preferred language for the interface"
     )
 
+    # Subscription & Billing (denormalized for performance)
+    subscription_tier = models.CharField(
+        max_length=20,
+        default='FREE',
+        verbose_name="Subscription Tier",
+        help_text="Current subscription tier (denormalized from Subscription model for quick access)"
+    )
+    stripe_customer_id = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name="Stripe Customer ID",
+        help_text="Stripe customer ID for billing (denormalized for quick access)"
+    )
+    trial_ends_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Trial Ends At",
+        help_text="When trial period ends (denormalized for quick access)"
+    )
+
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

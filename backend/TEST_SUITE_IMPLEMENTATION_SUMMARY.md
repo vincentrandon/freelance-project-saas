@@ -2,7 +2,7 @@
 
 ## Overview
 
-A comprehensive pytest-based test suite has been prepared for the Freelancer Management Platform backend, designed to achieve **>90% code coverage** without modifying any existing code.
+A comprehensive pytest-based test suite has been prepared for the kiik.app backend, designed to achieve **>90% code coverage** without modifying any existing code.
 
 ## ✅ Completed Implementation
 

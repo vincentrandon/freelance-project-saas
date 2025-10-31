@@ -9,6 +9,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import './css/style.css';
 import { ToastProvider, useToast } from './components/ToastNotification';
 import { useNotifications } from './api/hooks';
+import { SubscriptionProvider } from './utils/SubscriptionContext';
 
 // Import pages
 import Landing from './pages/Landing';
@@ -297,7 +298,9 @@ function App() {
   return (
     <HelmetProvider>
       <ToastProvider>
-        <AppContent />
+        <SubscriptionProvider>
+          <AppContent />
+        </SubscriptionProvider>
       </ToastProvider>
     </HelmetProvider>
   );

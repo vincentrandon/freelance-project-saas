@@ -1,4 +1,25 @@
 {
+  "subscription": {
+    "tiers": {
+      "free": "Free",
+      "core": "Core",
+      "elite": "Elite"
+    },
+    "upgradeRequired": "Upgrade Required",
+    "upgradeMessage": "This feature requires {{tier}} plan or higher",
+    "upgradeIncluded": "Included in this plan",
+    "usageLimitReached": "Usage Limit Reached",
+    "usageLimitMessage": "You've reached your monthly limit of {{limit}} for {{feature}}",
+    "upgradeNow": "Upgrade Now",
+    "manageSubscription": "Manage Subscription",
+    "currentPlan": "Current Plan",
+    "billingCycle": "Billing Cycle",
+    "nextBillingDate": "Next Billing Date",
+    "trialEndsIn": "Trial ends in {{days}} days",
+    "usageThisMonth": "Usage This Month",
+    "unlimited": "Unlimited",
+    "remaining": "{{count}} remaining"
+  },
   "common": {
     "cancel": "Cancel",
     "save": "Save",
@@ -983,13 +1004,13 @@
 
   "landing": {
     "seo": {
-      "title": "Freelancer Management Platform | AI-Powered Client & Invoice Management",
+      "title": "kiik.app | AI-Powered Client & Invoice Management",
       "description": "Streamline your freelance business with automated invoicing, client management, and project tracking. AI-powered document processing saves hours every week. Try free!",
       "keywords": "freelancer management, invoice automation, client CRM, project management for freelancers, AI document processing, time tracking, financial dashboard",
-      "author": "Freelancer Management Platform"
+      "author": "kiik.app"
     },
     "header": {
-      "siteName": "FreelanceHub",
+      "siteName": "kiik.app",
       "features": "Features",
       "benefits": "Benefits",
       "pricing": "Pricing",
@@ -998,9 +1019,9 @@
       "menu": "Menu"
     },
     "hero": {
-      "title": "Freelancer Management Platform - Streamline Your Business",
+      "title": "kiik.app - Streamline Your Business",
       "subtitle": "Manage clients, projects, invoices, and finances in one AI-powered platform. Save time with automated document processing and intelligent workflows.",
-      "imageAlt": "Freelancer Management Platform Dashboard",
+      "imageAlt": "kiik.app Dashboard",
       "cta": {
         "primary": "Start Free Trial",
         "secondary": "Learn More"
@@ -1060,6 +1081,58 @@
         "quote": "This platform has transformed how I manage my business. I save at least 10 hours every week on admin work, and I never miss a deadline anymore. The AI invoice processing is absolutely game-changing!"
       }
     },
+    "pricing": {
+      "badge": "Pricing Plans",
+      "title": "Choose the perfect plan for your freelance business",
+      "subtitle": "Start with a 7-day Core trial. Upgrade or cancel anytime.",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "save": "Save 20%",
+      "period": "/month",
+      "periodYearly": "/month, billed annually",
+      "trustMessage": "All plans include a 7-day free trial. No credit card required to start.",
+      "free": {
+        "name": "Free",
+        "description": "Perfect for trying out the platform",
+        "cta": "Get Started",
+        "features": [
+          "Up to 10 document imports/month",
+          "Up to 25 invoices/month",
+          "Up to 25 estimates/month",
+          "Customer & project management",
+          "Lead pipeline",
+          "Financial dashboard"
+        ]
+      },
+      "core": {
+        "name": "Core",
+        "description": "Essential features for growing freelancers",
+        "cta": "Start Free Trial",
+        "features": [
+          "Everything in Free",
+          "Unlimited invoices & estimates",
+          "Unlimited document imports",
+          "Email invoices & estimates",
+          "Digital signature for estimates",
+          "Task catalogue"
+        ]
+      },
+      "elite": {
+        "name": "Elite",
+        "popularBadge": "Most Popular",
+        "description": "Full power with AI automation",
+        "cta": "Start Free Trial",
+        "features": [
+          "Everything in Core",
+          "AI document processing",
+          "AI estimate generation",
+          "AI task suggestions",
+          "AI pricing suggestions",
+          "CRA (Activity Reports)",
+          "Priority support"
+        ]
+      }
+    },
     "cta": {
       "badge": "Get Started",
       "title": "Ready to Transform Your Freelance Business?",
@@ -1069,7 +1142,7 @@
       "trustText": "Trusted by freelancers worldwide"
     },
     "footer": {
-      "siteName": "FreelanceHub",
+      "siteName": "kiik.app",
       "description": "The all-in-one platform for freelancers to manage clients, projects, invoices, and finances with AI-powered automation.",
       "copyright": "All rights reserved.",
       "product": {

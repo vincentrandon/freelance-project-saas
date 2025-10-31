@@ -1,4 +1,25 @@
 {
+  "subscription": {
+    "tiers": {
+      "free": "Gratuit",
+      "core": "Core",
+      "elite": "Elite"
+    },
+    "upgradeRequired": "Mise à niveau requise",
+    "upgradeMessage": "Cette fonctionnalité nécessite le plan {{tier}} ou supérieur",
+    "upgradeIncluded": "Inclus dans ce plan",
+    "usageLimitReached": "Limite d'utilisation atteinte",
+    "usageLimitMessage": "Vous avez atteint votre limite mensuelle de {{limit}} pour {{feature}}",
+    "upgradeNow": "Mettre à niveau",
+    "manageSubscription": "Gérer l'abonnement",
+    "currentPlan": "Plan actuel",
+    "billingCycle": "Cycle de facturation",
+    "nextBillingDate": "Prochaine date de facturation",
+    "trialEndsIn": "L'essai se termine dans {{days}} jours",
+    "usageThisMonth": "Utilisation ce mois-ci",
+    "unlimited": "Illimité",
+    "remaining": "{{count}} restant"
+  },
   "common": {
     "cancel": "Annuler",
     "save": "Enregistrer",
@@ -983,13 +1004,13 @@
 
   "landing": {
     "seo": {
-      "title": "Plateforme de gestion freelance | Gestion client et facturation IA",
+      "title": "kiik.app | Gestion client et facturation IA",
       "description": "Simplifiez votre activité de freelance avec facturation automatisée, gestion client et suivi de projet. Le traitement IA de documents vous fait gagner des heures chaque semaine. Essayez gratuitement !",
       "keywords": "gestion freelance, facturation automatisée, CRM client, gestion de projet freelance, traitement IA documents, suivi temps, tableau de bord financier",
-      "author": "Plateforme de gestion freelance"
+      "author": "kiik.app"
     },
     "header": {
-      "siteName": "FreelanceHub",
+      "siteName": "kiik.app",
       "features": "Fonctionnalités",
       "benefits": "Avantages",
       "pricing": "Tarifs",
@@ -998,9 +1019,9 @@
       "menu": "Menu"
     },
     "hero": {
-      "title": "Plateforme de gestion freelance - Optimisez votre activité",
+      "title": "kiik.app - Optimisez votre activité",
       "subtitle": "Gérez clients, projets, factures et finances dans une seule plateforme alimentée par l'IA. Gagnez du temps avec le traitement automatisé de documents et des workflows intelligents.",
-      "imageAlt": "Tableau de bord de la plateforme de gestion freelance",
+      "imageAlt": "Tableau de bord kiik.app",
       "cta": {
         "primary": "Essai gratuit",
         "secondary": "En savoir plus"
@@ -1060,6 +1081,58 @@
         "quote": "Cette plateforme a transformé la façon dont je gère mon entreprise. J'économise au moins 10 heures chaque semaine sur le travail administratif, et je ne manque plus jamais de délai. Le traitement IA des factures change vraiment la donne!"
       }
     },
+    "pricing": {
+      "badge": "Plans tarifaires",
+      "title": "Choisissez le plan parfait pour votre activité de freelance",
+      "subtitle": "Commencez avec un essai Core de 7 jours. Upgrade ou annulez à tout moment.",
+      "monthly": "Mensuel",
+      "yearly": "Annuel",
+      "save": "Économisez 20%",
+      "period": "/mois",
+      "periodYearly": "/mois, facturé annuellement",
+      "trustMessage": "Tous les plans incluent un essai gratuit de 7 jours. Aucune carte de crédit requise pour commencer.",
+      "free": {
+        "name": "Gratuit",
+        "description": "Parfait pour essayer la plateforme",
+        "cta": "Commencer",
+        "features": [
+          "Jusqu'à 10 importations de documents/mois",
+          "Jusqu'à 25 factures/mois",
+          "Jusqu'à 25 devis/mois",
+          "Gestion clients & projets",
+          "Pipeline de prospects",
+          "Tableau de bord financier"
+        ]
+      },
+      "core": {
+        "name": "Core",
+        "description": "Fonctionnalités essentielles pour freelances en croissance",
+        "cta": "Essai gratuit",
+        "features": [
+          "Tout dans Gratuit",
+          "Factures & devis illimités",
+          "Importations de documents illimitées",
+          "Envoi de factures & devis par e-mail",
+          "Signature numérique pour devis",
+          "Catalogue de tâches"
+        ]
+      },
+      "elite": {
+        "name": "Elite",
+        "popularBadge": "Le plus populaire",
+        "description": "Toute la puissance avec automatisation IA",
+        "cta": "Essai gratuit",
+        "features": [
+          "Tout dans Core",
+          "Traitement IA de documents",
+          "Génération IA de devis",
+          "Suggestions IA de tâches",
+          "Suggestions IA de prix",
+          "CRA (Comptes Rendus d'Activité)",
+          "Support prioritaire"
+        ]
+      }
+    },
     "cta": {
       "badge": "Commencer",
       "title": "Prêt à transformer votre activité de freelance ?",
@@ -1069,7 +1142,7 @@
       "trustText": "Utilisé par des freelances du monde entier"
     },
     "footer": {
-      "siteName": "FreelanceHub",
+      "siteName": "kiik.app",
       "description": "La plateforme tout-en-un pour les freelances pour gérer clients, projets, factures et finances avec automatisation IA.",
       "copyright": "Tous droits réservés.",
       "product": {

@@ -1,4 +1,4 @@
-# Freelancer Management Platform - Backend
+# kiik.app - Backend
 
 Django REST API for managing customers, leads, projects, finances, and invoicing.
 

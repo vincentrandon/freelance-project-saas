@@ -21,13 +21,15 @@ from .services.estimate_assistant import EstimateAssistant
 from .services.task_quality_analyzer import TaskQualityAnalyzer
 from .services.batch_processor import BatchProcessor
 from .services.feedback_capture import FeedbackCaptureService
+from subscriptions.permissions import RequireElite
+from subscriptions.decorators import check_usage_limit_method
 
 
 class ImportedDocumentViewSet(viewsets.ModelViewSet):
-    """ViewSet for managing imported documents"""
+    """ViewSet for managing imported documents (requires ELITE tier)"""
 
     serializer_class = ImportedDocumentSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, RequireElite]
     parser_classes = [MultiPartParser, FormParser]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['status', 'document_type']
@@ -36,9 +38,10 @@ class ImportedDocumentViewSet(viewsets.ModelViewSet):
         return ImportedDocument.objects.filter(user=self.request.user)
 
     @action(detail=False, methods=['post'])
+    @check_usage_limit_method('document_import')
     def upload(self, request):
         """
-        Upload one or multiple PDF documents for processing.
+        Upload one or multiple PDF documents for processing (usage tracked for FREE tier).
 
         Accepts multipart/form-data with:
         - Single file: file field

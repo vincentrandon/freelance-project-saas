@@ -7,6 +7,7 @@ import LandingHeader from '../components/landing/LandingHeader';
 import Hero from '../components/landing/Hero';
 import Features from '../components/landing/Features';
 import Benefits from '../components/landing/Benefits';
+import Pricing from '../components/landing/Pricing';
 import CTA from '../components/landing/CTA';
 import LandingFooter from '../components/landing/LandingFooter';
 
@@ -92,6 +93,7 @@ export default function Landing() {
           <Hero />
           <Features />
           <Benefits />
+          <Pricing />
           <CTA />
         </main>
 

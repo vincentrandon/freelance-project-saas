@@ -1,6 +1,6 @@
 # Backend Test Suite
 
-Comprehensive pytest-based test suite for the Freelancer Management Platform backend.
+Comprehensive pytest-based test suite for the kiik.app backend.
 
 ## Overview
 

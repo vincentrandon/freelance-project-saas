@@ -15,16 +15,17 @@ from .serializers import (
     CRASignatureSubmitSerializer, MonthlyStatsSerializer
 )
 from projects.models import Task
+from subscriptions.permissions import RequireElite
 
 
 class CRAViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for managing CRAs (Compte Rendu d'Activité).
+    ViewSet for managing CRAs (Compte Rendu d'Activité) - requires ELITE tier.
     Provides CRUD operations plus custom actions for PDF generation,
     sending validation requests, and generating invoices.
     """
-    
-    permission_classes = [IsAuthenticated]
+
+    permission_classes = [IsAuthenticated, RequireElite]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['status', 'customer', 'period_month', 'period_year']
     search_fields = ['customer__name', 'notes']

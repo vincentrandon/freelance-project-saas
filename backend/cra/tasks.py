@@ -48,7 +48,7 @@ Une facture brouillon a été automatiquement générée:
 Vous pouvez consulter et modifier cette facture avant envoi sur votre tableau de bord.
 
 Cordialement,
-Freelancer Management System
+kiik.app
 """
             
             send_mail(
