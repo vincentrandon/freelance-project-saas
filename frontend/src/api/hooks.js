@@ -1009,6 +1009,13 @@ export const useCompleteOnboarding = () => {
   });
 };
 
+// Company lookup hook (INSEE API)
+export const useCompanyLookup = () => {
+  return useMutation({
+    mutationFn: (siren) => client.get(`/company-lookup/?siren=${encodeURIComponent(siren)}`).then((res) => res.data),
+  });
+};
+
 // Enhanced Estimate hooks
 export const useAIGenerateEstimate = () => {
   return useMutation({

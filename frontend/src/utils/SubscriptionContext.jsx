@@ -1,5 +1,6 @@
 import React, { createContext, useContext } from 'react';
 import { useSubscription, useUsage, hasTierAccess, hasFeatureAccess, canPerformAction, getRemainingUsage } from '../api/subscriptionHooks';
+import { useAuth } from './AuthContext';
 
 const SubscriptionContext = createContext();
 
@@ -12,10 +13,21 @@ export const useSubscriptionContext = () => {
 };
 
 export const SubscriptionProvider = ({ children }) => {
-  const { data: subscription, isLoading: isLoadingSubscription, error: subscriptionError } = useSubscription();
-  const { data: usage, isLoading: isLoadingUsage } = useUsage();
+  const { isAuthenticated } = useAuth();
+  const shouldFetch = isAuthenticated;
 
-  const isLoading = isLoadingSubscription || isLoadingUsage;
+  const {
+    data: subscription,
+    isLoading: isLoadingSubscription,
+    error: subscriptionError,
+  } = useSubscription({ enabled: shouldFetch });
+
+  const {
+    data: usage,
+    isLoading: isLoadingUsage,
+  } = useUsage({ enabled: shouldFetch });
+
+  const isLoading = shouldFetch ? (isLoadingSubscription || isLoadingUsage) : false;
 
   // Check if user has access to a specific tier
   const checkTierAccess = (requiredTier) => {

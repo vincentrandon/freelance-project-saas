@@ -229,7 +229,7 @@ REST_AUTH = {
     'JWT_AUTH_COOKIE': 'auth-token',
     'JWT_AUTH_REFRESH_COOKIE': 'refresh-token',
     'JWT_AUTH_HTTPONLY': False,
-    'PASSWORD_RESET_SERIALIZER': 'dj_rest_auth.serializers.PasswordResetSerializer',
+    'PASSWORD_RESET_SERIALIZER': 'freelancermgmt.serializers.CustomPasswordResetSerializer',
 }
 
 # Django Allauth Settings
@@ -241,6 +241,8 @@ ACCOUNT_USERNAME_REQUIRED = False
 # ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_EMAIL_VERIFICATION = 'optional'
 ACCOUNT_ADAPTER = 'freelancermgmt.adapters.CustomAccountAdapter'
+SOCIALACCOUNT_ADAPTER = 'freelancermgmt.socialaccount_adapter.CustomSocialAccountAdapter'
+SOCIALACCOUNT_AUTO_SIGNUP = True
 
 # Password Reset Settings
 PASSWORD_RESET_TIMEOUT = 3600  # 1 hour in seconds
@@ -355,6 +357,10 @@ OPENAI_MODEL = config('OPENAI_MODEL', default='gpt-5')  # Updated to GPT-5 (Aug 
 OPENAI_MAX_TOKENS = config('OPENAI_MAX_TOKENS', default=6000, cast=int)  # Increased for better extraction
 OPENAI_TEMPERATURE = config('OPENAI_TEMPERATURE', default=0.1, cast=float)
 OPENAI_REASONING_EFFORT = config('OPENAI_REASONING_EFFORT', default='medium')  # For GPT-5: minimal, low, medium, high
+
+# INSEE API Settings (French Company Lookup)
+# Get your API key from: https://portail-api.insee.fr/
+INSEE_API_KEY = config('INSEE_API_KEY', default='')
 
 # Freelance Pricing Settings
 DEFAULT_TJM = config('DEFAULT_TJM', default=500, cast=float)  # Default if not set in profile

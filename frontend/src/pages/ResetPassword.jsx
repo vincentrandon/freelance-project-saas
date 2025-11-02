@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import { usePasswordReset } from "../api/hooks";
 import AuthImage from "../images/auth-image.jpg";
 
 function ResetPassword() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -22,7 +24,7 @@ function ResetPassword() {
       setError(
         err.response?.data?.email?.[0] ||
         err.response?.data?.detail ||
-        'Failed to send reset email. Please try again.'
+        t('auth.resetPassword.errorGeneric')
       );
     }
   };
@@ -46,12 +48,12 @@ function ResetPassword() {
             </div>
 
             <div className="max-w-sm mx-auto w-full px-4 py-8">
-              <h1 className="text-3xl text-gray-800 dark:text-gray-100 font-bold mb-6">Reset your Password</h1>
+              <h1 className="text-3xl text-gray-800 dark:text-gray-100 font-bold mb-6">{t('auth.resetPassword.title')}</h1>
 
               {success && (
                 <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                   <p className="text-green-600 dark:text-green-400 text-sm">
-                    Password reset email sent! Please check your inbox and follow the instructions to reset your password.
+                    {t('auth.resetPassword.successMessage')}
                   </p>
                 </div>
               )}
@@ -67,7 +69,7 @@ function ResetPassword() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium mb-1" htmlFor="email">
-                      Email Address <span className="text-red-500">*</span>
+                      {t('auth.resetPassword.emailLabel')} <span className="text-red-500">*</span>
                     </label>
                     <input
                       id="email"
@@ -86,7 +88,7 @@ function ResetPassword() {
                     disabled={passwordResetMutation.isPending}
                     className="btn bg-gray-900 text-gray-100 hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-800 dark:hover:bg-white whitespace-nowrap disabled:opacity-50"
                   >
-                    {passwordResetMutation.isPending ? 'Sending...' : 'Send Reset Link'}
+                    {passwordResetMutation.isPending ? t('auth.resetPassword.sending') : t('auth.resetPassword.sendButton')}
                   </button>
                 </div>
               </form>
@@ -96,7 +98,7 @@ function ResetPassword() {
                   className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                   to="/signin"
                 >
-                  Back to Sign In
+                  {t('auth.resetPassword.backToSignIn')}
                 </Link>
               </div>
             </div>

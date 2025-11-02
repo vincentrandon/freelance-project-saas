@@ -1,0 +1,53 @@
+{% extends "account/email/base_email.html" %}
+{% load i18n %}
+
+{% block subject %}Welcome to kiik.app!{% endblock %}
+
+{% block content %}
+<h1>Welcome to kiik.app! 🎉</h1>
+
+<p>Hi {{ user.first_name|default:"there" }},</p>
+
+<p>We're thrilled to have you on board! You've just joined thousands of freelancers who are streamlining their business operations with kiik.app.</p>
+
+<h2 style="font-size: 18px; color: #111827; margin-top: 32px;">🚀 Quick Start Guide</h2>
+
+<p>Here's what you can do to get started:</p>
+
+<div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 16px 0;">
+    <p style="margin: 8px 0;"><strong>1. Complete your company profile</strong><br>
+    <span style="font-size: 14px; color: #6b7280;">Add your business details for professional invoices and estimates</span></p>
+
+    <p style="margin: 8px 0;"><strong>2. Add your first customer</strong><br>
+    <span style="font-size: 14px; color: #6b7280;">Import from documents or create manually</span></p>
+
+    <p style="margin: 8px 0;"><strong>3. Create a project</strong><br>
+    <span style="font-size: 14px; color: #6b7280;">Organize your work and track progress</span></p>
+
+    <p style="margin: 8px 0;"><strong>4. Generate your first invoice</strong><br>
+    <span style="font-size: 14px; color: #6b7280;">Professional PDFs ready in seconds</span></p>
+</div>
+
+<div style="text-align: center; margin: 32px 0;">
+    <a href="{{ frontend_url }}/dashboard" class="button">Go to Dashboard</a>
+</div>
+
+<h2 style="font-size: 18px; color: #111827; margin-top: 32px;">💡 Pro Tips</h2>
+
+<p><strong>Try AI Document Import:</strong> Upload existing invoices or estimates and let AI automatically extract customer and project data. It's a huge time-saver!</p>
+
+<p><strong>Set Your Pricing:</strong> Configure your daily rate (TJM) and security margins in Settings to speed up estimate creation.</p>
+
+<p><strong>Enable Email Notifications:</strong> Stay on top of invoice payments and project deadlines.</p>
+
+<div class="divider"></div>
+
+<p style="font-size: 14px; color: #6b7280;">
+    Need help? Check out our <a href="https://kiik.app/help">Help Center</a> or reply to this email - we're here to assist you!
+</p>
+
+<p style="margin-top: 32px;">
+    Happy freelancing! 🎨<br>
+    <strong>The kiik.app Team</strong>
+</p>
+{% endblock %}

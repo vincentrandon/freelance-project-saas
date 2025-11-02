@@ -1,7 +1,10 @@
+from decimal import Decimal
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils.translation import gettext_lazy as _
 
 
 class UserProfile(models.Model):
@@ -12,6 +15,25 @@ class UserProfile(models.Model):
 
     # Company/Freelance Information
     company_name = models.CharField(max_length=255, blank=True, help_text="Company or freelance business name")
+
+    COMPANY_TYPE_CHOICES = [
+        ('MICRO_ENTREPRISE', _('Micro-entreprise / Auto-entrepreneur')),
+        ('SASU', _('SASU (Société par Actions Simplifiée Unipersonnelle)')),
+        ('SAS', _('SAS (Société par Actions Simplifiée)')),
+        ('EURL', _('EURL (Entreprise Unipersonnelle à Responsabilité Limitée)')),
+        ('SARL', _('SARL (Société à Responsabilité Limitée)')),
+        ('EI', _('EI (Entreprise Individuelle)')),
+        ('OTHER', _('Other')),
+    ]
+
+    company_type = models.CharField(
+        max_length=50,
+        choices=COMPANY_TYPE_CHOICES,
+        blank=True,
+        verbose_name=_("Type de société"),
+        help_text=_("Your legal business structure")
+    )
+
     company_logo = models.ImageField(upload_to='company_logos/', blank=True, null=True, help_text="Company logo for PDFs")
 
     # Contact Details
@@ -79,13 +101,31 @@ class UserProfile(models.Model):
         verbose_name="Délai de paiement (jours)",
         help_text="Default payment terms in days (30, 45, 60)"
     )
+
+    # VAT/Tax Settings
+    is_vat_subject = models.BooleanField(
+        default=True,
+        verbose_name=_("Assujetti à la TVA"),
+        help_text=_("Do you charge VAT (TVA) on your invoices? All businesses with revenue below €37,500 (services) or €85,000 (goods) may be exempt under Article 293 B du CGI, regardless of legal status.")
+    )
+
+    VAT_RATE_CHOICES = [
+        (Decimal('20.00'), _('20% - Taux normal (Standard rate)')),
+        (Decimal('10.00'), _('10% - Taux réduit (Restaurants, accommodation)')),
+        (Decimal('5.50'), _('5.5% - Taux réduit (Essential goods)')),
+        (Decimal('2.10'), _('2.1% - Taux super réduit (Newspapers, medicines)')),
+        (Decimal('0.00'), _('0% - Exonéré (Exempt/Not applicable)')),
+    ]
+
     default_tax_rate = models.DecimalField(
         max_digits=5,
         decimal_places=2,
-        default=20.00,
-        verbose_name="Taux de TVA par défaut (%)",
-        help_text="Default VAT/tax rate (e.g., 20.00 for 20%)"
+        default=Decimal('20.00'),
+        choices=VAT_RATE_CHOICES,
+        verbose_name=_("Taux de TVA par défaut (%)"),
+        help_text=_("Default VAT/tax rate according to French law")
     )
+
     currency = models.CharField(
         max_length=3,
         default='EUR',
@@ -197,9 +237,15 @@ class UserProfile(models.Model):
         return f"{self.user.username}'s Profile - {self.company_name or 'No Company'}"
 
     def save(self, *args, **kwargs):
-        """Auto-calculate hourly rate from TJM if not set"""
+        """Auto-calculate hourly rate from TJM if not set, and enforce VAT rules"""
+        # Auto-calculate hourly rate from TJM if not set
         if self.tjm_default and self.tjm_hours_per_day and not self.hourly_rate_default:
             self.hourly_rate_default = self.tjm_default / self.tjm_hours_per_day
+
+        # If not subject to VAT, force tax rate to 0%
+        if not self.is_vat_subject:
+            self.default_tax_rate = 0.00
+
         super().save(*args, **kwargs)
 
     def get_tjm_for_service(self, service_type=None):
@@ -218,12 +264,12 @@ class UserProfile(models.Model):
     def is_profile_complete_for_invoicing(self):
         """
         Check if profile has all required fields for French legal invoicing.
-        Required: company_name, siret_siren, tax_id, address, city, postal_code, phone or email
+        Required: company_name, siret_siren, address, city, postal_code, phone or email
+        Note: tax_id (TVA Intracommunautaire) is optional - only required if is_vat_subject is True
         """
         required_fields = [
             self.company_name,
             self.siret_siren,
-            self.tax_id,
             self.address,
             self.city,
             self.postal_code,
@@ -271,8 +317,6 @@ class UserProfile(models.Model):
             missing.append('company_name')
         if not self.siret_siren:
             missing.append('siret_siren')
-        if not self.tax_id:
-            missing.append('tax_id')
         if not self.address:
             missing.append('address')
         if not self.city:
@@ -294,6 +338,9 @@ def create_user_profile(sender, instance, created, **kwargs):
             onboarding_completed=False,
             onboarding_step=1
         )
+        # Send welcome email asynchronously
+        from utils.email_tasks import send_welcome_email_task
+        send_welcome_email_task.delay(instance.id)
 
 
 @receiver(post_save, sender=User)

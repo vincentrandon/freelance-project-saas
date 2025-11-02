@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import { usePasswordResetConfirm } from "../api/hooks";
 import AuthImage from "../images/auth-image.jpg";
 
 function ResetPasswordConfirm() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const uid = searchParams.get('uid');
@@ -27,12 +29,12 @@ function ResetPasswordConfirm() {
     setError('');
 
     if (formData.new_password1 !== formData.new_password2) {
-      setError('Passwords do not match');
+      setError(t('auth.setNewPassword.errorPasswordMismatch'));
       return;
     }
 
     if (!uid || !token) {
-      setError('Invalid password reset link');
+      setError(t('auth.setNewPassword.errorInvalidLink'));
       return;
     }
 
@@ -54,11 +56,11 @@ function ResetPasswordConfirm() {
       } else if (errorData?.new_password1) {
         setError(errorData.new_password1[0]);
       } else if (errorData?.token) {
-        setError('Invalid or expired password reset link');
+        setError(t('auth.setNewPassword.errorExpiredLink'));
       } else if (errorData?.detail) {
         setError(errorData.detail);
       } else {
-        setError('Failed to reset password. Please try again.');
+        setError(t('auth.setNewPassword.errorGeneric'));
       }
     }
   };
@@ -82,12 +84,12 @@ function ResetPasswordConfirm() {
             </div>
 
             <div className="max-w-sm mx-auto w-full px-4 py-8">
-              <h1 className="text-3xl text-gray-800 dark:text-gray-100 font-bold mb-6">Set New Password</h1>
+              <h1 className="text-3xl text-gray-800 dark:text-gray-100 font-bold mb-6">{t('auth.setNewPassword.title')}</h1>
 
               {success && (
                 <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                   <p className="text-green-600 dark:text-green-400 text-sm">
-                    Password reset successful! Redirecting to sign in...
+                    {t('auth.setNewPassword.successMessage')}
                   </p>
                 </div>
               )}
@@ -101,7 +103,7 @@ function ResetPasswordConfirm() {
               {!success && (
                 <>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                    Please enter your new password below.
+                    {t('auth.setNewPassword.description')}
                   </p>
 
                   {/* Form */}
@@ -109,7 +111,7 @@ function ResetPasswordConfirm() {
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium mb-1" htmlFor="new_password1">
-                          New Password <span className="text-red-500">*</span>
+                          {t('auth.setNewPassword.newPasswordLabel')} <span className="text-red-500">*</span>
                         </label>
                         <input
                           id="new_password1"
@@ -125,7 +127,7 @@ function ResetPasswordConfirm() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium mb-1" htmlFor="new_password2">
-                          Confirm New Password <span className="text-red-500">*</span>
+                          {t('auth.setNewPassword.confirmPasswordLabel')} <span className="text-red-500">*</span>
                         </label>
                         <input
                           id="new_password2"
@@ -146,7 +148,7 @@ function ResetPasswordConfirm() {
                         disabled={passwordResetConfirmMutation.isPending}
                         className="btn bg-gray-900 text-gray-100 hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-800 dark:hover:bg-white whitespace-nowrap disabled:opacity-50"
                       >
-                        {passwordResetConfirmMutation.isPending ? 'Resetting...' : 'Reset Password'}
+                        {passwordResetConfirmMutation.isPending ? t('auth.setNewPassword.resetting') : t('auth.setNewPassword.resetButton')}
                       </button>
                     </div>
                   </form>
@@ -158,7 +160,7 @@ function ResetPasswordConfirm() {
                   className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                   to="/signin"
                 >
-                  Back to Sign In
+                  {t('auth.setNewPassword.backToSignIn')}
                 </Link>
               </div>
             </div>

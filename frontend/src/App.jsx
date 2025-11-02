@@ -101,6 +101,7 @@ import CRAMonthly from './pages/cra/CRAMonthly';
 import CRAForm from './pages/cra/CRAForm';
 import CRADetail from './pages/cra/CRADetail';
 import CRASignature from './pages/cra/CRASignature';
+import OAuthCallback from './pages/OAuthCallback';
 
 // Notification Polling Component
 function NotificationPoller() {
@@ -187,6 +188,7 @@ function AppContent() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/reset-password-confirm" element={<ResetPasswordConfirm />} />
         <Route path="/sign/:token" element={<PublicSignature />} />
+        <Route path="/auth/google/callback" element={<OAuthCallback />} />
 
         {/* Onboarding routes - protected but skip onboarding check */}
         <Route path="/onboarding-01" element={<ProtectedRoute skipOnboardingCheck={true}><Onboarding01 /></ProtectedRoute>} />

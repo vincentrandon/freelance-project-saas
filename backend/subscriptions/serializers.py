@@ -65,7 +65,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     billing_cycle_display = serializers.CharField(source='get_billing_cycle_display', read_only=True)
     is_trial = serializers.BooleanField(source='is_trial_active', read_only=True)
-    days_until_trial_ends = serializers.IntegerField(source='days_until_trial_ends', read_only=True)
+    days_until_trial_ends = serializers.IntegerField(read_only=True)
     is_active = serializers.BooleanField(source='is_active_paid', read_only=True)
 
     class Meta:

@@ -1,16 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useOnboardingStatus, useUpdateOnboarding } from "../api/hooks";
+import { useTranslation } from "react-i18next";
 import OnboardingImage from "../images/onboarding-image.jpg";
 
 function Onboarding03() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: onboardingData, isLoading } = useOnboardingStatus();
   const updateOnboarding = useUpdateOnboarding();
 
   const [formData, setFormData] = useState({
+    company_type: "",
     tjm_default: 500,
     tjm_hours_per_day: 7,
+    is_vat_subject: true,
+    tax_id: "",
     default_tax_rate: 20.0,
     currency: "EUR",
     payment_terms_days: 30,
@@ -25,8 +30,11 @@ function Onboarding03() {
   useEffect(() => {
     if (onboardingData) {
       setFormData({
+        company_type: onboardingData.company_type || "",
         tjm_default: onboardingData.tjm_default || 500,
         tjm_hours_per_day: onboardingData.tjm_hours_per_day || 7,
+        is_vat_subject: onboardingData.is_vat_subject !== undefined ? onboardingData.is_vat_subject : true,
+        tax_id: onboardingData.tax_id || "",
         default_tax_rate: onboardingData.default_tax_rate || 20.0,
         currency: onboardingData.currency || "EUR",
         payment_terms_days: onboardingData.payment_terms_days || 30,
@@ -39,11 +47,36 @@ function Onboarding03() {
   }, [onboardingData]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    const { name, value, type } = e.target;
+
+    // Handle radio button for is_vat_subject
+    let parsedValue = type === 'radio' ? value === 'true' : value;
+
+    // Convert numeric fields to proper types
+    if (name === 'default_tax_rate' || name === 'default_security_margin') {
+      parsedValue = parseFloat(value);
+    } else if (name === 'tjm_default' || name === 'tjm_hours_per_day' || name === 'payment_terms_days') {
+      parsedValue = value === '' ? '' : Number(value);
+    }
+
+    setFormData((prev) => {
+      const newData = {
+        ...prev,
+        [name]: parsedValue,
+      };
+
+      // If VAT subject is set to false, force tax rate to 0
+      if (name === 'is_vat_subject' && parsedValue === false) {
+        newData.default_tax_rate = 0.0;
+      }
+      // If VAT subject is set to true and tax rate is 0, set to default 20%
+      if (name === 'is_vat_subject' && parsedValue === true && prev.default_tax_rate === 0.0) {
+        newData.default_tax_rate = 20.0;
+      }
+
+      return newData;
+    });
+
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -161,6 +194,30 @@ function Onboarding03() {
                 {/* Form */}
                 <form onSubmit={handleSubmit}>
                   <div className="space-y-4 mb-8">
+                    {/* Company Type */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-800 dark:text-gray-100 mb-1" htmlFor="company_type">
+                        {t('onboarding.companyType.label')}
+                      </label>
+                      <select
+                        id="company_type"
+                        name="company_type"
+                        className="form-select w-full"
+                        value={formData.company_type}
+                        onChange={handleChange}
+                      >
+                        <option value="">{t('onboarding.companyType.placeholder')}</option>
+                        <option value="MICRO_ENTREPRISE">{t('onboarding.companyType.types.MICRO_ENTREPRISE')}</option>
+                        <option value="SASU">{t('onboarding.companyType.types.SASU')}</option>
+                        <option value="SAS">{t('onboarding.companyType.types.SAS')}</option>
+                        <option value="EURL">{t('onboarding.companyType.types.EURL')}</option>
+                        <option value="SARL">{t('onboarding.companyType.types.SARL')}</option>
+                        <option value="EI">{t('onboarding.companyType.types.EI')}</option>
+                        <option value="OTHER">{t('onboarding.companyType.types.OTHER')}</option>
+                      </select>
+                      <p className="mt-1 text-xs text-gray-500">{t('onboarding.companyType.helpText')}</p>
+                    </div>
+
                     {/* TJM (Daily Rate) */}
                     <div>
                       <label className="block text-sm font-medium text-gray-800 dark:text-gray-100 mb-1" htmlFor="tjm_default">
@@ -217,24 +274,93 @@ function Onboarding03() {
                       </select>
                     </div>
 
-                    {/* Tax Rate */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-800 dark:text-gray-100 mb-1" htmlFor="default_tax_rate">
-                        Default Tax Rate (%)
+                    {/* VAT/TVA Subject */}
+                    <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                      <label className="block text-sm font-medium text-gray-800 dark:text-gray-100 mb-3">
+                        Do you charge VAT (TVA) on your invoices?
                       </label>
-                      <input
-                        id="default_tax_rate"
-                        name="default_tax_rate"
-                        className="form-input w-full"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        max="100"
-                        value={formData.default_tax_rate}
-                        onChange={handleChange}
-                      />
-                      <p className="mt-1 text-xs text-gray-500">Standard VAT rate in France is 20%</p>
+                      <div className="flex gap-4">
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="radio"
+                            name="is_vat_subject"
+                            value="true"
+                            checked={formData.is_vat_subject === true}
+                            onChange={handleChange}
+                            className="form-radio"
+                          />
+                          <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Yes</span>
+                        </label>
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="radio"
+                            name="is_vat_subject"
+                            value="false"
+                            checked={formData.is_vat_subject === false}
+                            onChange={handleChange}
+                            className="form-radio"
+                          />
+                          <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">No</span>
+                        </label>
+                      </div>
+                      <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        {formData.company_type === 'MICRO_ENTREPRISE'
+                          ? t('onboarding.vat.helpTextMicro')
+                          : t('onboarding.vat.helpTextAll')
+                        }
+                      </p>
                     </div>
+
+                    {/* TVA Intracommunautaire - Conditional on VAT Subject */}
+                    {formData.is_vat_subject && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-800 dark:text-gray-100 mb-1" htmlFor="tax_id">
+                          TVA Intracommunautaire
+                        </label>
+                        <input
+                          id="tax_id"
+                          name="tax_id"
+                          className="form-input w-full"
+                          type="text"
+                          value={formData.tax_id}
+                          onChange={handleChange}
+                          placeholder="e.g., FR12345678901"
+                        />
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Optional - Your intra-community VAT number for EU transactions</p>
+                      </div>
+                    )}
+
+                    {/* Tax Rate - Conditional on VAT Subject */}
+                    {formData.is_vat_subject && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-800 dark:text-gray-100 mb-1" htmlFor="default_tax_rate">
+                          VAT Rate (%)
+                        </label>
+                        <select
+                          id="default_tax_rate"
+                          name="default_tax_rate"
+                          className="form-select w-full"
+                          value={formData.default_tax_rate}
+                          onChange={handleChange}
+                        >
+                          <option value="20.00">20% - Standard rate (Taux normal)</option>
+                          <option value="10.00">10% - Reduced rate (Restaurants, accommodation)</option>
+                          <option value="5.50">5.5% - Reduced rate (Essential goods)</option>
+                          <option value="2.10">2.1% - Super-reduced rate (Newspapers, medicines)</option>
+                          <option value="0.00">0% - Exempt (Not applicable)</option>
+                        </select>
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Select the VAT rate according to French law</p>
+                      </div>
+                    )}
+
+                    {/* Info box when not subject to VAT */}
+                    {!formData.is_vat_subject && (
+                      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded">
+                        <p className="text-sm text-blue-800 dark:text-blue-200">
+                          <strong>Note:</strong> Your invoices will display <em>"TVA non applicable, art. 293 B du CGI"</em> as required by French law.
+                        </p>
+                      </div>
+                    )}
 
                     {/* Payment Terms */}
                     <div>

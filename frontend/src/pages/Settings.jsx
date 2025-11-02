@@ -30,10 +30,27 @@ function Settings() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+
+    // Handle radio button for is_vat_subject
+    const parsedValue = type === 'radio' ? value === 'true' : (type === 'checkbox' ? checked : value);
+
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        [name]: parsedValue
+      };
+
+      // If VAT subject is set to false, force tax rate to 0
+      if (name === 'is_vat_subject' && parsedValue === false) {
+        newData.default_tax_rate = 0.0;
+      }
+      // If VAT subject is set to true and tax rate is 0, set to default 20%
+      if (name === 'is_vat_subject' && parsedValue === true && prev.default_tax_rate === 0.0) {
+        newData.default_tax_rate = 20.0;
+      }
+
+      return newData;
+    });
   };
 
   const handleSave = async (section) => {
@@ -45,6 +62,7 @@ function Settings() {
           tjm_hours_per_day: formData.tjm_hours_per_day,
           default_security_margin: formData.default_security_margin,
           show_security_margin_on_pdf: formData.show_security_margin_on_pdf,
+          is_vat_subject: formData.is_vat_subject,
           default_tax_rate: formData.default_tax_rate,
           currency: formData.currency,
         });
@@ -434,23 +452,74 @@ function Settings() {
                   {/* Tax & Currency */}
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                      Taxes & Devise
+                      TVA & Devise
                     </h3>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Taux de TVA par défaut (%)
+                    {/* VAT Subject */}
+                    <div className="mb-6">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                        Facturez-vous la TVA ?
+                      </label>
+                      <div className="flex gap-4">
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="radio"
+                            name="is_vat_subject"
+                            value="true"
+                            checked={formData.is_vat_subject === true}
+                            onChange={handleChange}
+                            className="form-radio h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                          />
+                          <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Oui</span>
                         </label>
-                        <input
-                          type="number"
-                          name="default_tax_rate"
-                          value={formData.default_tax_rate || ''}
-                          onChange={handleChange}
-                          step="0.1"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="radio"
+                            name="is_vat_subject"
+                            value="false"
+                            checked={formData.is_vat_subject === false}
+                            onChange={handleChange}
+                            className="form-radio h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                          />
+                          <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Non</span>
+                        </label>
                       </div>
+                      <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        Les micro-entrepreneurs en dessous des seuils (37 500 € pour les services, 85 000 € pour les biens) peuvent être exonérés selon l'<strong>Article 293 B du CGI</strong>
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Tax Rate - Conditional on VAT Subject */}
+                      {formData.is_vat_subject && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Taux de TVA par défaut (%)
+                          </label>
+                          <select
+                            name="default_tax_rate"
+                            value={formData.default_tax_rate || 20.0}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          >
+                            <option value="20.00">20% - Taux normal</option>
+                            <option value="10.00">10% - Taux réduit (Restaurants, hébergement)</option>
+                            <option value="5.50">5,5% - Taux réduit (Biens essentiels)</option>
+                            <option value="2.10">2,1% - Taux super réduit (Presse, médicaments)</option>
+                            <option value="0.00">0% - Exonéré</option>
+                          </select>
+                          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Sélectionnez le taux de TVA selon la loi française</p>
+                        </div>
+                      )}
+
+                      {/* Info box when not subject to VAT */}
+                      {!formData.is_vat_subject && (
+                        <div className="md:col-span-2 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded">
+                          <p className="text-sm text-blue-800 dark:text-blue-200">
+                            <strong>Note :</strong> Vos factures afficheront <em>"TVA non applicable, art. 293 B du CGI"</em> conformément à la loi française.
+                          </p>
+                        </div>
+                      )}
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

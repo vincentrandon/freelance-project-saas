@@ -1,0 +1,35 @@
+{% extends "account/email/base_email.html" %}
+{% load account i18n %}
+
+{% block subject %}Vérifiez votre adresse email pour kiik.app{% endblock %}
+
+{% block content %}
+<h1>Vérifiez votre adresse email</h1>
+
+<p>Bonjour {{ user.first_name|default:"" }},</p>
+
+<p>Merci de vous être inscrit sur kiik.app ! Pour finaliser votre inscription et activer votre compte, veuillez vérifier votre adresse email en cliquant sur le bouton ci-dessous :</p>
+
+<div style="text-align: center;">
+    <a href="{{ activate_url }}" class="button">Vérifier mon adresse email</a>
+</div>
+
+<p style="font-size: 14px; color: #6b7280;">
+    Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :
+</p>
+
+<div class="link-box">
+    <a href="{{ activate_url }}">{{ activate_url }}</a>
+</div>
+
+<div class="divider"></div>
+
+<p style="font-size: 14px; color: #6b7280;">
+    Si vous n'avez pas créé de compte sur kiik.app, vous pouvez ignorer cet email en toute sécurité.
+</p>
+
+<p style="margin-top: 32px;">
+    Cordialement,<br>
+    <strong>L'équipe kiik.app</strong>
+</p>
+{% endblock %}

@@ -6,6 +6,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from .views import GoogleLogin, google_login_redirect, google_callback, company_lookup
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -13,12 +14,20 @@ urlpatterns = [
     # API Documentation
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    
+
     # Authentication
     path('api/auth/', include('dj_rest_auth.urls')),
     path('api/auth/registration/', include('dj_rest_auth.registration.urls')),
     path('api/auth/social/', include('allauth.socialaccount.urls')),
-    
+
+    # Social Authentication (Google OAuth)
+    path('api/auth/google/', google_login_redirect, name='google_login'),
+    path('api/auth/google/callback/', google_callback, name='google_callback'),
+    path('api/auth/google/login/', GoogleLogin.as_view(), name='google_login_view'),
+
+    # Company Lookup (INSEE API)
+    path('api/company-lookup/', company_lookup, name='company_lookup'),
+
     # App URLs
     path('api/customers/', include('customers.urls')),
     path('api/leads/', include('leads.urls')),

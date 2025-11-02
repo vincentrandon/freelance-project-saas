@@ -21,7 +21,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'id', 'user', 'user_username', 'user_email', 'user_first_name', 'user_last_name', 'business_email',
 
             # Company info
-            'company_name', 'company_logo', 'address', 'city', 'postal_code',
+            'company_name', 'company_type', 'company_logo', 'address', 'city', 'postal_code',
             'country', 'phone', 'email', 'website', 'tax_id', 'siret_siren',
 
             # Bank details
@@ -33,7 +33,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'default_security_margin', 'show_security_margin_on_pdf',
 
             # Payment & tax
-            'payment_terms_days', 'default_tax_rate', 'currency',
+            'payment_terms_days', 'default_tax_rate', 'currency', 'is_vat_subject',
 
             # PDF customization
             'pdf_footer_text', 'pdf_primary_color', 'pdf_show_logo',
@@ -157,7 +157,7 @@ class OnboardingSerializer(serializers.ModelSerializer):
         model = UserProfile
         fields = [
             # Company info
-            'company_name', 'company_logo', 'address', 'city', 'postal_code',
+            'company_name', 'company_type', 'company_logo', 'address', 'city', 'postal_code',
             'country', 'phone', 'email', 'website', 'tax_id', 'siret_siren',
 
             # Bank details
@@ -166,7 +166,7 @@ class OnboardingSerializer(serializers.ModelSerializer):
             # Pricing settings
             'tjm_default', 'hourly_rate_default', 'tjm_hours_per_day',
             'default_security_margin', 'default_tax_rate', 'currency',
-            'payment_terms_days',
+            'payment_terms_days', 'is_vat_subject',
 
             # Onboarding
             'onboarding_completed', 'onboarding_step',
@@ -175,6 +175,26 @@ class OnboardingSerializer(serializers.ModelSerializer):
             'profile_completeness', 'is_complete_for_invoicing', 'missing_required_fields'
         ]
         read_only_fields = ['profile_completeness', 'is_complete_for_invoicing', 'missing_required_fields']
+
+    def to_internal_value(self, data):
+        """
+        Normalize tax rate input so strings like "20" match the allowed Decimal choices.
+        """
+        data = data.copy()
+        raw_tax_rate = data.get('default_tax_rate')
+
+        if raw_tax_rate not in (None, ''):
+            from decimal import Decimal, InvalidOperation
+
+            try:
+                normalized = Decimal(str(raw_tax_rate))
+                # Quantize to two decimals to match stored choices (e.g., 20 -> 20.00)
+                data['default_tax_rate'] = str(normalized.quantize(Decimal('0.00')))
+            except (InvalidOperation, TypeError, ValueError):
+                # Leave the value as-is; field validation will raise the appropriate error
+                pass
+
+        return super().to_internal_value(data)
 
     def get_profile_completeness(self, obj):
         return obj.get_profile_completeness_percentage()

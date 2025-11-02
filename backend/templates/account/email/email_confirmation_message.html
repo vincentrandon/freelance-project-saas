@@ -1,0 +1,35 @@
+{% extends "account/email/base_email.html" %}
+{% load account i18n %}
+
+{% block subject %}Verify your email address for kiik.app{% endblock %}
+
+{% block content %}
+<h1>Verify Your Email Address</h1>
+
+<p>Hi {{ user.first_name|default:"there" }},</p>
+
+<p>Thanks for signing up for kiik.app! To complete your registration and activate your account, please verify your email address by clicking the button below:</p>
+
+<div style="text-align: center;">
+    <a href="{{ activate_url }}" class="button">Verify Email Address</a>
+</div>
+
+<p style="font-size: 14px; color: #6b7280;">
+    If the button doesn't work, copy and paste this link into your browser:
+</p>
+
+<div class="link-box">
+    <a href="{{ activate_url }}">{{ activate_url }}</a>
+</div>
+
+<div class="divider"></div>
+
+<p style="font-size: 14px; color: #6b7280;">
+    If you didn't create an account on kiik.app, you can safely ignore this email.
+</p>
+
+<p style="margin-top: 32px;">
+    Best regards,<br>
+    <strong>The kiik.app Team</strong>
+</p>
+{% endblock %}

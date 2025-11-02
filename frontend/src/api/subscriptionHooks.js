@@ -4,7 +4,7 @@ import client from './client';
 /**
  * Fetch current user's subscription with usage data
  */
-export const useSubscription = () => {
+export const useSubscription = (options = {}) => {
   return useQuery({
     queryKey: ['subscription'],
     queryFn: async () => {
@@ -13,13 +13,14 @@ export const useSubscription = () => {
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 1,
+    ...options,
   });
 };
 
 /**
  * Fetch current period usage statistics
  */
-export const useUsage = () => {
+export const useUsage = (options = {}) => {
   return useQuery({
     queryKey: ['usage'],
     queryFn: async () => {
@@ -27,6 +28,7 @@ export const useUsage = () => {
       return data;
     },
     staleTime: 1 * 60 * 1000, // 1 minute
+    ...options,
   });
 };
 

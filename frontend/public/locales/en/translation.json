@@ -20,6 +20,38 @@
     "unlimited": "Unlimited",
     "remaining": "{{count}} remaining"
   },
+  "auth": {
+    "or": "Or",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithGithub": "Continue with GitHub",
+    "resetPassword": {
+      "title": "Reset your Password",
+      "emailLabel": "Email Address",
+      "sendButton": "Send Reset Link",
+      "sending": "Sending...",
+      "successMessage": "Password reset email sent! Please check your inbox and follow the instructions to reset your password.",
+      "backToSignIn": "Back to Sign In",
+      "errorGeneric": "Failed to send reset email. Please try again."
+    },
+    "setNewPassword": {
+      "title": "Set New Password",
+      "description": "Please enter your new password below.",
+      "newPasswordLabel": "New Password",
+      "confirmPasswordLabel": "Confirm New Password",
+      "resetButton": "Reset Password",
+      "resetting": "Resetting...",
+      "successMessage": "Password reset successful! Redirecting to sign in...",
+      "backToSignIn": "Back to Sign In",
+      "errorPasswordMismatch": "Passwords do not match",
+      "errorInvalidLink": "Invalid password reset link",
+      "errorExpiredLink": "Invalid or expired password reset link",
+      "errorGeneric": "Failed to reset password. Please try again."
+    },
+    "signin": {
+      "forgotPassword": "Forgot Password?"
+    }
+  },
+
   "common": {
     "cancel": "Cancel",
     "save": "Save",
@@ -973,6 +1005,36 @@
       "title": "No CRA for this month",
       "description": "Create your first activity report for this month.",
       "button": "Create a CRA"
+    }
+  },
+
+  "onboarding": {
+    "company": {
+      "sirenPlaceholder": "e.g., 123 456 789 or 123 456 789 00015",
+      "autoLookupHint": "Enter 9 digits (SIREN) or 14 digits (SIRET) - company info will auto-fill",
+      "sirenRequired": "SIREN number is required",
+      "sirenInvalid": "SIREN must be exactly 9 digits",
+      "lookupSuccess": "Company found: {{name}}",
+      "lookupError": "Company not found or information not publicly available. Please enter your company details manually below.",
+      "lookupNotFound": "Company information not available. Please fill in manually."
+    },
+    "companyType": {
+      "label": "Company Type",
+      "placeholder": "Select your business type...",
+      "helpText": "Your legal business structure",
+      "types": {
+        "MICRO_ENTREPRISE": "Micro-entreprise / Auto-entrepreneur",
+        "SASU": "SASU (Société par Actions Simplifiée Unipersonnelle)",
+        "SAS": "SAS (Société par Actions Simplifiée)",
+        "EURL": "EURL (Entreprise Unipersonnelle à Responsabilité Limitée)",
+        "SARL": "SARL (Société à Responsabilité Limitée)",
+        "EI": "EI (Entreprise Individuelle)",
+        "OTHER": "Other"
+      }
+    },
+    "vat": {
+      "helpTextMicro": "Micro-entrepreneurs below thresholds (€37,500 for services, €85,000 for goods) may be exempt under Article 293 B du CGI",
+      "helpTextAll": "All businesses with revenue below €37,500 (services) or €85,000 (goods) may be exempt under Article 293 B du CGI, regardless of legal status"
     }
   },
 

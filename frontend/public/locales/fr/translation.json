@@ -20,6 +20,38 @@
     "unlimited": "Illimité",
     "remaining": "{{count}} restant"
   },
+  "auth": {
+    "or": "Ou",
+    "continueWithGoogle": "Continuer avec Google",
+    "continueWithGithub": "Continuer avec GitHub",
+    "resetPassword": {
+      "title": "Réinitialiser votre mot de passe",
+      "emailLabel": "Adresse e-mail",
+      "sendButton": "Envoyer le lien de réinitialisation",
+      "sending": "Envoi...",
+      "successMessage": "Email de réinitialisation envoyé ! Veuillez consulter votre boîte de réception et suivre les instructions pour réinitialiser votre mot de passe.",
+      "backToSignIn": "Retour à la connexion",
+      "errorGeneric": "Échec de l'envoi de l'email. Veuillez réessayer."
+    },
+    "setNewPassword": {
+      "title": "Définir un nouveau mot de passe",
+      "description": "Veuillez entrer votre nouveau mot de passe ci-dessous.",
+      "newPasswordLabel": "Nouveau mot de passe",
+      "confirmPasswordLabel": "Confirmer le nouveau mot de passe",
+      "resetButton": "Réinitialiser le mot de passe",
+      "resetting": "Réinitialisation...",
+      "successMessage": "Réinitialisation du mot de passe réussie ! Redirection vers la connexion...",
+      "backToSignIn": "Retour à la connexion",
+      "errorPasswordMismatch": "Les mots de passe ne correspondent pas",
+      "errorInvalidLink": "Lien de réinitialisation invalide",
+      "errorExpiredLink": "Lien de réinitialisation invalide ou expiré",
+      "errorGeneric": "Échec de la réinitialisation du mot de passe. Veuillez réessayer."
+    },
+    "signin": {
+      "forgotPassword": "Mot de passe oublié ?"
+    }
+  },
+
   "common": {
     "cancel": "Annuler",
     "save": "Enregistrer",
@@ -973,6 +1005,36 @@
       "title": "Aucun CRA pour ce mois",
       "description": "Créez votre premier compte rendu d'activité pour ce mois.",
       "button": "Créer un CRA"
+    }
+  },
+
+  "onboarding": {
+    "company": {
+      "sirenPlaceholder": "ex: 123 456 789 ou 123 456 789 00015",
+      "autoLookupHint": "Saisissez 9 chiffres (SIREN) ou 14 chiffres (SIRET) - les infos se rempliront automatiquement",
+      "sirenRequired": "Le numéro SIREN est requis",
+      "sirenInvalid": "Le SIREN doit contenir exactement 9 chiffres",
+      "lookupSuccess": "Entreprise trouvée : {{name}}",
+      "lookupError": "Entreprise introuvable ou informations non publiques. Veuillez saisir vos informations manuellement ci-dessous.",
+      "lookupNotFound": "Informations non disponibles. Veuillez remplir manuellement."
+    },
+    "companyType": {
+      "label": "Type de société",
+      "placeholder": "Sélectionnez votre type d'entreprise...",
+      "helpText": "Votre structure juridique",
+      "types": {
+        "MICRO_ENTREPRISE": "Micro-entreprise / Auto-entrepreneur",
+        "SASU": "SASU (Société par Actions Simplifiée Unipersonnelle)",
+        "SAS": "SAS (Société par Actions Simplifiée)",
+        "EURL": "EURL (Entreprise Unipersonnelle à Responsabilité Limitée)",
+        "SARL": "SARL (Société à Responsabilité Limitée)",
+        "EI": "EI (Entreprise Individuelle)",
+        "OTHER": "Autre"
+      }
+    },
+    "vat": {
+      "helpTextMicro": "Les micro-entrepreneurs en dessous des seuils (37 500 € pour les services, 85 000 € pour les biens) peuvent être exonérés selon l'Article 293 B du CGI",
+      "helpTextAll": "Toutes les entreprises avec un chiffre d'affaires inférieur à 37 500 € (services) ou 85 000 € (biens) peuvent être exonérées selon l'Article 293 B du CGI, quel que soit le statut juridique"
     }
   },
 

@@ -1,0 +1,53 @@
+{% extends "account/email/base_email.html" %}
+{% load i18n %}
+
+{% block subject %}Bienvenue sur kiik.app !{% endblock %}
+
+{% block content %}
+<h1>Bienvenue sur kiik.app ! 🎉</h1>
+
+<p>Bonjour {{ user.first_name|default:"" }},</p>
+
+<p>Nous sommes ravis de vous accueillir ! Vous venez de rejoindre des milliers de freelances qui optimisent leurs opérations commerciales avec kiik.app.</p>
+
+<h2 style="font-size: 18px; color: #111827; margin-top: 32px;">🚀 Guide de Démarrage Rapide</h2>
+
+<p>Voici ce que vous pouvez faire pour commencer :</p>
+
+<div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 16px 0;">
+    <p style="margin: 8px 0;"><strong>1. Complétez votre profil d'entreprise</strong><br>
+    <span style="font-size: 14px; color: #6b7280;">Ajoutez vos informations professionnelles pour des factures et devis conformes</span></p>
+
+    <p style="margin: 8px 0;"><strong>2. Ajoutez votre premier client</strong><br>
+    <span style="font-size: 14px; color: #6b7280;">Importez depuis des documents ou créez manuellement</span></p>
+
+    <p style="margin: 8px 0;"><strong>3. Créez un projet</strong><br>
+    <span style="font-size: 14px; color: #6b7280;">Organisez votre travail et suivez votre progression</span></p>
+
+    <p style="margin: 8px 0;"><strong>4. Générez votre première facture</strong><br>
+    <span style="font-size: 14px; color: #6b7280;">Des PDFs professionnels prêts en quelques secondes</span></p>
+</div>
+
+<div style="text-align: center; margin: 32px 0;">
+    <a href="{{ frontend_url }}/dashboard" class="button">Accéder au Tableau de Bord</a>
+</div>
+
+<h2 style="font-size: 18px; color: #111827; margin-top: 32px;">💡 Astuces Pro</h2>
+
+<p><strong>Essayez l'Import IA de Documents :</strong> Téléversez vos factures ou devis existants et laissez l'IA extraire automatiquement les données clients et projets. C'est un énorme gain de temps !</p>
+
+<p><strong>Configurez vos Tarifs :</strong> Définissez votre TJM et vos marges de sécurité dans les Paramètres pour accélérer la création de devis.</p>
+
+<p><strong>Activez les Notifications Email :</strong> Restez informé des paiements de factures et des échéances de projets.</p>
+
+<div class="divider"></div>
+
+<p style="font-size: 14px; color: #6b7280;">
+    Besoin d'aide ? Consultez notre <a href="https://kiik.app/help">Centre d'Aide</a> ou répondez à cet email - nous sommes là pour vous aider !
+</p>
+
+<p style="margin-top: 32px;">
+    Bon freelancing ! 🎨<br>
+    <strong>L'équipe kiik.app</strong>
+</p>
+{% endblock %}
