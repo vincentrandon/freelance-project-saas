@@ -2,7 +2,16 @@ import React from 'react';
 
 const categoryColors = {
   development: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-  design: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+  automation: 'bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-400',
+  ui_ux_design: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+  graphic_design: 'bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900/30 dark:text-fuchsia-400',
+  video_editing: 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400',
+  '3d_modeling': 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400',
+  content_writing: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+  translation: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400',
+  marketing: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+  accounting: 'bg-lime-100 text-lime-800 dark:bg-lime-900/30 dark:text-lime-400',
+  audio_production: 'bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-400',
   testing: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
   deployment: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
   consulting: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400',

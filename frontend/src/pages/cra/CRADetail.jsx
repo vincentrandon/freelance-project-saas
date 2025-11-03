@@ -10,6 +10,7 @@ import {
 import Header from '../../partials/Header';
 import Sidebar from '../../partials/Sidebar';
 import ModalBasic from '../../components/ModalBasic';
+import DropdownActionsCRA from '../../components/DropdownActionsCRA';
 import { useTranslation } from 'react-i18next';
 
 // Notification Modal Component
@@ -74,6 +75,40 @@ function CRADetail() {
     setNotification({ isOpen: true, type, title, message });
   };
 
+  const handleActionClick = (action) => {
+    switch (action) {
+      case 'view':
+        // Already on view page
+        break;
+      case 'generate-pdf':
+        handleGeneratePDF();
+        break;
+      case 'view-pdf':
+        if (cra.pdf_file) {
+          window.open(cra.pdf_file, '_blank');
+        }
+        break;
+      case 'send-validation':
+        setSendModalOpen(true);
+        break;
+      case 'generate-invoice':
+        setGenerateInvoiceModalOpen(true);
+        break;
+      case 'edit':
+        navigate(`/cra/${id}/edit`);
+        break;
+      case 'duplicate':
+        // TODO: Implement duplicate functionality
+        showNotification('info', 'Info', 'Duplicate feature coming soon');
+        break;
+      case 'delete':
+        setDeleteModalOpen(true);
+        break;
+      default:
+        break;
+    }
+  };
+
   const cra = craData?.data;
 
   const monthNames = [
@@ -136,15 +171,16 @@ function CRADetail() {
   };
 
   const handleGenerateInvoice = async () => {
-    setGenerateInvoiceModalOpen(false);
     try {
       const response = await generateInvoiceMutation.mutateAsync(id);
+      setGenerateInvoiceModalOpen(false);
       showNotification('success', 'Succès', 'Facture créée avec succès!');
       setTimeout(() => {
         navigate(`/invoicing?invoice=${response.data.invoice.id}`);
       }, 1500);
     } catch (error) {
       console.error('Error generating invoice:', error);
+      setGenerateInvoiceModalOpen(false);
       showNotification('error', 'Erreur', 'Erreur lors de la génération de la facture: ' + (error.response?.data?.error || error.message));
     }
   };
@@ -214,51 +250,18 @@ function CRADetail() {
                 </div>
               </div>
 
-              <div className="grid grid-flow-col sm:auto-cols-max justify-start sm:justify-end gap-2">
-                {cra.can_edit && (
+              <div className="flex items-center gap-3">
+                {/* Primary Action Buttons - Keep most important visible */}
+                {cra.status === 'draft' && (
                   <button
-                    onClick={() => navigate(`/cra/${id}/edit`)}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 rounded-lg font-medium transition-colors"
+                    onClick={() => setSendModalOpen(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
-                    Modifier
+                    Envoyer pour validation
                   </button>
-                )}
-
-                {cra.status === 'draft' && (
-                  <>
-                    <button
-                      onClick={handleGeneratePDF}
-                      disabled={generatePDFMutation.isPending}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {generatePDFMutation.isPending ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-slate-700 dark:border-slate-200 border-t-transparent"></div>
-                          <span>Génération...</span>
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                          <span>Générer PDF</span>
-                        </>
-                      )}
-                    </button>
-
-                    <button
-                      onClick={() => setSendModalOpen(true)}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors"
-                    >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                      Envoyer pour validation
-                    </button>
-                  </>
                 )}
 
                 {cra.status === 'validated' && (
@@ -283,31 +286,8 @@ function CRADetail() {
                   </button>
                 )}
 
-                {cra.pdf_file && (
-                  <a
-                    href={cra.pdf_file}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 rounded-lg font-medium transition-colors"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    Télécharger PDF
-                  </a>
-                )}
-
-                {cra.can_delete && (
-                  <button
-                    onClick={() => setDeleteModalOpen(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-700 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-lg font-medium transition-colors"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    Supprimer
-                  </button>
-                )}
+                {/* Dropdown Menu for all other actions */}
+                <DropdownActionsCRA cra={cra} onAction={handleActionClick} />
               </div>
             </div>
 
@@ -486,8 +466,8 @@ function CRADetail() {
 
       {/* Send for Validation Modal */}
       <ModalBasic
-        isOpen={sendModalOpen}
-        setIsOpen={setSendModalOpen}
+        modalOpen={sendModalOpen}
+        setModalOpen={setSendModalOpen}
         title="Envoyer pour validation"
       >
         <div className="px-5 py-4">
@@ -560,8 +540,8 @@ function CRADetail() {
 
       {/* Generate Invoice Confirmation Modal */}
       <ModalBasic
-        isOpen={generateInvoiceModalOpen}
-        setIsOpen={setGenerateInvoiceModalOpen}
+        modalOpen={generateInvoiceModalOpen}
+        setModalOpen={setGenerateInvoiceModalOpen}
         title="Générer une facture"
       >
         <div className="px-5 py-4">

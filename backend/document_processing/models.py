@@ -39,6 +39,17 @@ class ImportedDocument(models.Model):
     error_message = models.TextField(null=True, blank=True)
     processing_time_seconds = models.FloatField(null=True, blank=True)
 
+    # Clarification history (preserves user refinements across reparses)
+    clarification_history = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text=_("Stores user-refined task data to preserve across reparses. Structure: {task_identifier: {refined_data, timestamp, version}}")
+    )
+    preserve_clarifications_on_reparse = models.BooleanField(
+        default=True,
+        help_text=_("If True, merge previous clarifications when reparsing; if False, start fresh")
+    )
+
     class Meta:
         ordering = ['-uploaded_at']
         indexes = [

@@ -72,7 +72,16 @@ class TaskTemplate(models.Model):
 
     CATEGORY_CHOICES = [
         ('development', _('Development')),
-        ('design', _('Design')),
+        ('automation', _('Automation')),
+        ('ui_ux_design', _('UI/UX Design')),
+        ('graphic_design', _('Graphic Design')),
+        ('video_editing', _('Video Editing')),
+        ('3d_modeling', _('3D Modeling')),
+        ('content_writing', _('Content Writing')),
+        ('translation', _('Translation')),
+        ('marketing', _('Marketing')),
+        ('accounting', _('Accounting')),
+        ('audio_production', _('Audio Production')),
         ('testing', _('Testing')),
         ('deployment', _('Deployment')),
         ('consulting', _('Consulting')),

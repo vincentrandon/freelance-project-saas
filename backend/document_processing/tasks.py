@@ -13,6 +13,7 @@ from .models import ImportedDocument, DocumentParseResult, ImportPreview
 from .services.openai_document_parser import OpenAIDocumentParser
 from .services.entity_matcher import EntityMatcher
 from .services.task_quality_analyzer import TaskQualityAnalyzer
+from .services.clarification_merger import ClarificationMerger
 from customers.models import Customer
 from projects.models import Project, Task
 from invoicing.models import Invoice, Estimate
@@ -121,9 +122,33 @@ def parse_document_with_ai(document_id: int):
             project_match
         )
 
+        # NEW: Merge previous clarifications if reparsing
+        clarification_merger = ClarificationMerger(document)
+        tasks_data = preview_data['tasks_data']
+
+        if clarification_merger.should_preserve_clarifications():
+            logger.info(f"Merging previous clarifications for document {document_id}")
+            merged_tasks, merge_stats = clarification_merger.merge_tasks(tasks_data)
+            preview_data['tasks_data'] = merged_tasks
+
+            # Log merge statistics
+            merge_summary = clarification_merger.get_merge_summary(merge_stats)
+            logger.info(f"Merge complete: {merge_summary}")
+
+            # Save updated clarification history
+            clarification_merger.save_clarification_history()
+
+            # Add merge stats to preview warnings for user visibility
+            if merge_stats['preserved_count'] > 0:
+                preview_data['warnings'].append(
+                    f"✓ Preserved {merge_stats['preserved_count']} clarified tasks from previous import"
+                )
+            tasks_data = merged_tasks
+        else:
+            logger.info(f"No clarifications to merge for document {document_id}")
+
         # NEW: Analyze task quality (cost-optimized with heuristics)
         quality_analyzer = TaskQualityAnalyzer()
-        tasks_data = preview_data['tasks_data']
         quality_analysis = quality_analyzer.analyze_all_tasks(tasks_data)
 
         # Convert task_results list to dict keyed by task_index for easier lookup

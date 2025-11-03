@@ -285,6 +285,150 @@
             margin-bottom: 8px;
             color: {{ profile.pdf_primary_color|default:'#3B82F6' }};
         }
+
+        /* Calendar Styles */
+        .calendar-section {
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+            page-break-after: always;
+        }
+
+        .calendar-title {
+            font-size: 12pt;
+            font-weight: bold;
+            color: {{ profile.pdf_primary_color|default:'#3B82F6' }};
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .calendar-grid {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+        }
+
+        .calendar-grid th {
+            background: {{ profile.pdf_primary_color|default:'#3B82F6' }};
+            color: white;
+            padding: 8px 4px;
+            text-align: center;
+            font-size: 9pt;
+            font-weight: bold;
+            border: 0.5pt solid #ddd;
+        }
+
+        .calendar-grid td {
+            border: 0.5pt solid #ddd;
+            padding: 8px 4px;
+            text-align: center;
+            font-size: 9pt;
+            height: 32px;
+            vertical-align: top;
+            position: relative;
+        }
+
+        .calendar-grid td.empty {
+            background: #f9fafb;
+        }
+
+        .calendar-grid td.weekend {
+            background: #f3f4f6;
+            color: #9ca3af;
+        }
+
+        .calendar-grid td.worked {
+            background: #e3f2fd;
+            font-weight: bold;
+            color: #1e40af;
+        }
+
+        .calendar-grid td.today {
+            border: 2px solid {{ profile.pdf_primary_color|default:'#3B82F6' }};
+        }
+
+        .day-number {
+            display: block;
+            font-size: 9pt;
+            margin-bottom: 2px;
+        }
+
+        .task-count {
+            font-size: 7pt;
+            color: #666;
+            font-weight: normal;
+            display: none; /* Hide task count in calendar */
+        }
+
+        .calendar-legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            font-size: 8pt;
+            margin-top: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .legend-box {
+            width: 15px;
+            height: 15px;
+            border: 0.5pt solid #ddd;
+        }
+
+        .legend-worked {
+            background: #e3f2fd;
+        }
+
+        .legend-weekend {
+            background: #f3f4f6;
+        }
+
+        .legend-nonworked {
+            background: white;
+        }
+
+        /* Enhanced Task Table */
+        .tasks-table tbody tr:nth-child(even) {
+            background: #fafafa;
+        }
+
+        .task-dates {
+            font-size: 8pt;
+            margin-top: 8px;
+            padding: 6px 10px;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-left: 3px solid {{ profile.pdf_primary_color|default:'#3B82F6' }};
+            border-radius: 3px;
+            font-style: normal;
+            line-height: 1.6;
+        }
+
+        .task-dates-label {
+            font-weight: bold;
+            color: {{ profile.pdf_primary_color|default:'#3B82F6' }};
+            margin-right: 6px;
+            text-transform: uppercase;
+            font-size: 7pt;
+            letter-spacing: 0.5px;
+        }
+
+        .task-dates-content {
+            color: #334155;
+            font-weight: 500;
+        }
+
+        .task-project-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #e3f2fd;
+            border-radius: 3px;
+            font-size: 8pt;
+            color: #1e40af;
+        }
     </style>
 </head>
 <body>
@@ -341,6 +485,56 @@
         <h2>Période : {{ cra.period_display }}</h2>
     </div>
 
+    <!-- Calendar View -->
+    {% if calendar_data %}
+    <div class="calendar-section">
+        <div class="calendar-title">Calendrier des jours travaillés</div>
+        <table class="calendar-grid">
+            <thead>
+                <tr>
+                    <th>Lun</th>
+                    <th>Mar</th>
+                    <th>Mer</th>
+                    <th>Jeu</th>
+                    <th>Ven</th>
+                    <th>Sam</th>
+                    <th>Dim</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for week in calendar_data.weeks %}
+                <tr>
+                    {% for day in week %}
+                    <td class="{% if day.is_empty %}empty{% elif day.is_worked %}worked{% elif day.is_weekend %}weekend{% endif %}{% if day.is_today %} today{% endif %}">
+                        {% if not day.is_empty %}
+                            <span class="day-number">{{ day.day }}</span>
+                            {% if day.task_count > 0 %}
+                            <span class="task-count">{{ day.task_count }} tâche{{ day.task_count|pluralize }}</span>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="calendar-legend">
+            <div class="legend-item">
+                <div class="legend-box legend-worked"></div>
+                <span>Jour travaillé</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box legend-weekend"></div>
+                <span>Week-end</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box legend-nonworked"></div>
+                <span>Jour non travaillé</span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Tasks Table -->
     <table class="tasks-table">
         <thead>
@@ -359,10 +553,18 @@
                     {% if task.description %}
                     <div class="task-description">{{ task.description|safe }}</div>
                     {% endif %}
+                    {% if task.worked_dates_display %}
+                    <div class="task-dates">
+                        <span class="task-dates-label">Dates travaillées:</span>
+                        <span>{{ task.worked_dates_display }}</span>
+                    </div>
+                    {% endif %}
                 </td>
-                <td>{{ task.project.name }}</td>
-                <td class="text-right">{{ task.worked_days|floatformat:1 }}</td>
-                <td class="text-right">{{ task.task_amount|floatformat:2 }} {{ cra.currency }}</td>
+                <td>
+                    <span class="task-project-badge">{{ task.project.name }}</span>
+                </td>
+                <td class="text-right"><strong>{{ task.worked_days|floatformat:1 }}</strong></td>
+                <td class="text-right"><strong>{{ task.task_amount|floatformat:2 }} {{ cra.currency }}</strong></td>
             </tr>
             {% empty %}
             <tr>

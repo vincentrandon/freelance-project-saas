@@ -321,11 +321,12 @@ class PublicCRASignatureViewSet(viewsets.ViewSet):
     
     permission_classes = [AllowAny]
     
-    def retrieve(self, request, token=None):
+    def retrieve(self, request, pk=None):
         """
         Get CRA details for signing (public access via token).
         """
-        signature_request = get_object_or_404(CRASignature, token=token)
+        # pk is the token (UUID) passed by the router
+        signature_request = get_object_or_404(CRASignature, token=pk)
         
         # Mark as viewed
         ip_address = request.META.get('REMOTE_ADDR')

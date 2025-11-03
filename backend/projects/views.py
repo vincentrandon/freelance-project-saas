@@ -41,26 +41,33 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def update_notes(self, request, pk=None):
         """Update project notes (Tiptap JSON content)"""
         project = self.get_object()
-        notes_json = request.data.get('notes_json')
-        
-        if notes_json is None:
+
+        # Check if notes_json key exists in request data
+        if 'notes_json' not in request.data:
             return Response(
                 {'error': 'notes_json is required'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
-        # Validate it's valid JSON
-        if isinstance(notes_json, str):
-            try:
-                notes_json = json.loads(notes_json)
-            except json.JSONDecodeError:
-                return Response(
-                    {'error': 'Invalid JSON format for notes_json'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-        
-        project.notes_json = notes_json
-        project.save()
+
+        notes_json = request.data.get('notes_json')
+
+        # Allow null or empty string to clear notes
+        if notes_json is None or notes_json == '':
+            project.notes_json = None
+            project.save()
+        else:
+            # Validate it's valid JSON
+            if isinstance(notes_json, str):
+                try:
+                    notes_json = json.loads(notes_json)
+                except json.JSONDecodeError:
+                    return Response(
+                        {'error': 'Invalid JSON format for notes_json'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+            project.notes_json = notes_json
+            project.save()
         
         serializer = self.get_serializer(project)
         return Response(serializer.data)

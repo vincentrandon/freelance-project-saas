@@ -39,17 +39,59 @@ class ClarificationQuestion:
 class TaskQualityAnalyzer:
     """Service for analyzing task quality and generating clarification questions"""
 
-    # Keywords indicating clear, specific tasks
+    # Keywords indicating clear, specific tasks (expanded)
     CLEAR_INDICATORS = [
+        # Action verbs
         'implement', 'create', 'develop', 'build', 'design', 'test', 'deploy',
-        'configure', 'integrate', 'optimize', 'refactor', 'document', 'api',
-        'endpoint', 'database', 'authentication', 'frontend', 'backend', 'component'
+        'configure', 'integrate', 'optimize', 'refactor', 'document', 'fix',
+        'add', 'remove', 'update', 'migrate', 'setup', 'install', 'upgrade',
+        'debug', 'validate', 'verify', 'review', 'analyze', 'investigate',
+        # Technical terms (frontend)
+        'component', 'page', 'form', 'button', 'modal', 'dropdown', 'table',
+        'navigation', 'menu', 'sidebar', 'header', 'footer', 'dashboard',
+        'responsive', 'mobile', 'desktop', 'layout', 'css', 'html',
+        # Technical terms (backend)
+        'api', 'endpoint', 'database', 'schema', 'migration', 'authentication',
+        'authorization', 'permission', 'jwt', 'token', 'session', 'cache',
+        'query', 'model', 'serializer', 'view', 'controller', 'service',
+        'webhook', 'integration', 'middleware', 'validation', 'error handling',
+        # Technologies
+        'django', 'react', 'postgresql', 'redis', 'celery', 'docker', 'nginx',
+        'rest', 'graphql', 'aws', 'stripe', 'oauth', 'ssl', 'https',
+        # Business logic
+        'payment', 'invoice', 'estimate', 'customer', 'user', 'order',
+        'product', 'cart', 'checkout', 'subscription', 'billing',
+        # Specificity indicators
+        'endpoint', 'function', 'class', 'method', 'module', 'feature',
+        'screen', 'workflow', 'flow', 'process', 'system'
     ]
 
-    # Keywords indicating vague tasks
+    # Keywords indicating vague tasks (expanded)
     VAGUE_INDICATORS = [
-        'stuff', 'things', 'misc', 'various', 'fix', 'update', 'change', 'bonus',
-        'work', 'task', 'todo', 'other', 'general', 'several'
+        # Generic terms
+        'stuff', 'things', 'misc', 'miscellaneous', 'various', 'several',
+        'some', 'multiple', 'general', 'general purpose', 'generic',
+        # Vague actions
+        'work', 'work on', 'handle', 'deal with', 'take care of', 'sort out',
+        'look at', 'check', 'see', 'maybe', 'possibly', 'might',
+        # Vague scope
+        'task', 'todo', 'item', 'other', 'etc', 'and more', 'additional',
+        'related', 'associated', 'relevant', 'necessary',
+        # French vague terms
+        'truc', 'machin', 'divers', 'autre', 'bonus', 'script',
+        'trucs', 'machins', 'bidule', 'travailler sur'
+    ]
+
+    # Action verbs that should be followed by specific objects
+    ACTION_VERBS = [
+        'implement', 'create', 'develop', 'build', 'design', 'deploy',
+        'configure', 'integrate', 'optimize', 'refactor', 'fix', 'add'
+    ]
+
+    # Technical terms that indicate specificity
+    TECHNICAL_TERMS = [
+        'api', 'endpoint', 'database', 'authentication', 'component',
+        'webhook', 'integration', 'migration', 'serializer', 'validation'
     ]
 
     def __init__(self):
@@ -60,61 +102,159 @@ class TaskQualityAnalyzer:
 
     def _quick_heuristic_analysis(self, task_data: Dict[str, Any]) -> Optional[TaskQualityResult]:
         """
-        Fast, cost-free heuristic analysis before using AI.
+        Enhanced fast, cost-free heuristic analysis before using AI.
         Returns TaskQualityResult if confident, None if needs AI.
+
+        Scoring factors:
+        - Name length and specificity
+        - Presence of clear indicators (action verbs, technical terms)
+        - Absence of vague indicators
+        - Description quality
+        - Reasonable time estimates
+        - Category specificity
         """
         task_name = (task_data.get('name') or '').lower()
         task_description = (task_data.get('description') or '').lower()
         estimated_hours = task_data.get('estimated_hours') or task_data.get('actual_hours', 0)
+        category = (task_data.get('category') or '').lower()
 
         combined_text = f"{task_name} {task_description}"
 
-        # Quick rejection: Too short
+        # Initialize score components
+        score = 50  # Start at neutral
+        issues = []
+        improvements = []
+
+        # 1. NAME LENGTH CHECK
+        name_words = task_name.split()
         if len(task_name) < 5:
-            return TaskQualityResult(
-                score=30,
-                clarity_level='vague',
-                issues=['Task name is too short', 'Not enough detail to understand scope'],
-                needs_clarification=True,
-                suggested_improvements=['Provide a more descriptive task name', 'Add details about what needs to be done']
-            )
+            score -= 30
+            issues.append('Task name is extremely short')
+            improvements.append('Provide a more descriptive task name (aim for 8-15 words)')
+        elif len(task_name) < 15:
+            score -= 10
+            issues.append('Task name could be more specific')
+        elif len(name_words) >= 5 and len(name_words) <= 20:
+            score += 15  # Good length
 
-        # Check for vague indicators
-        vague_count = sum(1 for indicator in self.VAGUE_INDICATORS if indicator in combined_text)
-        clear_count = sum(1 for indicator in self.CLEAR_INDICATORS if indicator in combined_text)
+        # 2. VAGUE INDICATORS CHECK (penalize heavily)
+        vague_matches = [v for v in self.VAGUE_INDICATORS if v in combined_text]
+        if vague_matches:
+            penalty = min(len(vague_matches) * 15, 40)  # Max -40 for vague terms
+            score -= penalty
+            issues.append(f'Contains vague terms: {", ".join(vague_matches[:3])}')
+            improvements.append('Replace generic terms with specific technical details')
 
-        # Strong signals for clear tasks
-        if clear_count >= 2 and vague_count == 0 and len(task_name) > 15:
+        # 3. CLEAR INDICATORS CHECK (reward)
+        clear_matches = [c for c in self.CLEAR_INDICATORS if c in combined_text]
+        if clear_matches:
+            reward = min(len(clear_matches) * 8, 35)  # Max +35 for clear terms
+            score += reward
+
+        # 4. ACTION VERB + OBJECT PATTERN CHECK
+        has_action_verb = any(verb in task_name for verb in self.ACTION_VERBS)
+        has_technical_term = any(term in combined_text for term in self.TECHNICAL_TERMS)
+
+        if has_action_verb and has_technical_term:
+            score += 20
+        elif has_action_verb and not has_technical_term:
+            score -= 5
+            issues.append('Action verb present but missing technical specifics')
+            improvements.append('Add specific component/module/feature being worked on')
+
+        # 5. DESCRIPTION QUALITY CHECK
+        if not task_description:
+            score -= 15
+            issues.append('No description provided')
+            improvements.append('Add description with implementation details')
+        elif len(task_description) > 50:
+            score += 10  # Good description length
+        elif len(task_description) < 20:
+            score -= 5
+            issues.append('Description is too brief')
+
+        # 6. TIME ESTIMATE VALIDATION
+        if not estimated_hours or estimated_hours == 0:
+            score -= 10
+            issues.append('Missing time estimate')
+            improvements.append('Provide realistic time estimate')
+        elif estimated_hours < 0.5:
+            score -= 5
+            issues.append('Unusually low time estimate')
+        elif estimated_hours > 200:
+            score -= 10
+            issues.append('Unusually high time estimate - consider breaking down')
+            improvements.append('Break down into smaller, manageable tasks (8-40 hours each)')
+
+        # 7. CATEGORY CHECK
+        specific_categories = [
+            'development', 'automation', 'ui_ux_design', 'graphic_design',
+            'video_editing', '3d_modeling', 'content_writing', 'translation',
+            'marketing', 'accounting', 'audio_production', 'testing',
+            'deployment', 'consulting', 'documentation', 'maintenance', 'research'
+        ]
+        if category in specific_categories:
+            score += 5  # Specific category
+        elif category == 'other':
+            score -= 5
+            issues.append('Generic "other" category')
+            improvements.append('Assign more specific category')
+
+        # 8. SPECIFICITY PATTERNS
+        # Check for "for X" or "to X" patterns (good specificity)
+        if ' for ' in task_name or ' to ' in task_name or ' with ' in task_name:
+            score += 10
+
+        # Check for "script" without context (common vague pattern)
+        if 'script' in task_name and len(task_name) < 20:
+            score -= 15
+            issues.append('Generic "script" reference without details')
+            improvements.append('Specify what the script does and its inputs/outputs')
+
+        # Clamp score to 0-100
+        score = max(0, min(100, score))
+
+        # Determine clarity level
+        if score >= 80:
+            clarity_level = 'clear'
+            needs_clarification = False
+        elif score >= 60:
+            clarity_level = 'needs_review'
+            needs_clarification = False
+        else:
+            clarity_level = 'vague'
+            needs_clarification = True
+
+        # CONFIDENCE THRESHOLDS
+        # Only return result if we're confident (very clear or very vague)
+        if score >= 85:
+            # Very clear - confident result
             return TaskQualityResult(
-                score=85,
+                score=score,
                 clarity_level='clear',
-                issues=[],
+                issues=issues,
                 needs_clarification=False,
-                suggested_improvements=[]
+                suggested_improvements=improvements
             )
-
-        # Strong signals for vague tasks
-        if vague_count >= 2 or (len(task_name) < 10 and not task_description):
+        elif score <= 45:
+            # Very vague - confident result
             return TaskQualityResult(
-                score=45,
+                score=score,
                 clarity_level='vague',
                 issues=['Task description is too generic', 'Missing specific details about requirements'],
                 needs_clarification=True,
                 suggested_improvements=['Specify what exactly needs to be done', 'Add technical details']
             )
 
-        # Moderate case - has description and reasonable length
-        if len(combined_text) > 30 and task_description:
-            return TaskQualityResult(
-                score=75,
-                clarity_level='needs_review',
-                issues=['Could be more specific about implementation details'],
-                needs_clarification=True,
-                suggested_improvements=['Add more context about requirements']
-            )
-
-        # Not confident - need AI analysis
-        return None
+        # Moderate case - return best heuristic guess but mark for potential AI review
+        # (Between 45-85 score range - ambiguous zone)
+        return TaskQualityResult(
+            score=score,
+            clarity_level=clarity_level,
+            issues=issues if issues else ['Task quality is moderate'],
+            needs_clarification=needs_clarification,
+            suggested_improvements=improvements if improvements else []
+        )
 
     def analyze_task_clarity(self, task_data: Dict[str, Any]) -> TaskQualityResult:
         """

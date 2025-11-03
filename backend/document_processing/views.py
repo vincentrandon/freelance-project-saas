@@ -107,7 +107,10 @@ class ImportedDocumentViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def reparse(self, request, pk=None):
-        """Trigger re-parsing of a document"""
+        """
+        Trigger re-parsing of a document.
+        Preserves previous clarifications if preserve_clarifications_on_reparse is enabled.
+        """
         document = self.get_object()
 
         if document.status == 'processing':
@@ -116,6 +119,10 @@ class ImportedDocumentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # Check if clarifications will be preserved
+        has_clarifications = bool(document.clarification_history)
+        will_preserve = document.preserve_clarifications_on_reparse and has_clarifications
+
         # Reset status and trigger parsing
         document.status = 'uploaded'
         document.error_message = None
@@ -123,8 +130,16 @@ class ImportedDocumentViewSet(viewsets.ModelViewSet):
 
         parse_document_with_ai.delay(document.id)
 
+        message = 'Document re-parsing triggered'
+        if will_preserve:
+            message += '. Your previous clarifications will be preserved.'
+
         return Response(
-            {'message': 'Document re-parsing triggered'},
+            {
+                'message': message,
+                'will_preserve_clarifications': will_preserve,
+                'has_clarification_history': has_clarifications
+            },
             status=status.HTTP_200_OK
         )
 
@@ -283,7 +298,8 @@ class ImportPreviewViewSet(viewsets.ModelViewSet):
         """
         preview = self.get_object()
 
-        if preview.status != 'pending_review':
+        # Allow approval for pending_review or needs_clarification
+        if preview.status not in ['pending_review', 'needs_clarification']:
             return Response(
                 {'error': _('Cannot approve preview with status: %(status)s') % {'status': preview.status}},
                 status=status.HTTP_400_BAD_REQUEST
@@ -327,7 +343,8 @@ class ImportPreviewViewSet(viewsets.ModelViewSet):
         """Reject the import preview"""
         preview = self.get_object()
 
-        if preview.status != 'pending_review':
+        # Allow rejection for pending_review or needs_clarification
+        if preview.status not in ['pending_review', 'needs_clarification']:
             return Response(
                 {'error': _('Cannot reject preview with status: %(status)s') % {'status': preview.status}},
                 status=status.HTTP_400_BAD_REQUEST
@@ -822,6 +839,15 @@ class ImportPreviewViewSet(viewsets.ModelViewSet):
             preview.clarification_completed_at = timezone.now()
 
         preview.save()
+
+        # NEW: Save refined tasks to clarification history for future reparses
+        from .services.clarification_merger import ClarificationMerger
+        merger = ClarificationMerger(preview.document)
+        for task_index, task in enumerate(tasks_data):
+            if task.get('was_refined'):
+                task_identifier = merger._generate_task_identifier(task)
+                merger._update_clarification_history(task_identifier, task)
+        merger.save_clarification_history()
 
         return Response({
             'message': f'Successfully updated {len(tasks_updates)} tasks',
