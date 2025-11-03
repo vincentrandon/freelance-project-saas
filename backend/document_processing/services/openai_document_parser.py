@@ -220,63 +220,65 @@ Pay special attention to:
 
 Return ONLY the JSON object, no additional text."""
 
-        try:
-            # Prepare API parameters
-            api_params = {
-                "model": self.model,
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": system_prompt
-                    },
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": user_prompt
-                            },
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/png;base64,{image_base64}",
-                                    "detail": "high"
-                                }
+        # Prepare API parameters
+        api_params = {
+            "model": self.model,
+            "messages": [
+                {
+                    "role": "system",
+                    "content": system_prompt
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": user_prompt
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/png;base64,{image_base64}",
+                                "detail": "high"
                             }
-                        ]
-                    }
-                ],
-                "max_tokens": self.max_tokens,
-                "temperature": self.temperature,
-                "response_format": {"type": "json_object"}
-            }
+                        }
+                    ]
+                }
+            ],
+            "max_tokens": self.max_tokens,
+            "temperature": self.temperature,
+            "response_format": {"type": "json_object"}
+        }
 
-            # Add reasoning_effort for GPT-5 models
-            if 'gpt-5' in self.model.lower():
-                api_params["reasoning_effort"] = self.reasoning_effort
+        # Add reasoning_effort for GPT-5 models
+        if 'gpt-5' in self.model.lower():
+            api_params["reasoning_effort"] = self.reasoning_effort
 
+        try:
             response = self.client.chat.completions.create(**api_params)
-
-            # Parse the response
             content = response.choices[0].message.content
             extracted_data = json.loads(content)
-
-            # Add usage metadata
-            extracted_data['_metadata'] = {
-                'model': self.model,
-                'tokens_used': response.usage.total_tokens,
-                'prompt_tokens': response.usage.prompt_tokens,
-                'completion_tokens': response.usage.completion_tokens
-            }
-
-            return extracted_data
-
-        except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse OpenAI response as JSON: {str(e)}")
-            raise ValueError(f"Invalid JSON response from OpenAI: {str(e)}")
-        except Exception as e:
-            logger.error(f"OpenAI API error: {str(e)}")
+        except json.JSONDecodeError as exc:
+            logger.error(f"Failed to parse OpenAI response as JSON: {str(exc)}")
+            raise ValueError(f"Invalid JSON response from OpenAI: {str(exc)}") from exc
+        except Exception as exc:
+            message = str(exc)
+            status = getattr(exc, "status_code", None)
+            if status == 401 or "Incorrect API key provided" in message:
+                raise RuntimeError(
+                    "OpenAI authentication failed. Verify the OPENAI_API_KEY value and ensure it has access to the configured model."
+                ) from exc
+            logger.error(f"OpenAI API error: {message}")
             raise
+
+        extracted_data['_metadata'] = {
+            'model': self.model,
+            'tokens_used': response.usage.total_tokens,
+            'prompt_tokens': response.usage.prompt_tokens,
+            'completion_tokens': response.usage.completion_tokens
+        }
+
+        return extracted_data
 
     def parse_documents_batch(self, file_paths: list[str]) -> Dict[str, Any]:
         """

@@ -27,7 +27,7 @@ class Invoice(models.Model):
     issue_date = models.DateField()
     due_date = models.DateField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
-    items = models.JSONField(default=list, help_text=_("Line items: [{description, quantity, rate, amount}]"))
+    items = models.JSONField(default=list, help_text=_("Line items: [{description, quantity, unit, rate, amount}]"))
     subtotal = models.DecimalField(max_digits=12, decimal_places=2)
     tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0, help_text=_("Tax rate as percentage"))
     tax_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)

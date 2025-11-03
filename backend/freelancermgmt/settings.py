@@ -185,12 +185,26 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Django Sites Framework
 SITE_ID = 1
 
+def _env_list(name, default):
+    """Split comma-separated env values into a trimmed list, ignoring blanks."""
+    raw = config(name, default=default)
+    return [item.strip() for item in raw.split(',') if item.strip()]
+
+
 # CORS Settings
-CORS_ALLOWED_ORIGINS = config(
+CORS_ALLOWED_ORIGINS = _env_list(
     'CORS_ALLOWED_ORIGINS',
     default='http://localhost:5173,http://127.0.0.1:5173'
-).split(',')
+)
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https?://localhost(:\d+)?$",
+    r"^https?://127\.0\.0\.1(:\d+)?$",
+]
+CSRF_TRUSTED_ORIGINS = _env_list(
+    'CSRF_TRUSTED_ORIGINS',
+    default='http://localhost,http://127.0.0.1,http://localhost:5173,http://127.0.0.1:5173'
+)
 
 # REST Framework Settings
 REST_FRAMEWORK = {
@@ -255,6 +269,9 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
+CELERY_IMPORTS = (
+    'utils.email_tasks',
+)
 CELERY_BEAT_SCHEDULE = {
     'sync-bank-accounts-daily': {
         'task': 'finance.tasks.sync_all_bank_accounts',

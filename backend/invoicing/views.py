@@ -1461,6 +1461,12 @@ class EstimateViewSetExtension:
         estimate = self.get_object()
 
         # Validate that we can convert this estimate
+        if not estimate.customer:
+            return Response(
+                {'error': 'Cannot convert estimate to invoice: estimate must have a customer assigned'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         if estimate.status == 'declined':
             return Response(
                 {'error': 'Cannot convert a declined estimate to invoice'},

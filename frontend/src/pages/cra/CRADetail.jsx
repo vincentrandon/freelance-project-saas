@@ -12,6 +12,43 @@ import Sidebar from '../../partials/Sidebar';
 import ModalBasic from '../../components/ModalBasic';
 import { useTranslation } from 'react-i18next';
 
+// Notification Modal Component
+function NotificationModal({ isOpen, setIsOpen, type, title, message }) {
+  const bgColor = type === 'success' ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20';
+  const borderColor = type === 'success' ? 'border-green-200 dark:border-green-800' : 'border-red-200 dark:border-red-800';
+  const iconColor = type === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+  const textColor = type === 'success' ? 'text-green-800 dark:text-green-300' : 'text-red-800 dark:text-red-300';
+
+  return (
+    <ModalBasic modalOpen={isOpen} setModalOpen={setIsOpen} title={title}>
+      <div className={`p-4 rounded-lg border ${bgColor} ${borderColor}`}>
+        <div className="flex items-start gap-3">
+          <div className={iconColor}>
+            {type === 'success' ? (
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            )}
+          </div>
+          <p className={`text-sm ${textColor}`}>{message}</p>
+        </div>
+      </div>
+      <div className="mt-4 flex justify-end">
+        <button
+          onClick={() => setIsOpen(false)}
+          className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
+        >
+          Close
+        </button>
+      </div>
+    </ModalBasic>
+  );
+}
+
 function CRADetail() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -25,11 +62,17 @@ function CRADetail() {
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [sendModalOpen, setSendModalOpen] = useState(false);
+  const [generateInvoiceModalOpen, setGenerateInvoiceModalOpen] = useState(false);
+  const [notification, setNotification] = useState({ isOpen: false, type: 'success', title: '', message: '' });
   const [signerData, setSignerData] = useState({
     signer_name: '',
     signer_email: '',
     signer_company: '',
   });
+
+  const showNotification = (type, title, message) => {
+    setNotification({ isOpen: true, type, title, message });
+  };
 
   const cra = craData?.data;
 
@@ -64,17 +107,17 @@ function CRADetail() {
       navigate('/cra');
     } catch (error) {
       console.error('Error deleting CRA:', error);
-      alert('Erreur lors de la suppression du CRA');
+      showNotification('error', 'Erreur', 'Erreur lors de la suppression du CRA: ' + (error.response?.data?.error || error.message));
     }
   };
 
   const handleGeneratePDF = async () => {
     try {
       await generatePDFMutation.mutateAsync(id);
-      alert('PDF généré avec succès!');
+      showNotification('success', 'Succès', 'PDF généré avec succès!');
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Erreur lors de la génération du PDF');
+      showNotification('error', 'Erreur', 'Erreur lors de la génération du PDF: ' + (error.response?.data?.error || error.message));
     }
   };
 
@@ -85,23 +128,24 @@ function CRADetail() {
         ...signerData,
       });
       setSendModalOpen(false);
-      alert('CRA envoyé pour validation!');
+      showNotification('success', 'Succès', 'CRA envoyé pour validation!');
     } catch (error) {
       console.error('Error sending CRA:', error);
-      alert('Erreur lors de l\'envoi du CRA');
+      showNotification('error', 'Erreur', 'Erreur lors de l\'envoi du CRA: ' + (error.response?.data?.error || error.message));
     }
   };
 
   const handleGenerateInvoice = async () => {
-    if (!confirm('Générer une facture depuis ce CRA ?')) return;
-
+    setGenerateInvoiceModalOpen(false);
     try {
       const response = await generateInvoiceMutation.mutateAsync(id);
-      alert('Facture créée avec succès!');
-      navigate(`/invoicing?invoice=${response.data.invoice.id}`);
+      showNotification('success', 'Succès', 'Facture créée avec succès!');
+      setTimeout(() => {
+        navigate(`/invoicing?invoice=${response.data.invoice.id}`);
+      }, 1500);
     } catch (error) {
       console.error('Error generating invoice:', error);
-      alert('Erreur lors de la génération de la facture');
+      showNotification('error', 'Erreur', 'Erreur lors de la génération de la facture: ' + (error.response?.data?.error || error.message));
     }
   };
 
@@ -174,8 +218,11 @@ function CRADetail() {
                 {cra.can_edit && (
                   <button
                     onClick={() => navigate(`/cra/${id}/edit`)}
-                    className="btn bg-white dark:bg-slate-700 border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500 text-slate-600 dark:text-slate-300"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 rounded-lg font-medium transition-colors"
                   >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
                     Modifier
                   </button>
                 )}
@@ -184,16 +231,31 @@ function CRADetail() {
                   <>
                     <button
                       onClick={handleGeneratePDF}
-                      disabled={generatePDFMutation.isLoading}
-                      className="btn bg-white border-gray-200 hover:border-gray-300 text-slate-600 dark:text-slate-400"
+                      disabled={generatePDFMutation.isPending}
+                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {generatePDFMutation.isLoading ? 'Génération...' : 'Générer PDF'}
+                      {generatePDFMutation.isPending ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-slate-700 dark:border-slate-200 border-t-transparent"></div>
+                          <span>Génération...</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          <span>Générer PDF</span>
+                        </>
+                      )}
                     </button>
 
                     <button
                       onClick={() => setSendModalOpen(true)}
-                      className="btn bg-indigo-500 hover:bg-indigo-600 text-white"
+                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors"
                     >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
                       Envoyer pour validation
                     </button>
                   </>
@@ -201,11 +263,23 @@ function CRADetail() {
 
                 {cra.status === 'validated' && (
                   <button
-                    onClick={handleGenerateInvoice}
-                    disabled={generateInvoiceMutation.isLoading}
-                    className="btn bg-emerald-500 hover:bg-emerald-600 text-white"
+                    onClick={() => setGenerateInvoiceModalOpen(true)}
+                    disabled={generateInvoiceMutation.isPending}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {generateInvoiceMutation.isLoading ? 'Génération...' : 'Générer Facture'}
+                    {generateInvoiceMutation.isPending ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                        <span>Génération...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span>Générer Facture</span>
+                      </>
+                    )}
                   </button>
                 )}
 
@@ -214,8 +288,11 @@ function CRADetail() {
                     href={cra.pdf_file}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn bg-white border-gray-200 hover:border-gray-300 text-slate-600 dark:text-slate-400"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 rounded-lg font-medium transition-colors"
                   >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
                     Télécharger PDF
                   </a>
                 )}
@@ -223,8 +300,11 @@ function CRADetail() {
                 {cra.can_delete && (
                   <button
                     onClick={() => setDeleteModalOpen(true)}
-                    className="btn bg-white border-red-200 hover:border-red-300 text-red-600"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-700 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-lg font-medium transition-colors"
                   >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
                     Supprimer
                   </button>
                 )}
@@ -395,10 +475,10 @@ function CRADetail() {
             </button>
             <button
               onClick={handleDelete}
-              disabled={deleteMutation.isLoading}
+              disabled={deleteMutation.isPending}
               className="btn bg-red-500 hover:bg-red-600 text-white"
             >
-              {deleteMutation.isLoading ? 'Suppression...' : 'Supprimer'}
+              {deleteMutation.isPending ? 'Suppression...' : 'Supprimer'}
             </button>
           </div>
         </div>
@@ -469,14 +549,59 @@ function CRADetail() {
             </button>
             <button
               onClick={handleSendForValidation}
-              disabled={!signerData.signer_name || !signerData.signer_email || sendValidationMutation.isLoading}
+              disabled={!signerData.signer_name || !signerData.signer_email || sendValidationMutation.isPending}
               className="btn bg-indigo-500 hover:bg-indigo-600 text-white disabled:opacity-50"
             >
-              {sendValidationMutation.isLoading ? 'Envoi...' : 'Envoyer'}
+              {sendValidationMutation.isPending ? 'Envoi...' : 'Envoyer'}
             </button>
           </div>
         </div>
       </ModalBasic>
+
+      {/* Generate Invoice Confirmation Modal */}
+      <ModalBasic
+        isOpen={generateInvoiceModalOpen}
+        setIsOpen={setGenerateInvoiceModalOpen}
+        title="Générer une facture"
+      >
+        <div className="px-5 py-4">
+          <div className="text-sm">
+            <div className="font-medium text-slate-800 dark:text-slate-100 mb-3">
+              Générer une facture depuis ce CRA ?
+            </div>
+            <p className="text-slate-600 dark:text-slate-400">
+              Une nouvelle facture sera créée avec les informations de ce CRA validé.
+            </p>
+          </div>
+        </div>
+
+        <div className="px-5 py-4 border-t border-gray-200 dark:border-slate-700">
+          <div className="flex flex-wrap justify-end space-x-2">
+            <button
+              onClick={() => setGenerateInvoiceModalOpen(false)}
+              className="btn bg-white border-gray-200 hover:border-gray-300 text-slate-600 dark:text-slate-400"
+            >
+              Annuler
+            </button>
+            <button
+              onClick={handleGenerateInvoice}
+              disabled={generateInvoiceMutation.isPending}
+              className="btn bg-emerald-500 hover:bg-emerald-600 text-white"
+            >
+              {generateInvoiceMutation.isPending ? 'Génération...' : 'Générer'}
+            </button>
+          </div>
+        </div>
+      </ModalBasic>
+
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={notification.isOpen}
+        setIsOpen={(isOpen) => setNotification({ ...notification, isOpen })}
+        type={notification.type}
+        title={notification.title}
+        message={notification.message}
+      />
     </div>
   );
 }

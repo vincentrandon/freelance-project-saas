@@ -1,10 +1,8 @@
-import stripe
-from django.conf import settings
 from django.utils import timezone
 from django.contrib.auth.models import User
-from .models import Subscription, SubscriptionHistory, SubscriptionTier, SubscriptionStatus, BillingCycle, SubscriptionPlan
 
-stripe.api_key = settings.STRIPE_SECRET_KEY
+from .stripe_client import stripe
+from .models import Subscription, SubscriptionHistory, SubscriptionTier, SubscriptionStatus, BillingCycle, SubscriptionPlan
 
 
 class StripeService:

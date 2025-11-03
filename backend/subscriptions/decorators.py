@@ -170,7 +170,32 @@ def require_feature(feature_name):
     """
     def decorator(view_func):
         @wraps(view_func)
-        def wrapped_view(request, *args, **kwargs):
+        def wrapped_view(*args, **kwargs):
+            if not args:
+                raise ValueError('require_feature decorator expects at least one argument.')
+
+            view_instance = None
+            request = None
+            remaining_args = ()
+
+            first_arg = args[0]
+            if hasattr(first_arg, 'user'):
+                request = first_arg
+                remaining_args = args[1:]
+            else:
+                view_instance = first_arg
+                if len(args) > 1:
+                    request = args[1]
+                    remaining_args = args[2:]
+                else:
+                    request = kwargs.get('request')
+
+            if request is None:
+                raise ValueError('require_feature decorator could not determine request object.')
+
+            if 'request' in kwargs:
+                kwargs = {key: value for key, value in kwargs.items() if key != 'request'}
+
             if not request.user or not request.user.is_authenticated:
                 return Response(
                     {'error': _('Authentication required')},
@@ -219,6 +244,8 @@ def require_feature(feature_name):
                     status=status.HTTP_403_FORBIDDEN
                 )
 
-            return view_func(request, *args, **kwargs)
+            if view_instance is not None:
+                return view_func(view_instance, request, *remaining_args, **kwargs)
+            return view_func(request, *remaining_args, **kwargs)
         return wrapped_view
     return decorator

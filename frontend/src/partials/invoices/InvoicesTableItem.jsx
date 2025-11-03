@@ -1,4 +1,5 @@
 import React from 'react';
+import DropdownEditMenu from '../../components/DropdownEditMenu';
 
 function InvoicesTableItem(props) {
 
@@ -80,26 +81,53 @@ function InvoicesTableItem(props) {
         </div>
       </td>
       <td className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap w-px">
-        <div className="space-x-1">
-          <button className="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400 rounded-full">
-            <span className="sr-only">Edit</span>
-            <svg className="w-8 h-8 fill-current" viewBox="0 0 32 32">
-                <path d="M19.7 8.3c-.4-.4-1-.4-1.4 0l-10 10c-.2.2-.3.4-.3.7v4c0 .6.4 1 1 1h4c.3 0 .5-.1.7-.3l10-10c.4-.4.4-1 0-1.4l-4-4zM12.6 22H10v-2.6l6-6 2.6 2.6-6 6zm7.4-7.4L17.4 12l1.6-1.6 2.6 2.6-1.6 1.6z" />
-            </svg>
-          </button>
-          <button className="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400 rounded-full">
-            <span className="sr-only">Download</span>
-            <svg className="w-8 h-8 fill-current" viewBox="0 0 32 32">
-                <path d="M16 20c.3 0 .5-.1.7-.3l5.7-5.7-1.4-1.4-4 4V8h-2v8.6l-4-4L9.6 14l5.7 5.7c.2.2.4.3.7.3zM9 22h14v2H9z" />
-            </svg>
-          </button>
-          <button className="text-red-500 hover:text-red-600 rounded-full">
-            <span className="sr-only">Delete</span>
-            <svg className="w-8 h-8 fill-current" viewBox="0 0 32 32">
-                <path d="M13 15h2v6h-2zM17 15h2v6h-2z" />
-                <path d="M20 9c0-.6-.4-1-1-1h-6c-.6 0-1 .4-1 1v2H8v2h1v10c0 .6.4 1 1 1h12c.6 0 1-.4 1-1V13h1v-2h-4V9zm-6 1h4v1h-4v-1zm7 3v9H11v-9h10z" />
-            </svg>
-          </button>
+        <div className="flex justify-end">
+          <DropdownEditMenu align="right">
+            <li>
+              <button
+                className="font-medium text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-200 flex items-center py-1 px-3"
+                onClick={() => console.log('View invoice:', props.id)}
+              >
+                <svg className="w-4 h-4 fill-current text-gray-400 dark:text-gray-500 shrink-0 mr-2" viewBox="0 0 16 16">
+                  <path d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm0 12c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1zm1-3H7V4h2v5z" />
+                </svg>
+                <span>View Details</span>
+              </button>
+            </li>
+            <li>
+              <button
+                className="font-medium text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-200 flex items-center py-1 px-3"
+                onClick={() => console.log('Edit invoice:', props.id)}
+              >
+                <svg className="w-4 h-4 fill-current text-gray-400 dark:text-gray-500 shrink-0 mr-2" viewBox="0 0 16 16">
+                  <path d="M11.7 5.3L9 2.6l1.3-1.3c.4-.4 1-.4 1.4 0l1.4 1.4c.4.4.4 1 0 1.4l-1.4 1.2zM8 3.6l-6 6V13h3.4l6-6L8 3.6z" />
+                </svg>
+                <span>Edit</span>
+              </button>
+            </li>
+            <li>
+              <button
+                className="font-medium text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-200 flex items-center py-1 px-3"
+                onClick={() => console.log('Download invoice:', props.id)}
+              >
+                <svg className="w-4 h-4 fill-current text-gray-400 dark:text-gray-500 shrink-0 mr-2" viewBox="0 0 16 16">
+                  <path d="M9 4H7v4H5l3 3 3-3H9V4zm-3 8h4v1H6z" />
+                </svg>
+                <span>Download PDF</span>
+              </button>
+            </li>
+            <li>
+              <button
+                className="font-medium text-sm text-red-500 hover:text-red-600 flex items-center py-1 px-3"
+                onClick={() => console.log('Delete invoice:', props.id)}
+              >
+                <svg className="w-4 h-4 fill-current shrink-0 mr-2" viewBox="0 0 16 16">
+                  <path d="M5 7h2v6H5V7zm4 0h2v6H9V7zm3-6v2h4v2h-1v10c0 .6-.4 1-1 1H2c-.6 0-1-.4-1-1V5H0V3h4V1c0-.6.4-1 1-1h6c.6 0 1 .4 1 1zM6 2v1h4V2H6zm7 3H3v9h10V5z" />
+                </svg>
+                <span>Delete</span>
+              </button>
+            </li>
+          </DropdownEditMenu>
         </div>
       </td>
     </tr>

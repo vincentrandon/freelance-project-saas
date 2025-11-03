@@ -9,7 +9,6 @@ from django.utils.translation import gettext as _
 from django.db.models import Count, Sum, Q
 from django.utils import timezone
 from datetime import timedelta
-import stripe
 import json
 
 from .models import Subscription, SubscriptionPlan, UsageCounter, SubscriptionHistory, SubscriptionTier
@@ -18,10 +17,10 @@ from .serializers import (
     SubscriptionHistorySerializer, CreateCheckoutSessionSerializer,
     SubscriptionWithUsageSerializer, UsageSummarySerializer
 )
+from .stripe_client import stripe
 from .stripe_handlers import StripeService, StripeWebhookHandler
 from .services.usage_tracker import get_usage_summary
 
-stripe.api_key = getattr(settings, 'STRIPE_SECRET_KEY', '')
 
 
 class SubscriptionPlanViewSet(viewsets.ReadOnlyModelViewSet):

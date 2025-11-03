@@ -31,6 +31,7 @@ def generate_invoice_pdf(invoice_id):
         html_string = render_to_string('invoicing/invoice_pdf.html', {
             'invoice': invoice,
             'profile': profile,
+            'is_vat_subject': profile.is_vat_subject,
         })
 
         # Generate PDF
@@ -88,6 +89,7 @@ def generate_estimate_pdf(estimate_id):
         html_string = render_to_string('invoicing/estimate_pdf.html', {
             'estimate': estimate,
             'profile': profile,
+            'is_vat_subject': profile.is_vat_subject,
         })
 
         # Generate PDF
@@ -177,6 +179,7 @@ def generate_signed_pdf(estimate_id):
             'estimate': estimate,
             'profile': profile,
             'signature_request': signature_request,
+            'is_vat_subject': profile.is_vat_subject,
         })
 
         # Generate PDF

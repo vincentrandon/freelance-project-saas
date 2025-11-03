@@ -2,6 +2,7 @@ from celery import shared_task
 from django.utils import timezone
 from django.contrib.auth.models import User
 from .models import Subscription, SubscriptionStatus, SubscriptionTier, SubscriptionHistory
+from .stripe_client import stripe
 from .services.usage_tracker import UsageTracker
 
 
@@ -69,11 +70,6 @@ def sync_stripe_subscriptions():
     Sync subscription status with Stripe.
     Run periodically to catch any missed webhook events.
     """
-    import stripe
-    from django.conf import settings
-
-    stripe.api_key = settings.STRIPE_SECRET_KEY
-
     # Get all subscriptions with Stripe IDs
     subscriptions = Subscription.objects.filter(
         stripe_subscription_id__isnull=False

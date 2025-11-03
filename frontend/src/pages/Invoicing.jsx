@@ -24,6 +24,7 @@ import Sidebar from '../partials/Sidebar';
 import ModalBasic from '../components/ModalBasic';
 import EmptyState from '../components/EmptyState';
 import StatusBadge from '../components/StatusBadge';
+import DropdownActions from '../components/DropdownActions';
 
 function Invoicing() {
   const navigate = useNavigate();
@@ -485,8 +486,9 @@ function Invoicing() {
 
             {/* Content */}
             {activeTab === 'invoices' ? (
-              <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
-                <table className="w-full">
+              <div className="bg-gray-800 rounded-lg border border-gray-700">
+                <div className="overflow-x-auto overflow-y-visible">
+                  <table className="w-full">
                   <thead className="bg-gray-900 border-b border-gray-700">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Number</th>
@@ -499,7 +501,7 @@ function Invoicing() {
                       <th className="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-700">
+                  <tbody className="divide-y divide-gray-700" style={{ position: 'relative' }}>
                     {filteredInvoices.length === 0 ? (
                       <tr>
                         <td colSpan="8" className="px-6 py-12">
@@ -530,68 +532,50 @@ function Invoicing() {
                           <td className="px-6 py-4 text-center">
                             <StatusBadge.Invoice status={invoice.status} />
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <div className="flex items-center justify-end gap-2">
-                              <button
-                                onClick={() => navigate(`/invoicing/invoices/${invoice.id}`)}
-                                className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors"
-                                title="View details"
-                              >
-                                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                </svg>
-                                View
-                              </button>
-                              {invoice.status === 'draft' && (
-                                <button
-                                  onClick={() => navigate(`/invoicing/invoices/edit/${invoice.id}`)}
-                                  className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 rounded-md transition-colors"
-                                  title="Edit invoice"
-                                >
-                                  <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                  </svg>
-                                  Edit
-                                </button>
-                              )}
-                              {invoice.status !== 'paid' && invoice.status !== 'sent' && (
-                                <button
-                                  onClick={() => sendInvoiceMutation.mutate(invoice.id)}
-                                  className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-violet-300 bg-violet-500/10 hover:bg-violet-500/20 rounded-md transition-colors"
-                                  title="Send invoice"
-                                  disabled={sendInvoiceMutation.isPending}
-                                >
-                                  <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                  </svg>
-                                  Send
-                                </button>
-                              )}
-                              {invoice.status === 'sent' && (
-                                <button
-                                  onClick={() => markPaidMutation.mutate(invoice.id)}
-                                  className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-green-300 bg-green-500/10 hover:bg-green-500/20 rounded-md transition-colors"
-                                  title="Mark as paid"
-                                  disabled={markPaidMutation.isPending}
-                                >
-                                  <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                  </svg>
-                                  Mark Paid
-                                </button>
-                              )}
-                            </div>
+                          <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium relative">
+                            <DropdownActions
+                              invoice={invoice}
+                              onAction={(action) => {
+                                switch (action) {
+                                  case 'view':
+                                  case 'view-pdf':
+                                  case 'edit':
+                                  case 'generate-pdf':
+                                    navigate(`/invoicing/invoices/${invoice.id}`);
+                                    break;
+                                  case 'send-email':
+                                    sendInvoiceMutation.mutate(invoice.id);
+                                    break;
+                                  case 'record-payment':
+                                    markPaidMutation.mutate(invoice.id);
+                                    break;
+                                  case 'duplicate':
+                                    // Handle duplicate
+                                    console.log('Duplicate invoice:', invoice.id);
+                                    break;
+                                  case 'delete':
+                                    // Handle delete
+                                    if (confirm('Are you sure you want to delete this invoice?')) {
+                                      console.log('Delete invoice:', invoice.id);
+                                    }
+                                    break;
+                                  default:
+                                    break;
+                                }
+                              }}
+                            />
                           </td>
                         </tr>
                       ))
                     )}
                   </tbody>
                 </table>
+                </div>
               </div>
             ) : (
-              <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
-                <table className="w-full">
+              <div className="bg-gray-800 rounded-lg border border-gray-700">
+                <div className="overflow-x-auto overflow-y-visible">
+                  <table className="w-full">
                   <thead className="bg-gray-900 border-b border-gray-700">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Number</th>
@@ -605,7 +589,7 @@ function Invoicing() {
                       <th className="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-700">
+                  <tbody className="divide-y divide-gray-700" style={{ position: 'relative' }}>
                     {filteredEstimates.length === 0 ? (
                       <tr>
                         <td colSpan="9" className="px-6 py-12">
@@ -654,49 +638,48 @@ function Invoicing() {
                               label={estimate.signature_status === 'not_requested' ? 'No' : estimate.signature_status}
                             />
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <div className="flex items-center justify-end gap-2">
-                              <button
-                                onClick={() => navigate(`/invoicing/estimates/${estimate.id}`)}
-                                className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors"
-                                title="View details"
-                              >
-                                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                </svg>
-                                View
-                              </button>
-                              <button
-                                onClick={() => navigate(`/invoicing/estimates/edit/${estimate.id}`)}
-                                className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 rounded-md transition-colors"
-                                title="Edit estimate"
-                              >
-                                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
-                                Edit
-                              </button>
-                              {estimate.status !== 'sent' && (
-                                <button
-                                  onClick={() => sendEstimateMutation.mutate(estimate.id)}
-                                  className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-violet-300 bg-violet-500/10 hover:bg-violet-500/20 rounded-md transition-colors"
-                                  title="Send estimate"
-                                  disabled={sendEstimateMutation.isPending}
-                                >
-                                  <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                  </svg>
-                                  Send
-                                </button>
-                              )}
-                            </div>
+                          <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium relative">
+                            <DropdownActions
+                              estimate={estimate}
+                              onAction={(action) => {
+                                switch (action) {
+                                  case 'view':
+                                  case 'view-pdf':
+                                  case 'edit':
+                                  case 'generate-pdf':
+                                    navigate(`/invoicing/estimates/${estimate.id}`);
+                                    break;
+                                  case 'send-email':
+                                    sendEstimateMutation.mutate(estimate.id);
+                                    break;
+                                  case 'request-signature':
+                                    handleRequestSignature(estimate.id);
+                                    break;
+                                  case 'convert-to-invoice':
+                                    navigate(`/invoicing/invoices/create?from_estimate=${estimate.id}`);
+                                    break;
+                                  case 'duplicate':
+                                    // Handle duplicate
+                                    console.log('Duplicate estimate:', estimate.id);
+                                    break;
+                                  case 'delete':
+                                    // Handle delete
+                                    if (confirm('Are you sure you want to delete this estimate?')) {
+                                      console.log('Delete estimate:', estimate.id);
+                                    }
+                                    break;
+                                  default:
+                                    break;
+                                }
+                              }}
+                            />
                           </td>
                         </tr>
                       ))
                     )}
                   </tbody>
                 </table>
+                </div>
               </div>
             )}
           </div>
