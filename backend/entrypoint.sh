@@ -6,6 +6,7 @@ set -e
 # Create media directories if they don't exist
 mkdir -p /app/media/imported_documents
 mkdir -p /app/staticfiles
+mkdir -p /app/logs
 
 # Run migrations
 python manage.py migrate
