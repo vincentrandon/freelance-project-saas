@@ -1,0 +1,42 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Allow manual deployment
+
+jobs:
+  deploy:
+    name: Deploy to Hetzner Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to server via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            cd /opt/kiik-app
+            /opt/kiik-app/scripts/deploy.sh
+
+      - name: Notify deployment success
+        if: success()
+        run: echo "✅ Deployment to production completed successfully!"
+
+      - name: Notify deployment failure
+        if: failure()
+        run: |
+          echo "❌ Deployment failed!"
+          exit 1
+
+# GitHub Secrets Required:
+# - PRODUCTION_HOST: 138.199.232.159
+# - PRODUCTION_USER: root (or kiikapp if using non-root)
+# - SSH_PRIVATE_KEY: Your SSH private key for server access
