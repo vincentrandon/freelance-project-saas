@@ -54,8 +54,14 @@ apt-get install -y \
     htop \
     ufw \
     fail2ban \
-    awscli
+    python3-pip \
+    unzip
 echo -e "${GREEN}✓ Essential packages installed${NC}"
+
+# Install AWS CLI via pip
+echo -e "${YELLOW}Installing AWS CLI...${NC}"
+pip3 install awscli --break-system-packages
+echo -e "${GREEN}✓ AWS CLI installed${NC}"
 
 # Step 3: Install Docker
 echo ""
