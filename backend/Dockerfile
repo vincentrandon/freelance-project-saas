@@ -37,7 +37,7 @@ RUN chmod +x /entrypoint.sh
 
 # Create non-root user
 RUN useradd -m -u 1000 appuser && \
-    mkdir -p /app/media /app/staticfiles && \
+    mkdir -p /app/media /app/staticfiles /app/logs && \
     chown -R appuser:appuser /app
 USER appuser
 
