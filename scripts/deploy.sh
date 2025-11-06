@@ -7,7 +7,12 @@
 set -e  # Exit on error
 
 # Configuration
-APP_DIR="/opt/kiik-app/freelance-project-saas"
+# Use current directory if already in the app dir, otherwise use default
+if [ -f "docker-compose.prod.yml" ]; then
+    APP_DIR="$(pwd)"
+else
+    APP_DIR="/opt/kiik-app/freelance-project-saas"
+fi
 COMPOSE_FILE="$APP_DIR/docker-compose.prod.yml"
 BRANCH="${1:-main}"  # Default to main branch
 
