@@ -7,7 +7,7 @@
 set -e  # Exit on error
 
 # Configuration
-APP_DIR="/opt/kiik-app"
+APP_DIR="/opt/kiik-app/freelance-project-saas"
 COMPOSE_FILE="$APP_DIR/docker-compose.prod.yml"
 BRANCH="${1:-main}"  # Default to main branch
 
