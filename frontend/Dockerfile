@@ -15,6 +15,12 @@ RUN pnpm install --frozen-lockfile
 # Copy source
 COPY . .
 
+# Accept build argument for API URL (defaults to /api for production)
+ARG VITE_API_URL=/api
+
+# Set as environment variable so Vite can access it during build
+ENV VITE_API_URL=$VITE_API_URL
+
 # Build
 RUN pnpm run build
 

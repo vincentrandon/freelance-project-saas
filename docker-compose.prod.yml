@@ -251,6 +251,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile  # Use production Dockerfile, NOT Dockerfile.dev
+      args:
+        VITE_API_URL: /api  # Pass as build arg so it's baked into the build
     image: kiik/frontend:latest
     container_name: kiik_prod_frontend
     # Production: DO NOT mount source code
