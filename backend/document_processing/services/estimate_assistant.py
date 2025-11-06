@@ -9,7 +9,7 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 from django.conf import settings
 from django.db.models import Avg, Sum, Count, Q
-from openai import OpenAI
+from utils.openai_client import create_openai_client
 
 from projects.models import Project, Task
 from invoicing.models import Invoice, Estimate
@@ -22,11 +22,7 @@ class EstimateAssistant:
 
     def __init__(self, user):
         self.user = user
-        self.client = OpenAI(
-            api_key=settings.OPENAI_API_KEY,
-            timeout=15.0,  # 15 second timeout to prevent hanging
-            max_retries=2   # Retry twice on connection errors
-        )
+        self.client = create_openai_client(timeout=15.0, max_retries=2)
         self.model = settings.OPENAI_MODEL
         self.max_tokens = settings.OPENAI_MAX_TOKENS
         self.temperature = 0.2  # Slightly higher for more creative suggestions

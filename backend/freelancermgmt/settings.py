@@ -9,6 +9,8 @@ from datetime import timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+LOG_DIR = BASE_DIR / 'logs'
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-in-production')
@@ -387,6 +389,8 @@ OPENAI_MODEL = config('OPENAI_MODEL', default='gpt-5')  # Updated to GPT-5 (Aug 
 OPENAI_MAX_TOKENS = config('OPENAI_MAX_TOKENS', default=6000, cast=int)  # Increased for better extraction
 OPENAI_TEMPERATURE = config('OPENAI_TEMPERATURE', default=0.1, cast=float)
 OPENAI_REASONING_EFFORT = config('OPENAI_REASONING_EFFORT', default='medium')  # For GPT-5: minimal, low, medium, high
+OPENAI_CA_BUNDLE = config('OPENAI_CA_BUNDLE', default=None)
+OPENAI_VERIFY_SSL = config('OPENAI_VERIFY_SSL', default=True, cast=bool)
 
 # INSEE API Settings (French Company Lookup)
 # Get your API key from: https://portail-api.insee.fr/

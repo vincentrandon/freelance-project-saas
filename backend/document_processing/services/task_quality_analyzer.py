@@ -9,7 +9,7 @@ import json
 from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass
 from django.conf import settings
-from openai import OpenAI
+from utils.openai_client import create_openai_client
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +95,7 @@ class TaskQualityAnalyzer:
     ]
 
     def __init__(self):
-        self.client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        self.client = create_openai_client()
         self.model = settings.OPENAI_MODEL
         self.temperature = 0.3  # Lower temperature for consistent analysis
         self.use_ai_analysis = getattr(settings, 'USE_AI_TASK_ANALYSIS', True)

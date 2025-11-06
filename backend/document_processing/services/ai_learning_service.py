@@ -12,7 +12,7 @@ from decimal import Decimal
 
 from django.db import models, transaction
 from django.contrib.auth.models import User
-from openai import OpenAI
+from utils.openai_client import create_openai_client
 
 from ..models import (
     AIExtractionFeedback,
@@ -30,7 +30,7 @@ class AILearningService:
     """
 
     def __init__(self):
-        self.client = OpenAI()
+        self.client = create_openai_client()
         self.base_model = "gpt-4o-2024-08-06"  # Latest GPT-4o model with structured outputs
 
     @classmethod
@@ -196,7 +196,7 @@ Output valid JSON only. Be precise with numbers and dates."""
                 temp_file_path = f.name
 
             # Upload to OpenAI
-            client = OpenAI()
+            client = create_openai_client()
             with open(temp_file_path, 'rb') as f:
                 file_response = client.files.create(
                     file=f,
@@ -239,7 +239,7 @@ Output valid JSON only. Be precise with numbers and dates."""
             Dict with job details and created model version
         """
         try:
-            client = OpenAI()
+            client = create_openai_client()
 
             # Default hyperparameters
             if hyperparameters is None:
@@ -295,7 +295,7 @@ Output valid JSON only. Be precise with numbers and dates."""
         """
         try:
             version = AIModelVersion.objects.get(id=model_version_id)
-            client = OpenAI()
+            client = create_openai_client()
 
             job = client.fine_tuning.jobs.retrieve(version.fine_tune_job_id)
 

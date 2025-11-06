@@ -10,7 +10,8 @@ from typing import Dict, Any, Optional
 from pathlib import Path
 
 from django.conf import settings
-from openai import OpenAI
+
+from utils.openai_client import create_openai_client
 import PyPDF2
 from pdf2image import convert_from_path
 
@@ -21,7 +22,7 @@ class OpenAIDocumentParser:
     """Service for parsing invoice and estimate PDFs using OpenAI GPT-4o Vision"""
 
     def __init__(self):
-        self.client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        self.client = create_openai_client()
         self.model = settings.OPENAI_MODEL
         self.max_tokens = settings.OPENAI_MAX_TOKENS
         self.temperature = settings.OPENAI_TEMPERATURE
