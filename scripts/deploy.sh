@@ -34,13 +34,17 @@ fi
 # Navigate to application directory
 cd "$APP_DIR" || exit 1
 
-# Step 1: Pull latest code
-echo -e "${YELLOW}[1/8] Pulling latest code from git...${NC}"
-if git pull origin "$BRANCH"; then
-    echo -e "${GREEN}✓ Code updated successfully${NC}"
+# Step 1: Pull latest code (skip if not a git repo)
+echo -e "${YELLOW}[1/8] Checking for code updates...${NC}"
+if [ -d ".git" ]; then
+    if git pull origin "$BRANCH"; then
+        echo -e "${GREEN}✓ Code updated successfully${NC}"
+    else
+        echo -e "${RED}✗ Failed to pull latest code${NC}"
+        exit 1
+    fi
 else
-    echo -e "${RED}✗ Failed to pull latest code${NC}"
-    exit 1
+    echo -e "${YELLOW}⚠ Not a git repository, skipping pull (using existing code)${NC}"
 fi
 
 # Step 2: Build Docker images
