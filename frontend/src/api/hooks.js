@@ -1480,3 +1480,46 @@ export const useDeclineCRA = () => {
     mutationFn: ({ token, reason }) => client.post(`/cra/public/sign/${token}/decline/`, { reason }),
   });
 };
+
+// AI Service Token (API Key) Management hooks
+export const useAIServiceTokens = () => {
+  return useQuery({
+    queryKey: ['ai-service-tokens'],
+    queryFn: () => client.get('/ai-actions/tokens/').then((res) => res.data),
+  });
+};
+
+export const useCreateAIServiceToken = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data) => client.post('/ai-actions/tokens/', data).then((res) => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ai-service-tokens'] });
+    },
+  });
+};
+
+export const useDeleteAIServiceToken = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => client.delete(`/ai-actions/tokens/${id}/`).then((res) => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ai-service-tokens'] });
+    },
+  });
+};
+
+export const useAIServiceTokenLogs = (tokenId) => {
+  return useQuery({
+    queryKey: ['ai-service-token-logs', tokenId],
+    queryFn: () => client.get(`/ai-actions/tokens/${tokenId}/logs/`).then((res) => res.data),
+    enabled: !!tokenId,
+  });
+};
+
+export const useAIActionLogs = () => {
+  return useQuery({
+    queryKey: ['ai-action-logs'],
+    queryFn: () => client.get('/ai-actions/logs/').then((res) => res.data),
+  });
+};

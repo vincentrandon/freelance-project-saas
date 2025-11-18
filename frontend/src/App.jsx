@@ -57,6 +57,8 @@ import CompanyProfileSettings from './pages/settings/CompanyProfile';
 import Pricing from './pages/settings/Pricing';
 import Plans from './pages/settings/Plans';
 import Billing from './pages/settings/Billing';
+import ApiKeys from './pages/settings/ApiKeys';
+import ApiKeyCreate from './pages/settings/ApiKeyCreate';
 import Changelog from './pages/utility/Changelog';
 import Roadmap from './pages/utility/Roadmap';
 import Faqs from './pages/utility/Faqs';
@@ -265,6 +267,8 @@ function AppContent() {
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         <Route path="/settings/company" element={<ProtectedRoute><CompanyProfileSettings /></ProtectedRoute>} />
         <Route path="/settings/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
+        <Route path="/settings/api" element={<ProtectedRoute><ApiKeys /></ProtectedRoute>} />
+        <Route path="/settings/api/create" element={<ProtectedRoute><ApiKeyCreate /></ProtectedRoute>} />
         <Route path="/settings/pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
         <Route path="/settings/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
         <Route path="/settings/plans" element={<ProtectedRoute><Plans /></ProtectedRoute>} />

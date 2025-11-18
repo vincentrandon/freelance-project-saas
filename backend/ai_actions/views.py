@@ -34,6 +34,9 @@ from .serializers import (
     ContextEstimateSerializer,
     ContextInvoiceSerializer,
     ContextProjectSerializer,
+    AIServiceTokenSerializer,
+    AIServiceTokenCreateSerializer,
+    AIActionLogSerializer,
 )
 
 
@@ -912,3 +915,64 @@ class AIActionViewSet(AIActionLoggingMixin, viewsets.ViewSet):
             response_payload=response_payload,
             status_code=status.HTTP_201_CREATED,
         )
+
+
+# Token Management ViewSets
+
+
+class AIServiceTokenViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing AI service tokens (API keys).
+
+    Users can create, list, and revoke their own tokens.
+    Tokens are shown only once upon creation.
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = AIServiceTokenSerializer
+
+    def get_queryset(self):
+        """Return only tokens owned by the current user"""
+        return AIServiceToken.objects.filter(user=self.request.user).order_by('-created_at')
+
+    def get_serializer_class(self):
+        """Use create serializer for POST requests"""
+        if self.action == 'create':
+            return AIServiceTokenCreateSerializer
+        return AIServiceTokenSerializer
+
+    def perform_create(self, serializer):
+        """Create token for current user"""
+        serializer.save(user=self.request.user)
+
+    def destroy(self, request, *args, **kwargs):
+        """Revoke a token (soft delete by setting is_active=False)"""
+        instance = self.get_object()
+        instance.is_active = False
+        instance.save(update_fields=['is_active'])
+        return Response(
+            {"detail": "Token revoked successfully"},
+            status=status.HTTP_204_NO_CONTENT
+        )
+
+    @action(detail=True, methods=['get'])
+    def logs(self, request, pk=None):
+        """Get usage logs for a specific token"""
+        token = self.get_object()
+        logs = AIActionLog.objects.filter(token=token).order_by('-created_at')[:100]
+        serializer = AIActionLogSerializer(logs, many=True)
+        return Response(serializer.data)
+
+
+class AIActionLogViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Read-only viewset for viewing AI action logs.
+
+    Shows all logs for the current user's tokens.
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = AIActionLogSerializer
+
+    def get_queryset(self):
+        """Return logs for tokens owned by the current user"""
+        user_tokens = AIServiceToken.objects.filter(user=self.request.user)
+        return AIActionLog.objects.filter(token__in=user_tokens).order_by('-created_at')

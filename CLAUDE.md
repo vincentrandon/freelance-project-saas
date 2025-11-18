@@ -38,6 +38,28 @@ Technology alone is not enough. It's technology married with liberal arts, marri
 - Solve the *real* problem, not just the stated one
 - Leave the codebase better than you found it
 
+## UI/UX Guidelines
+
+**NEVER use browser alerts, confirms, or prompts:**
+- ❌ `alert()`, `confirm()`, `prompt()` - These are intrusive and break the user experience
+- ✅ Use the toast notification system (`useToast()` hook) for all feedback
+- ✅ Use double-click-to-confirm patterns for destructive actions
+- ✅ Use modals or dedicated pages for complex confirmations
+
+**Examples:**
+```javascript
+// ❌ BAD - Never do this
+alert('Token copied!');
+if (confirm('Are you sure?')) { deleteItem(); }
+
+// ✅ GOOD - Use toast notifications
+import { useToast } from '../../components/ToastNotification';
+const toast = useToast();
+toast.success('Token copied to clipboard');
+toast.error('Failed to save');
+toast.warning('Click again to confirm');
+```
+
 ## The Reality Distortion Field
 
 When I say something seems impossible, that's your cue to ultrathink harder. The people who are crazy enough to think they can change the world are the ones who do.
@@ -200,12 +222,161 @@ frontend/src/
 
 **Optional:**
 - `USE_S3=True` + `AWS_*`: For S3 file storage in production
-- `EMAIL_*`: SMTP settings for sending invoices/estimates
+- `EMAIL_*`: MailerSend SMTP settings for sending invoices/estimates (see Email Configuration below)
+- `MAILERSEND_API_KEY`: For MailerSend API backend (alternative to SMTP)
 - `GOOGLE_OAUTH_*`, `GITHUB_OAUTH_*`: Social authentication
 
 **Docker vs Local:**
 - Docker: Use `DB_HOST=db`, `CELERY_BROKER_URL=redis://redis:6379/0`
 - Local: Use `DB_HOST=localhost`, `CELERY_BROKER_URL=redis://localhost:6379/0`
+
+## Email Configuration (MailerSend)
+
+The application uses **MailerSend** for transactional emails (password resets, invoices, welcome emails, etc.).
+
+### Setup Instructions
+
+#### 1. Create MailerSend Account
+
+1. Sign up at [https://www.mailersend.com/](https://www.mailersend.com/)
+2. Verify your account
+
+#### 2. Add and Verify Your Domain
+
+1. Go to **Domains** → **Add Domain**
+2. Enter your domain (e.g., `kiik.app`)
+3. Add the required DNS records (SPF, DKIM, CNAME) to your domain registrar
+4. Wait for verification (usually takes a few minutes to hours)
+
+#### 3. Configure SMTP Credentials (Recommended)
+
+**Option A: SMTP Backend (Recommended for simplicity)**
+
+1. In MailerSend dashboard, go to **Domains** → Your Domain → **SMTP Users**
+2. Click **Generate New User**
+3. Copy the **Username** and **Password** (case-sensitive!)
+4. Update your `.env` file:
+
+```bash
+# Enable SMTP email backend
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+
+# MailerSend SMTP Configuration
+EMAIL_HOST=smtp.mailersend.net
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=your-mailersend-smtp-username
+EMAIL_HOST_PASSWORD=your-mailersend-smtp-password
+
+# Sender email (must match verified domain)
+DEFAULT_FROM_EMAIL=noreply@yourdomain.com
+```
+
+**Option B: API Backend (For advanced features)**
+
+1. In MailerSend dashboard, go to **Settings** → **API Tokens**
+2. Click **Generate New Token**
+3. Copy the API key
+4. Update your `.env` file:
+
+```bash
+# Enable MailerSend API backend
+EMAIL_BACKEND=utils.mailersend_backend.MailerSendBackend
+
+# MailerSend API Key
+MAILERSEND_API_KEY=your-mailersend-api-key
+
+# Sender email (must match verified domain)
+DEFAULT_FROM_EMAIL=noreply@yourdomain.com
+```
+
+#### 4. Development vs Production
+
+**Development (Console Backend)**
+```bash
+# Print emails to console instead of sending
+EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+```
+
+**Production (MailerSend SMTP)**
+```bash
+# Send real emails via MailerSend
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.mailersend.net
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=your-smtp-username
+EMAIL_HOST_PASSWORD=your-smtp-password
+DEFAULT_FROM_EMAIL=noreply@yourdomain.com
+```
+
+### Email Features
+
+The application sends emails for:
+- **Authentication**: Password resets, email verification, welcome emails
+- **Invoices**: Send invoices and estimates to customers
+- **Subscriptions**: Trial expiration reminders
+- **Notifications**: Activity CRA submission confirmations
+
+All emails support:
+- **Internationalization**: French and English templates based on user preferences
+- **HTML and Plain Text**: Dual-format emails for better compatibility
+- **Template System**: Django templates in `/backend/templates/account/email/`
+
+### Testing Email Configuration
+
+#### Test SMTP Connection
+
+```bash
+# Docker
+docker-compose exec backend python manage.py shell
+
+# Then in shell:
+from django.core.mail import send_mail
+send_mail(
+    'Test Email',
+    'This is a test email from kiik.app',
+    'noreply@yourdomain.com',
+    ['your-email@example.com'],
+    fail_silently=False,
+)
+```
+
+#### Test Password Reset Email
+
+1. Go to: http://localhost:5173/forgot-password
+2. Enter your email address
+3. Check your inbox (or console if using console backend)
+
+### Troubleshooting
+
+**Emails not sending:**
+- Verify `EMAIL_BACKEND` is set to `django.core.mail.backends.smtp.EmailBackend`
+- Check SMTP credentials are correct (case-sensitive!)
+- Ensure sender email domain is verified in MailerSend
+- Check Celery worker is running: `docker-compose logs celery`
+- Check Django logs: `docker-compose logs backend`
+
+**550 Error (Domain not verified):**
+- Verify your domain in MailerSend dashboard
+- Ensure DNS records (SPF, DKIM) are properly configured
+- Wait for DNS propagation (can take up to 48 hours)
+
+**Authentication failed:**
+- SMTP credentials are case-sensitive - copy them exactly
+- Generate new SMTP user if needed
+
+**Rate limits:**
+- Free tier: Limited sends per month
+- Trial accounts: 5 concurrent connections, 120 requests/minute
+- Upgrade to paid plan for higher limits
+
+### MailerSend Resources
+
+- Dashboard: [https://app.mailersend.com/](https://app.mailersend.com/)
+- Documentation: [https://developers.mailersend.com/](https://developers.mailersend.com/)
+- SMTP Guide: [https://www.mailersend.com/help/smtp-relay](https://www.mailersend.com/help/smtp-relay)
+- Support: [https://www.mailersend.com/help](https://www.mailersend.com/help)
 
 ## API Structure
 
@@ -625,9 +796,176 @@ SUPPORTED_LANGUAGES=en,fr
 - i18next documentation: https://www.i18next.com/
 - react-i18next guide: https://react.i18next.com/
 
+## ChatGPT Integration (OpenAI Apps SDK)
+
+kiik.app now supports integration with ChatGPT and other AI assistants through OAuth 2.0 and API key authentication.
+
+### Features
+
+- **OAuth 2.0 Authorization**: Secure authorization flow with PKCE support for third-party apps
+- **API Key Management**: Create and manage tokens with granular scope-based permissions
+- **In-App Token UI**: User-friendly interface for generating and managing API keys
+- **Usage Logging**: Complete audit trail of all AI-powered actions
+- **Token Revocation**: Instantly revoke access when needed
+
+### Quick Start
+
+#### 1. Create an API Key
+
+1. Go to **Settings** → **API & ChatGPT** tab
+2. Click **Create New Key**
+3. Select scopes (permissions):
+   - `customers:read/write` - Customer management
+   - `invoices:read/write` - Invoice management
+   - `estimates:read/write` - Estimate management
+   - `projects:read/write` - Project management
+   - `cra:read/write` - Activity reports
+   - `documents:import` - Document import
+   - `context:read` - Read context data
+4. Copy the token (shown only once!)
+
+#### 2. Use the API
+
+```bash
+# List customers
+curl -H "Authorization: Bearer fta_your_token_here" \
+  http://localhost/api/ai-actions/context/customers/
+
+# Create invoice
+curl -X POST \
+  -H "Authorization: Bearer fta_your_token_here" \
+  -H "Content-Type: application/json" \
+  -d '{"customer_id": 1, "amount": 1500}' \
+  http://localhost/api/ai-actions/actions/invoices/
+```
+
+### OAuth 2.0 Endpoints
+
+**For third-party app developers:**
+
+- **Authorization**: `/oauth/authorize/`
+- **Token**: `/oauth/token/`
+- **Revoke**: `/oauth/revoke/`
+- **Consent Screen**: Bilingual (French/English) with scope details
+
+**PKCE**: Required (S256 method)
+
+**Configuration** (settings.py):
+```python
+OAUTH2_PROVIDER = {
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,  # 1 hour
+    'REFRESH_TOKEN_EXPIRE_SECONDS': 604800,  # 7 days
+    'PKCE_REQUIRED': True,
+    'SCOPES': {...},  # Defined scopes
+}
+```
+
+### API Endpoints
+
+**Context Endpoints** (Read-only):
+- `GET /api/ai-actions/context/` - Summary
+- `GET /api/ai-actions/context/customers/` - List customers
+- `GET /api/ai-actions/context/projects/` - List projects
+- `GET /api/ai-actions/context/invoices/` - List invoices
+- `GET /api/ai-actions/context/estimates/` - List estimates
+- `GET /api/ai-actions/context/cras/` - List CRAs
+
+**Action Endpoints** (Mutations):
+- `GET /api/ai-actions/actions/` - List available actions
+- `POST /api/ai-actions/actions/customers/` - Create customer
+- `POST /api/ai-actions/actions/invoices/` - Create invoice
+- `POST /api/ai-actions/actions/estimates/` - Create estimate
+- `POST /api/ai-actions/actions/cras/` - Create CRA
+- `POST /api/ai-actions/actions/import-customer/` - Approve import
+
+**Token Management**:
+- `GET /api/ai-actions/tokens/` - List user's tokens
+- `POST /api/ai-actions/tokens/` - Create new token
+- `DELETE /api/ai-actions/tokens/{id}/` - Revoke token
+- `GET /api/ai-actions/tokens/{id}/logs/` - View usage logs
+
+**Logs**:
+- `GET /api/ai-actions/logs/` - All logs for user's tokens
+
+### Architecture
+
+```
+┌─────────────┐         ┌─────────────────┐         ┌─────────────┐
+│  ChatGPT    │◄───────►│  OAuth2 Server  │◄───────►│   kiik.app  │
+│  (Client)   │  PKCE   │  (Authorization) │   JWT   │  (Backend)  │
+└─────────────┘         └─────────────────┘         └─────────────┘
+                                │
+                                ▼
+                        ┌─────────────────┐
+                        │  Consent Screen │ (Bilingual)
+                        └─────────────────┘
+```
+
+### Security
+
+- **Scope Enforcement**: All endpoints validate required scopes
+- **Token Hashing**: API keys are hashed with PBKDF2-SHA256
+- **HTTPS Only**: All OAuth endpoints require HTTPS in production
+- **Audit Logging**: Complete trail via `AIActionLog` model
+- **Origin Validation**: Tokens can be restricted to specific origins
+- **Token Expiration**: Optional expiry dates on API keys
+
+### Files Added/Modified
+
+**Backend**:
+- `backend/requirements.txt` - Added django-oauth-toolkit==2.3.0
+- `backend/freelancermgmt/settings.py` - OAuth & OpenAPI config
+- `backend/freelancermgmt/urls.py` - OAuth routes
+- `backend/templates/oauth2_provider/authorize.html` - Consent screen
+- `backend/ai_actions/serializers.py` - Token serializers
+- `backend/ai_actions/views.py` - Token management viewsets
+- `backend/ai_actions/urls.py` - Token routes
+- `backend/.env.example` - OAuth environment variables
+
+**Frontend**:
+- `frontend/src/api/hooks.js` - AI token hooks
+- `frontend/src/partials/settings/APIKeysPanel.jsx` - Token UI
+- `frontend/src/pages/Settings.jsx` - Added "API & ChatGPT" tab
+
+**Documentation**:
+- `CHATGPT_INTEGRATION.md` - Complete integration guide
+
+### Testing
+
+1. **Create OAuth Application** (Django admin):
+   ```
+   http://localhost/admin/oauth2_provider/application/add/
+   ```
+
+2. **Test OAuth Flow**:
+   ```bash
+   # Navigate to authorization URL
+   http://localhost/oauth/authorize/?response_type=code&client_id=...&redirect_uri=...&scope=invoices:read
+   ```
+
+3. **Test API Key Creation**:
+   - Go to Settings → API & ChatGPT
+   - Create key with scopes
+   - Test with curl
+
+4. **View OpenAPI Schema**:
+   ```bash
+   curl http://localhost/api/schema/ > openapi.json
+   ```
+
+### Future Enhancements
+
+- [ ] ChatGPT app store submission (when available)
+- [ ] Webhook support for real-time updates
+- [ ] Rate limiting and usage quotas
+- [ ] IP whitelisting
+- [ ] MCP (Model Context Protocol) server implementation
+- [ ] Custom ChatGPT widgets for rich UI
+
 ## Additional Documentation
 
 - [LOCAL_SETUP.md](./LOCAL_SETUP.md) - Detailed setup instructions with troubleshooting
 - [AI_IMPORT_README.md](./AI_IMPORT_README.md) - Complete AI document processing guide
 - [DOCKER.md](./DOCKER.md) - Docker deployment guide
 - [backend/README.md](./backend/README.md) - Backend API reference
+- **[CHATGPT_INTEGRATION.md](./CHATGPT_INTEGRATION.md) - ChatGPT integration guide**

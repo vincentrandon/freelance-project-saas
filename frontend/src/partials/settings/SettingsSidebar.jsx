@@ -51,6 +51,14 @@ function SettingsSidebar() {
               <span className={`text-sm font-medium ${pathname.includes('/settings/account') ? 'text-violet-500 dark:text-violet-400' : 'text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200'}`}>My Account</span>
             </NavLink>
           </li>
+          <li className="mr-0.5 md:mr-0 md:mb-0.5">
+            <NavLink end to="/settings/api" className={`flex items-center px-2.5 py-2 rounded-lg whitespace-nowrap ${pathname.includes('/settings/api') && 'bg-linear-to-r from-violet-500/[0.12] dark:from-violet-500/[0.24] to-violet-500/[0.04]'}`}>
+              <svg className={`shrink-0 fill-current mr-2 ${pathname.includes('/settings/api') ? 'text-violet-500 dark:text-violet-400' : 'text-gray-400 dark:text-gray-500'}`} width="16" height="16" viewBox="0 0 16 16">
+                <path d="M8 0a1 1 0 0 1 1 1v1a6 6 0 0 1 6 6 1 1 0 1 1-2 0 4 4 0 0 0-4-4V3a1 1 0 0 1-2 0V1a1 1 0 0 1 1-1Zm7 8a1 1 0 0 1 1 1 6 6 0 0 1-6 6h-1a1 1 0 1 1 0-2h1a4 4 0 0 0 4-4 1 1 0 0 1 1-1ZM8 16a1 1 0 0 1-1-1v-1a6 6 0 0 1-6-6 1 1 0 1 1 2 0 4 4 0 0 0 4 4v-1a1 1 0 1 1 2 0v1a1 1 0 0 1-1 1ZM1 8a1 1 0 0 1-1-1 6 6 0 0 1 6-6h1a1 1 0 0 1 0 2H6a4 4 0 0 0-4 4 1 1 0 0 1-1 1Z" />
+              </svg>
+              <span className={`text-sm font-medium ${pathname.includes('/settings/api') ? 'text-violet-500 dark:text-violet-400' : 'text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200'}`}>API & ChatGPT</span>
+            </NavLink>
+          </li>
         </ul>
       </div>
 

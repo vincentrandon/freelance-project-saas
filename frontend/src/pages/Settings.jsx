@@ -3,6 +3,7 @@ import Sidebar from '../partials/Sidebar';
 import Header from '../partials/Header';
 import { useProfile, useUpdateProfile, usePricingSettings, useUpdatePricingSettings, useCalculateTJM } from '../api/hooks';
 import SubscriptionPanel from '../partials/settings/SubscriptionPanel';
+import APIKeysPanel from '../partials/settings/APIKeysPanel';
 
 function Settings() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -155,6 +156,16 @@ function Settings() {
                   }`}
                 >
                   Abonnement
+                </button>
+                <button
+                  onClick={() => setActiveTab('api')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'api'
+                      ? 'border-indigo-500 text-indigo-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  API & ChatGPT
                 </button>
               </nav>
             </div>
@@ -657,6 +668,11 @@ function Settings() {
               {/* Subscription Tab */}
               {activeTab === 'subscription' && (
                 <SubscriptionPanel />
+              )}
+
+              {/* API & ChatGPT Tab */}
+              {activeTab === 'api' && (
+                <APIKeysPanel />
               )}
             </div>
           </div>

@@ -23,6 +23,9 @@ urlpatterns = [
     path('api/auth/registration/', include('dj_rest_auth.registration.urls')),
     path('api/auth/social/', include('allauth.socialaccount.urls')),
 
+    # OAuth2 Provider (for ChatGPT and third-party integrations)
+    path('oauth/', include('oauth2_provider.urls', namespace='oauth2_provider')),
+
     # Social Authentication (Google OAuth)
     path('api/auth/google/', google_login_redirect, name='google_login'),
     path('api/auth/google/callback/', google_callback, name='google_callback'),

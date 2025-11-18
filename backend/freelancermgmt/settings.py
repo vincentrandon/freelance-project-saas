@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'allauth.socialaccount.providers.github',
+    'oauth2_provider',
     'corsheaders',
     'django_filters',
     'drf_spectacular',
@@ -212,6 +213,7 @@ CSRF_TRUSTED_ORIGINS = _env_list(
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -332,20 +334,98 @@ if USE_S3:
     }
 
 # Email Settings
+# MailerSend Configuration (API is recommended over SMTP for better features)
+# For production: Use 'utils.mailersend_backend.MailerSendBackend' with MailerSend API
+# For development: Use 'django.core.mail.backends.console.EmailBackend' to print emails to console
+# Alternative: Use 'django.core.mail.backends.smtp.EmailBackend' for SMTP relay
 EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
-EMAIL_HOST = config('EMAIL_HOST', default='localhost')
+
+# MailerSend API Key (Recommended)
+# Generate API key in MailerSend dashboard: Settings → API Tokens
+# Required when using utils.mailersend_backend.MailerSendBackend
+MAILERSEND_API_KEY = config('MAILERSEND_API_KEY', default='')
+
+# Sender Email (must be verified domain in MailerSend)
+# This should be a verified email address from your domain (e.g., noreply@yourdomain.com)
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@kiik.app')
+
+# MailerSend SMTP Settings (Alternative to API)
+# Only needed if using EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+# SMTP Server: smtp.mailersend.net
+# Port: 587 (TLS/STARTTLS)
+# See: https://www.mailersend.com/help/smtp-relay
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.mailersend.net')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)  # Use TLS (587), not SSL (465)
+
+# MailerSend SMTP Credentials (only if using SMTP backend)
+# Generate SMTP credentials in MailerSend dashboard: Domains → Your Domain → SMTP Users
+# Username and Password are case-sensitive
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@kiik.app')
 
 # DRF Spectacular Settings (API Documentation)
 SPECTACULAR_SETTINGS = {
     'TITLE': 'kiik.app API',
-    'DESCRIPTION': 'API for managing customers, leads, projects, finances, and invoicing',
+    'DESCRIPTION': 'API for managing customers, leads, projects, finances, and invoicing with ChatGPT integration',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
+
+    # OAuth 2.0 Security Scheme for ChatGPT Integration
+    'SECURITY': [{
+        'OAuth2': []
+    }],
+    'APPEND_COMPONENTS': {
+        'securitySchemes': {
+            'OAuth2': {
+                'type': 'oauth2',
+                'flows': {
+                    'authorizationCode': {
+                        'authorizationUrl': config('OAUTH_AUTHORIZATION_URL', default='/oauth/authorize/'),
+                        'tokenUrl': config('OAUTH_TOKEN_URL', default='/oauth/token/'),
+                        'refreshUrl': config('OAUTH_TOKEN_URL', default='/oauth/token/'),
+                        'scopes': {
+                            # Customer management
+                            'customers:read': 'View customers',
+                            'customers:write': 'Create and update customers',
+
+                            # Project management
+                            'projects:read': 'View projects',
+                            'projects:write': 'Create and update projects',
+
+                            # Invoice management
+                            'invoices:read': 'View invoices',
+                            'invoices:write': 'Create and update invoices',
+
+                            # Estimate management
+                            'estimates:read': 'View estimates',
+                            'estimates:write': 'Create and update estimates',
+
+                            # CRA (Activity Reports)
+                            'cra:read': 'View activity reports',
+                            'cra:write': 'Create and update activity reports',
+
+                            # Document import
+                            'documents:import': 'Import documents and approve imports',
+
+                            # Context access (read-only aggregated data)
+                            'context:read': 'Read aggregated context information',
+                        }
+                    }
+                }
+            },
+            'Bearer': {
+                'type': 'http',
+                'scheme': 'bearer',
+                'bearerFormat': 'JWT',
+            }
+        }
+    },
+
+    # Operation ID configuration for stable tool names
+    'CAMELIZE_NAMES': False,
+    'SCHEMA_COERCE_PATH_PK': True,
 }
 
 # Open Banking Settings
@@ -557,4 +637,44 @@ LOGGING = {
             'propagate': False,
         },
     },
+}
+
+# OAuth2 Provider Settings (django-oauth-toolkit)
+# Configuration for ChatGPT and third-party app integration
+OAUTH2_PROVIDER = {
+    # Token lifetimes
+    'ACCESS_TOKEN_EXPIRE_SECONDS': config('OAUTH2_PROVIDER_ACCESS_TOKEN_EXPIRE_SECONDS', default=3600, cast=int),  # 1 hour
+    'REFRESH_TOKEN_EXPIRE_SECONDS': config('OAUTH2_PROVIDER_REFRESH_TOKEN_EXPIRE_SECONDS', default=604800, cast=int),  # 7 days
+    'AUTHORIZATION_CODE_EXPIRE_SECONDS': config('OAUTH2_PROVIDER_AUTHORIZATION_CODE_EXPIRE_SECONDS', default=60, cast=int),  # 1 minute
+
+    # PKCE is required for ChatGPT integration
+    'PKCE_REQUIRED': True,
+
+    # Supported scopes (must match SPECTACULAR_SETTINGS scopes)
+    'SCOPES': {
+        'customers:read': 'View customers',
+        'customers:write': 'Create and update customers',
+        'projects:read': 'View projects',
+        'projects:write': 'Create and update projects',
+        'invoices:read': 'View invoices',
+        'invoices:write': 'Create and update invoices',
+        'estimates:read': 'View estimates',
+        'estimates:write': 'Create and update estimates',
+        'cra:read': 'View activity reports',
+        'cra:write': 'Create and update activity reports',
+        'documents:import': 'Import documents and approve imports',
+        'context:read': 'Read aggregated context information',
+    },
+
+    # Default scopes granted when none are requested
+    'DEFAULT_SCOPES': [],
+
+    # Allow rotating refresh tokens for enhanced security
+    'ROTATE_REFRESH_TOKEN': True,
+
+    # OAuth2 grant types
+    'ALLOWED_REDIRECT_URI_SCHEMES': ['https', 'http'],  # Allow http for local dev
+
+    # Request and response handling
+    'ERROR_RESPONSE_WITH_SCOPES': True,
 }

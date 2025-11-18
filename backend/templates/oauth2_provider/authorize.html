@@ -1,0 +1,324 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "Authorize Application" %} - kiik.app</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 32px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 32px;
+        }
+
+        .app-info {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            border-left: 4px solid #667eea;
+        }
+
+        .app-info h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .app-info p {
+            font-size: 14px;
+            color: #4a5568;
+        }
+
+        .user-info {
+            background: #edf2f7;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .user-details h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+
+        .user-details p {
+            font-size: 14px;
+            color: #4a5568;
+        }
+
+        .scopes {
+            margin-bottom: 24px;
+        }
+
+        .scopes h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 12px;
+        }
+
+        .scope-list {
+            list-style: none;
+        }
+
+        .scope-item {
+            padding: 12px;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .scope-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 14px;
+        }
+
+        .scope-text {
+            font-size: 14px;
+            color: #2d3748;
+        }
+
+        .warning {
+            background: #fffaf0;
+            border: 1px solid #f6ad55;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .warning p {
+            font-size: 13px;
+            color: #744210;
+            line-height: 1.5;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .footer {
+            padding: 24px 32px;
+            background: #f7fafc;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .footer p {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .error {
+            background: #fed7d7;
+            border: 1px solid #fc8181;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .error p {
+            font-size: 14px;
+            color: #742a2a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{% trans "Authorization Request" %}</h1>
+            <p>kiik.app</p>
+        </div>
+
+        <div class="content">
+            {% if not error %}
+                <div class="app-info">
+                    <h2>{{ application.name }}</h2>
+                    <p>{% trans "wants to access your kiik.app account" %}</p>
+                </div>
+
+                <div class="user-info">
+                    <div class="user-avatar">
+                        {{ user.email.0|upper }}
+                    </div>
+                    <div class="user-details">
+                        <h3>{{ user.get_full_name|default:user.email }}</h3>
+                        <p>{{ user.email }}</p>
+                    </div>
+                </div>
+
+                {% if scopes %}
+                <div class="scopes">
+                    <h3>{% trans "This application will be able to:" %}</h3>
+                    <ul class="scope-list">
+                        {% for scope in scopes_descriptions %}
+                        <li class="scope-item">
+                            <div class="scope-icon">✓</div>
+                            <div class="scope-text">{{ scope }}</div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <div class="warning">
+                    <p>
+                        {% trans "Only authorize this application if you trust it. It will have access to your data according to the permissions above." %}
+                    </p>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% for field in form %}
+                        {{ field.as_hidden }}
+                    {% endfor %}
+
+                    <div class="actions">
+                        <button type="submit" name="allow" class="btn btn-primary">
+                            {% trans "Authorize" %}
+                        </button>
+                        <button type="submit" name="cancel" class="btn btn-secondary" formnovalidate>
+                            {% trans "Cancel" %}
+                        </button>
+                    </div>
+                </form>
+
+            {% else %}
+                <div class="error">
+                    <p><strong>{% trans "Error:" %}</strong> {{ error.error }}</p>
+                    {% if error.description %}
+                        <p>{{ error.description }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="actions">
+                    <a href="/" class="btn btn-secondary" style="text-align: center; text-decoration: none; display: block;">
+                        {% trans "Return to kiik.app" %}
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="footer">
+            <p>
+                {% blocktrans %}
+                By authorizing, you allow this application to access your account according to its <a href="/privacy" target="_blank">Privacy Policy</a>.
+                {% endblocktrans %}
+            </p>
+        </div>
+    </div>
+</body>
+</html>
