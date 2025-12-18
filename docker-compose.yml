@@ -77,6 +77,10 @@ services:
       - GITHUB_OAUTH_CLIENT_ID=${GITHUB_OAUTH_CLIENT_ID}
       - GITHUB_OAUTH_CLIENT_SECRET=${GITHUB_OAUTH_CLIENT_SECRET}
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173}
+      - OAUTH_AUTHORIZATION_URL=${OAUTH_AUTHORIZATION_URL:-/oauth/authorize/}
+      - OAUTH_TOKEN_URL=${OAUTH_TOKEN_URL:-/oauth/token/}
+      - MCP_RESOURCE_URL=${MCP_RESOURCE_URL:-http://localhost:8787}
+      - MCP_AUTHORIZATION_SERVER_ISSUER=${MCP_AUTHORIZATION_SERVER_ISSUER:-http://localhost}
     ports:
       - "8000:8000"
     depends_on:
@@ -84,6 +88,26 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    networks:
+      - freelancer_network
+    restart: unless-stopped
+
+  # MCP Server (ChatGPT App)
+  mcp:
+    build:
+      context: ./mcp-server
+      dockerfile: Dockerfile
+    container_name: freelancer_mcp
+    environment:
+      - MCP_PORT=8787
+      - MCP_HOST=0.0.0.0
+      - MCP_API_BASE_URL=http://backend:8000
+      - MCP_RESOURCE_URL=${MCP_RESOURCE_URL:-http://localhost:8787}
+      - MCP_AUTHORIZATION_SERVER_ISSUER=${MCP_AUTHORIZATION_SERVER_ISSUER:-http://backend:8000}
+    ports:
+      - "8787:8787"
+    depends_on:
+      - backend
     networks:
       - freelancer_network
     restart: unless-stopped

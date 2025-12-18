@@ -26,9 +26,9 @@ class TestAIServiceTokenModel:
         assert isinstance(token.scopes, list)
 
     def test_has_scopes(self):
-        token = AIServiceTokenFactory(scopes=['context:read', 'actions:customers.create'])
+        token = AIServiceTokenFactory(scopes=['context:read', 'customers:write'])
         assert token.has_scopes(['context:read']) is True
-        assert token.has_scopes(['context:read', 'actions:customers.create']) is True
+        assert token.has_scopes(['context:read', 'customers:write']) is True
         assert token.has_scopes(['missing:scope']) is False
 
     def test_token_expiration(self):
@@ -50,7 +50,7 @@ class TestAIActionLogModel:
         log = AIActionLog.objects.create(
             token=token,
             user=token.user,
-            action_type='actions:customers.create',
+            action_type='actions.customers.create',
             path='/api/ai-actions/customers/',
             method='POST',
             status='success',

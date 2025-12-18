@@ -151,20 +151,20 @@ gunicorn freelancermgmt.wsgi:application --bind 0.0.0.0:8000
 ### AI Actions (OpenAI App Integration)
 All endpoints live under `POST /api/ai-actions/...` and require an AI service token.
 
-Context (read-only, scope `context:*`):
+Context (read-only, scope `*:read`):
 - `GET /api/ai-actions/context/` – Dashboard counts
-- `GET /api/ai-actions/context/customers/` – Recent customers (`context:customers`)
-- `GET /api/ai-actions/context/projects/` – Recent projects (`context:projects`)
-- `GET /api/ai-actions/context/estimates/` – Recent estimates (`context:estimates`)
-- `GET /api/ai-actions/context/invoices/` – Recent invoices (`context:invoices`)
-- `GET /api/ai-actions/context/cras/` – Recent CRA summaries (`context:cras`)
+- `GET /api/ai-actions/context/customers/` – Recent customers (`customers:read`)
+- `GET /api/ai-actions/context/projects/` – Recent projects (`projects:read`)
+- `GET /api/ai-actions/context/estimates/` – Recent estimates (`estimates:read`)
+- `GET /api/ai-actions/context/invoices/` – Recent invoices (`invoices:read`)
+- `GET /api/ai-actions/context/cras/` – Recent CRA summaries (`cra:read`)
 
-Mutations (scope `actions:*`):
-- `POST /api/ai-actions/actions/customers/` – Create customer (`actions:customers.create`)
-- `POST /api/ai-actions/actions/estimates/` – Create estimate draft (`actions:estimates.create`)
-- `POST /api/ai-actions/actions/invoices/` – Create invoice (`actions:invoices.create`)
-- `POST /api/ai-actions/actions/cras/` – Create CRA (`actions:cra.create`)
-- `POST /api/ai-actions/actions/import-customer/` – Approve import preview and create entities (`actions:customers.import`)
+Mutations (scope `*:write`):
+- `POST /api/ai-actions/actions/customers/` – Create customer (`customers:write`)
+- `POST /api/ai-actions/actions/estimates/` – Create estimate draft (`estimates:write`)
+- `POST /api/ai-actions/actions/invoices/` – Create invoice (`invoices:write`)
+- `POST /api/ai-actions/actions/cras/` – Create CRA (`cra:write`)
+- `POST /api/ai-actions/actions/import-customer/` – Approve import preview and create entities (`documents:import`)
 
 Token provisioning:
 1. Create an `AIServiceToken` from Django admin (AI Actions → AI Service Tokens) or via shell.
@@ -172,6 +172,14 @@ Token provisioning:
 3. Assign only the scopes the OpenAI App should access (see list above). Tokens can be revoked or rotated at any time.
 
 For OpenAI Apps, include the raw token in requests via `Authorization: Bearer <token>` or `X-AI-Service-Token: <token>`.
+
+### MCP Server (ChatGPT Apps)
+The MCP server exposes ChatGPT App tools that proxy the AI Actions endpoints.
+
+- `POST /mcp` – MCP Streamable HTTP endpoint
+- `GET /.well-known/oauth-protected-resource` – MCP resource metadata
+- `GET /.well-known/oauth-authorization-server` – OAuth 2.1 metadata
+- `POST /oauth/register/` – Dynamic client registration
 
 ## Database Models
 

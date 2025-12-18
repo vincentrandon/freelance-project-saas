@@ -19,8 +19,8 @@ class AIServiceTokenFactory(DjangoModelFactory):
 
     scopes = factory.LazyFunction(lambda: [
         'context:read',
-        'context:customers',
-        'actions:customers.create'
+        'customers:read',
+        'customers:write'
     ])
 
     key_prefix = 'temp'
@@ -60,10 +60,10 @@ class AIActionLogFactory(DjangoModelFactory):
     user = factory.SelfAttribute('token.user')
     action_type = FuzzyChoice(
         [
-            'context:customers',
-            'actions:customers.create',
-            'actions:estimates.create',
-            'actions:invoices.create',
+            'context.customers',
+            'actions.customers.create',
+            'actions.estimates.create',
+            'actions.invoices.create',
         ]
     )
     path = factory.Faker('uri_path')

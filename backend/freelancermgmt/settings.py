@@ -266,6 +266,14 @@ SOCIALACCOUNT_AUTO_SIGNUP = True
 PASSWORD_RESET_TIMEOUT = 3600  # 1 hour in seconds
 FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')
 
+# OAuth endpoints (used by OpenAI Apps / MCP metadata)
+OAUTH_AUTHORIZATION_URL = config('OAUTH_AUTHORIZATION_URL', default='/oauth/authorize/')
+OAUTH_TOKEN_URL = config('OAUTH_TOKEN_URL', default='/oauth/token/')
+
+# MCP / ChatGPT App configuration
+MCP_RESOURCE_URL = config('MCP_RESOURCE_URL', default='')
+MCP_AUTHORIZATION_SERVER_ISSUER = config('MCP_AUTHORIZATION_SERVER_ISSUER', default='')
+
 # Celery Settings
 CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://localhost:6379/0')

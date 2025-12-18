@@ -6,13 +6,29 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-from .views import GoogleLogin, google_login_redirect, google_callback, company_lookup, health_check
+from .views import (
+    GoogleLogin,
+    google_login_redirect,
+    google_callback,
+    company_lookup,
+    health_check,
+    oauth_authorization_server_metadata,
+    oauth_protected_resource_metadata,
+    oauth_register,
+    privacy_policy,
+    terms_of_service,
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
     # Health Check (for monitoring/load balancers)
     path('health/', health_check, name='health_check'),
+    path('.well-known/oauth-authorization-server', oauth_authorization_server_metadata, name='oauth_metadata'),
+    path('.well-known/oauth-protected-resource', oauth_protected_resource_metadata, name='mcp_resource_metadata'),
+    path('oauth/register/', oauth_register, name='oauth_register'),
+    path('privacy/', privacy_policy, name='privacy_policy'),
+    path('terms/', terms_of_service, name='terms_of_service'),
 
     # API Documentation
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),

@@ -11,6 +11,7 @@ kiik.app now supports integration with ChatGPT and other AI assistants through O
 - **Scope-Based Permissions**: Fine-grained control over what ChatGPT can access
 - **Usage Logs**: Track all API calls made by your tokens
 - **Token Revocation**: Instantly revoke access when needed
+- **MCP Server**: Streamable HTTP MCP endpoint for ChatGPT Apps
 
 ## Getting Started
 
@@ -103,6 +104,33 @@ If you're building an app that integrates with kiik.app:
 6. Click **Authorize**
 7. You'll be redirected back to ChatGPT
 8. Start using natural language commands!
+
+## MCP Server (ChatGPT Apps)
+
+ChatGPT Apps use the Model Context Protocol (MCP). The MCP server exposes tools that map to the AI actions endpoints.
+
+### MCP Endpoint
+
+- `POST /mcp` – MCP Streamable HTTP endpoint
+- `GET /.well-known/oauth-protected-resource` – Protected resource metadata
+- `GET /.well-known/oauth-authorization-server` – OAuth 2.1 metadata
+- `POST /oauth/register/` – Dynamic client registration
+- `GET /privacy/` – Privacy policy
+- `GET /terms/` – Terms of service
+
+### Environment Variables
+
+- `MCP_API_BASE_URL` – Base URL for the backend (default `http://localhost:8000`)
+- `MCP_RESOURCE_URL` – Public URL of the MCP server (for `.well-known` metadata)
+- `MCP_AUTHORIZATION_SERVER_ISSUER` – Issuer URL for OAuth metadata
+
+### Running Locally
+
+```bash
+docker-compose up -d mcp
+```
+
+The MCP server will be available at `http://localhost:8787/mcp` (or via nginx at `http://localhost/mcp`).
 
 ## Available API Endpoints
 
