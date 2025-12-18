@@ -17,17 +17,16 @@ class AIActionAPITests(APITestCase):
         self.full_scope_token = self._create_token(
             scopes=[
                 "context:read",
-                "context:customers",
-                "context:projects",
-                "context:estimates",
-                "context:invoices",
-                "context:cras",
-                "actions:read",
-                "actions:customers.create",
-                "actions:estimates.create",
-                "actions:invoices.create",
-                "actions:cra.create",
-                "actions:customers.import",
+                "customers:read",
+                "projects:read",
+                "estimates:read",
+                "invoices:read",
+                "cra:read",
+                "customers:write",
+                "estimates:write",
+                "invoices:write",
+                "cra:write",
+                "documents:import",
             ]
         )
 

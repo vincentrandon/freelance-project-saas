@@ -113,6 +113,11 @@ services:
       - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
       # Frontend URL
       - FRONTEND_URL=${FRONTEND_URL:-https://kiik.app}
+      # OAuth + MCP metadata
+      - OAUTH_AUTHORIZATION_URL=${OAUTH_AUTHORIZATION_URL:-/oauth/authorize/}
+      - OAUTH_TOKEN_URL=${OAUTH_TOKEN_URL:-/oauth/token/}
+      - MCP_RESOURCE_URL=${MCP_RESOURCE_URL}
+      - MCP_AUTHORIZATION_SERVER_ISSUER=${MCP_AUTHORIZATION_SERVER_ISSUER}
       # Sentry
       - SENTRY_DSN=${SENTRY_DSN}
       - SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT:-production}
@@ -144,6 +149,34 @@ services:
         reservations:
           cpus: '1.0'
           memory: 1G
+
+  # MCP Server (ChatGPT App)
+  mcp:
+    build:
+      context: ./mcp-server
+      dockerfile: Dockerfile
+    image: kiik/mcp:latest
+    container_name: kiik_prod_mcp
+    environment:
+      - MCP_PORT=8787
+      - MCP_HOST=0.0.0.0
+      - MCP_API_BASE_URL=http://backend:8000
+      - MCP_RESOURCE_URL=${MCP_RESOURCE_URL}
+      - MCP_AUTHORIZATION_SERVER_ISSUER=${MCP_AUTHORIZATION_SERVER_ISSUER}
+    # Keep internal; expose via nginx or platform routing
+    networks:
+      - kiik_network
+    depends_on:
+      - backend
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
 
   # Celery Worker
   celery:

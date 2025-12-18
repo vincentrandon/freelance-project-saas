@@ -5,7 +5,9 @@ from django.conf import settings
 from django.shortcuts import redirect
 from django.core.cache import cache
 from django.db import connection
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -18,6 +20,10 @@ from dj_rest_auth.registration.views import SocialLoginView
 import requests
 import re
 import logging
+import json
+import time
+
+from oauth2_provider.models import Application
 
 logger = logging.getLogger(__name__)
 
@@ -453,3 +459,193 @@ def company_lookup(request):
             {'error': 'Invalid response from company lookup service'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+def _absolute_url(request, path_or_url: str) -> str:
+    if not path_or_url:
+        return request.build_absolute_uri("/").rstrip("/")
+    if path_or_url.startswith("http://") or path_or_url.startswith("https://"):
+        return path_or_url.rstrip("/")
+    return request.build_absolute_uri(path_or_url).rstrip("/")
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def oauth_authorization_server_metadata(request):
+    """
+    OAuth 2.1 Authorization Server metadata for MCP authentication.
+    """
+    issuer = _absolute_url(request, "/")
+    authorization_url = _absolute_url(request, settings.OAUTH_AUTHORIZATION_URL)
+    token_url = _absolute_url(request, settings.OAUTH_TOKEN_URL)
+    registration_url = _absolute_url(request, "/oauth/register/")
+    scopes = list(settings.OAUTH2_PROVIDER.get("SCOPES", {}).keys())
+
+    return JsonResponse({
+        "issuer": issuer,
+        "authorization_endpoint": authorization_url,
+        "token_endpoint": token_url,
+        "registration_endpoint": registration_url,
+        "scopes_supported": scopes,
+        "response_types_supported": ["code"],
+        "grant_types_supported": ["authorization_code", "refresh_token"],
+        "code_challenge_methods_supported": ["S256"],
+        "token_endpoint_auth_methods_supported": ["none", "client_secret_basic"],
+    })
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def oauth_protected_resource_metadata(request):
+    """
+    Protected Resource metadata for MCP servers.
+    """
+    resource = settings.MCP_RESOURCE_URL or _absolute_url(request, "/")
+    issuer = settings.MCP_AUTHORIZATION_SERVER_ISSUER or _absolute_url(request, "/")
+    scopes = list(settings.OAUTH2_PROVIDER.get("SCOPES", {}).keys())
+
+    return JsonResponse({
+        "resource": resource.rstrip("/"),
+        "authorization_servers": [issuer.rstrip("/")],
+        "scopes_supported": scopes,
+        "bearer_methods_supported": ["header"],
+    })
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def oauth_register(request):
+    """
+    Dynamic client registration endpoint for MCP OAuth clients.
+    """
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "invalid_request", "error_description": "Invalid JSON payload."}, status=400)
+
+    redirect_uris = payload.get("redirect_uris")
+    client_name = payload.get("client_name") or "MCP Client"
+    token_auth_method = payload.get("token_endpoint_auth_method") or "none"
+
+    if not redirect_uris:
+        return JsonResponse({"error": "invalid_request", "error_description": "redirect_uris is required."}, status=400)
+
+    if isinstance(redirect_uris, list):
+        redirect_uris_value = " ".join(redirect_uris)
+        redirect_uris_list = redirect_uris
+    else:
+        redirect_uris_value = str(redirect_uris)
+        redirect_uris_list = redirect_uris_value.split()
+
+    client_type = Application.CLIENT_CONFIDENTIAL
+    if token_auth_method == "none":
+        client_type = Application.CLIENT_PUBLIC
+
+    application = Application.objects.create(
+        name=client_name,
+        client_type=client_type,
+        authorization_grant_type=Application.GRANT_AUTHORIZATION_CODE,
+        redirect_uris=redirect_uris_value,
+    )
+
+    now_ts = int(time.time())
+    response_payload = {
+        "client_id": application.client_id,
+        "client_id_issued_at": now_ts,
+        "client_secret_expires_at": 0,
+        "redirect_uris": redirect_uris_list,
+        "grant_types": ["authorization_code"],
+        "response_types": ["code"],
+        "token_endpoint_auth_method": token_auth_method,
+        "client_name": client_name,
+    }
+
+    if token_auth_method != "none":
+        response_payload["client_secret"] = application.client_secret
+
+    return JsonResponse(response_payload, status=201)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def privacy_policy(request):
+    """
+    Privacy policy for OAuth consent and app submission.
+    """
+    policy_text = (
+        "kiik.app Privacy Policy\n"
+        "Effective date: December 18, 2025\n\n"
+        "1. Overview\n"
+        "We respect your privacy. This policy explains how kiik.app collects, uses, and shares\n"
+        "information when you use our services.\n\n"
+        "2. Information We Collect\n"
+        "- Account data: name, email, company details, login credentials.\n"
+        "- Workspace data: customers, projects, invoices, estimates, documents you upload.\n"
+        "- Usage data: log data, IP address, browser type, device identifiers, and interactions.\n"
+        "- Communications: support requests and feedback.\n\n"
+        "3. How We Use Information\n"
+        "- Provide and operate the service, including billing and account management.\n"
+        "- Generate documents and power AI features you request.\n"
+        "- Improve product performance, reliability, and security.\n"
+        "- Communicate about updates, security notices, and support responses.\n\n"
+        "4. Sharing and Disclosure\n"
+        "- Service providers: hosting, email delivery, analytics, and payment processors.\n"
+        "- Legal compliance: to comply with laws or protect rights and safety.\n"
+        "- Business transfers: in the event of a merger, acquisition, or asset sale.\n"
+        "We do not sell your personal data.\n\n"
+        "5. Data Retention\n"
+        "We retain data as long as your account is active or as needed to provide the service.\n"
+        "You can request deletion or export of your data at any time.\n\n"
+        "6. Security\n"
+        "We use administrative, technical, and physical safeguards to protect your data.\n"
+        "No method of transmission or storage is 100 percent secure.\n\n"
+        "7. Your Rights\n"
+        "Depending on your location, you may have rights to access, correct, delete, or export\n"
+        "your data. Contact us to exercise these rights.\n\n"
+        "8. International Transfers\n"
+        "Your data may be processed in countries where we or our service providers operate.\n\n"
+        "9. Changes to This Policy\n"
+        "We may update this policy from time to time. We will post the updated version here.\n\n"
+        "10. Contact\n"
+        "Email: support@kiik.app\n"
+    )
+    return HttpResponse(policy_text, content_type="text/plain")
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def terms_of_service(request):
+    """
+    Terms of service for OAuth consent and app submission.
+    """
+    terms_text = (
+        "kiik.app Terms of Service\n"
+        "Effective date: December 18, 2025\n\n"
+        "1. Acceptance of Terms\n"
+        "By accessing or using kiik.app, you agree to these terms.\n\n"
+        "2. Your Account\n"
+        "You are responsible for maintaining the security of your account and credentials.\n"
+        "You must provide accurate information and keep it up to date.\n\n"
+        "3. Permitted Use\n"
+        "You may use the service for lawful business purposes. You agree not to misuse the\n"
+        "service, interfere with its operation, or attempt unauthorized access.\n\n"
+        "4. Data and Content\n"
+        "You retain ownership of the content you submit. You grant us permission to process\n"
+        "that content to provide the service.\n\n"
+        "5. Payments\n"
+        "Paid plans are billed in advance. Fees are non-refundable except as required by law.\n\n"
+        "6. Availability\n"
+        "We strive to keep the service available but do not guarantee uninterrupted access.\n\n"
+        "7. Termination\n"
+        "You may stop using the service at any time. We may suspend or terminate access for\n"
+        "violations of these terms.\n\n"
+        "8. Limitation of Liability\n"
+        "To the maximum extent permitted by law, kiik.app is not liable for indirect or\n"
+        "consequential damages. Our total liability is limited to fees paid in the prior\n"
+        "12 months.\n\n"
+        "9. Changes\n"
+        "We may update these terms. Continued use after changes means you accept the update.\n\n"
+        "10. Contact\n"
+        "Email: support@kiik.app\n"
+    )
+    return HttpResponse(terms_text, content_type="text/plain")

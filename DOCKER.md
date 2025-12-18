@@ -82,9 +82,17 @@ Complete guide for running the Freelancer Management Platform with Docker.
 - Routes:
   - `/` → Frontend
   - `/api/` → Backend API
+  - `/mcp` → MCP Server (ChatGPT App)
   - `/admin/` → Django Admin
+  - `/privacy/` → Privacy policy (backend)
+  - `/terms/` → Terms of service (backend)
   - `/static/` → Static files
   - `/media/` → User uploads
+
+### 8. MCP Server (`mcp`)
+- Port: 8787
+- Provides the ChatGPT App MCP endpoint (`/mcp`)
+- Proxies requests to the backend AI actions API
 
 ## Common Commands
 

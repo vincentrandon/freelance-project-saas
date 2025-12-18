@@ -13,6 +13,7 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from oauth2_provider.contrib.rest_framework import OAuth2Authentication
 
 from customers.models import Customer
 from customers.serializers import CustomerSerializer
@@ -126,17 +127,17 @@ class AIContextViewSet(AIActionLoggingMixin, viewsets.ViewSet):
     These endpoints do not mutate state and are protected with AI service tokens.
     """
 
-    authentication_classes = [AIServiceTokenAuthentication]
+    authentication_classes = [AIServiceTokenAuthentication, OAuth2Authentication]
     permission_classes = [IsAuthenticated, HasAIScopes]
 
     default_scope = "context:read"
     scope_map = {
         "list": ["context:read"],
-        "customers": ["context:customers", "context:read"],
-        "projects": ["context:projects", "context:read"],
-        "estimates": ["context:estimates", "context:read"],
-        "invoices": ["context:invoices", "context:read"],
-        "cras": ["context:cras", "context:read"],
+        "customers": ["customers:read"],
+        "projects": ["projects:read"],
+        "estimates": ["estimates:read"],
+        "invoices": ["invoices:read"],
+        "cras": ["cra:read"],
     }
 
     def get_required_scopes(self) -> Optional[list[str]]:
@@ -307,20 +308,20 @@ class AIActionViewSet(AIActionLoggingMixin, viewsets.ViewSet):
     Each action performs additional guards and calculations before delegating to serializers.
     """
 
-    authentication_classes = [AIServiceTokenAuthentication]
+    authentication_classes = [AIServiceTokenAuthentication, OAuth2Authentication]
     permission_classes = [IsAuthenticated, HasAIScopes]
 
     scope_map = {
-        "list": ["actions:read"],
-        "create_customer": ["actions:customers.create"],
-        "create_estimate": ["actions:estimates.create"],
-        "create_invoice": ["actions:invoices.create"],
-        "create_cra": ["actions:cra.create"],
-        "import_customer": ["actions:customers.import"],
+        "list": [],
+        "create_customer": ["customers:write"],
+        "create_estimate": ["estimates:write"],
+        "create_invoice": ["invoices:write"],
+        "create_cra": ["cra:write"],
+        "import_customer": ["documents:import"],
     }
 
     def get_required_scopes(self) -> Optional[list[str]]:
-        return self.scope_map.get(self.action, ["actions:execute"])
+        return self.scope_map.get(self.action, [])
 
     def list(self, request):
         """Expose the available action endpoints and required scopes."""
