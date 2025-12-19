@@ -14,12 +14,16 @@ const ALLOW_ANON = process.env.MCP_ALLOW_ANON === "true";
 const requestContext = new AsyncLocalStorage();
 
 const app = express();
-app.use(express.raw({ type: "*/*", limit: "4mb" }));
+// Parse JSON bodies so the MCP transport receives parsed messages.
+app.use(express.json({ type: "application/json", limit: "4mb" }));
 
 const mcpServer = new McpServer({
   name: "kiik.app",
   version: "1.0.0",
 });
+
+// Shared HTTP transport for streamable MCP responses.
+const transport = new StreamableHTTPServerTransport({ app });
 
 const oauthSecurity = (scopes) => [{ type: "oauth2", scopes }];
 
@@ -500,15 +504,30 @@ app.post("/mcp", async (req, res) => {
     return;
   }
 
-  await requestContext.run({ authHeaders }, async () => {
-    const transport = new StreamableHTTPServerTransport({
-      req,
-      res,
+  try {
+    await requestContext.run({ authHeaders }, async () => {
+      await transport.handleRequest(req, res, req.body);
     });
-    await mcpServer.connect(transport);
-  });
+  } catch (error) {
+    console.error("MCP request failed", error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: "mcp_request_failed" });
+    } else {
+      res.end();
+    }
+  }
 });
 
-app.listen(PORT, HOST, () => {
-  console.log(`MCP server listening on http://${HOST}:${PORT}`);
-});
+// Establish the MCP server/transport connection once at startup.
+(async () => {
+  try {
+    await mcpServer.connect(transport);
+  } catch (error) {
+    console.error("Failed to start MCP transport", error);
+    process.exit(1);
+  }
+
+  app.listen(PORT, HOST, () => {
+    console.log(`MCP server listening on http://${HOST}:${PORT}`);
+  });
+})();
