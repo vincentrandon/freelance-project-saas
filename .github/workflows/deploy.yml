@@ -24,8 +24,8 @@ jobs:
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           port: 22
           script: |
-            cd /opt/kiik-app
-            /opt/kiik-app/scripts/deploy.sh
+            cd /opt/kiik-app/freelance-project-saas
+            ./scripts/deploy.sh
 
       - name: Notify deployment success
         if: success()
