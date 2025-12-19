@@ -78,7 +78,7 @@ Complete guide for running the Freelancer Management Platform with Docker.
 - Volume: `./frontend` (mounted for development)
 
 ### 7. Nginx Reverse Proxy (`nginx`)
-- Port: 80 (HTTP) & 443 (HTTPS - optional)
+- Port: 80 (HTTP) & 443 (HTTPS)
 - Routes:
   - `/` → Frontend
   - `/api/` → Backend API
@@ -93,6 +93,12 @@ Complete guide for running the Freelancer Management Platform with Docker.
 - Port: 8787
 - Provides the ChatGPT App MCP endpoint (`/mcp`)
 - Proxies requests to the backend AI actions API
+
+### 9. Certbot (`certbot`) - production
+- Issues & renews the TLS cert for `CERTBOT_DOMAIN` using webroot (`/var/www/certbot`)
+- Shares certs with nginx via `/etc/letsencrypt`
+- Set in `.env`: `CERTBOT_EMAIL=you@example.com`, `CERTBOT_DOMAIN=kiik.app`
+- Ensure ports 80/443 are open to the public
 
 ## Common Commands
 

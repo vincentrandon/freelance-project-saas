@@ -320,6 +320,7 @@ services:
     depends_on:
       - backend
       - frontend
+      - certbot
     networks:
       - kiik_network
     restart: unless-stopped
@@ -331,6 +332,29 @@ services:
         reservations:
           cpus: '0.5'
           memory: 256M
+
+  # Certbot (Let's Encrypt) for automated certificate issuance/renewal
+  certbot:
+    image: certbot/certbot:latest
+    container_name: kiik_prod_certbot
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt
+      - /var/www/certbot:/var/www/certbot
+    environment:
+      - CERTBOT_EMAIL=${CERTBOT_EMAIL:?Set CERTBOT_EMAIL in .env}
+      - CERTBOT_DOMAIN=${CERTBOT_DOMAIN:-kiik.app}
+    entrypoint: >
+      /bin/sh -c "
+      certbot certonly --webroot -w /var/www/certbot
+        -d ${CERTBOT_DOMAIN}
+        -n --agree-tos -m ${CERTBOT_EMAIL} --keep-until-expiring &&
+      while true; do
+        certbot renew --webroot -w /var/www/certbot;
+        sleep 12h;
+      done"
+    networks:
+      - kiik_network
+    restart: unless-stopped
 
 volumes:
   postgres_data:
