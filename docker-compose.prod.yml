@@ -160,7 +160,7 @@ services:
     environment:
       - MCP_PORT=8787
       - MCP_HOST=0.0.0.0
-      - MCP_API_BASE_URL=http://backend:8000
+      - MCP_API_BASE_URL=${MCP_API_BASE_URL:-https://kiik.app}
       - MCP_RESOURCE_URL=${MCP_RESOURCE_URL}
       - MCP_AUTHORIZATION_SERVER_ISSUER=${MCP_AUTHORIZATION_SERVER_ISSUER}
     # Keep internal; expose via nginx or platform routing
