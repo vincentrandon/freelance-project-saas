@@ -14,7 +14,8 @@ const ALLOW_ANON = process.env.MCP_ALLOW_ANON === "true";
 const requestContext = new AsyncLocalStorage();
 
 const app = express();
-app.use(express.raw({ type: "*/*", limit: "4mb" }));
+// Parse JSON bodies so the MCP transport receives parsed messages.
+app.use(express.json({ type: "application/json", limit: "4mb" }));
 
 const mcpServer = new McpServer({
   name: "kiik.app",
