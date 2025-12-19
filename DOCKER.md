@@ -93,6 +93,7 @@ Complete guide for running the Freelancer Management Platform with Docker.
 - Port: 8787
 - Provides the ChatGPT App MCP endpoint (`/mcp`)
 - Proxies requests to the backend AI actions API
+- Production uses `MCP_API_BASE_URL=https://kiik.app` (internal calls go via public host to avoid host-header issues)
 
 ### 9. Certbot (`certbot`) - production
 - Issues & renews the TLS cert for `CERTBOT_DOMAIN` using webroot (`/var/www/certbot`)
