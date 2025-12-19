@@ -82,7 +82,7 @@ services:
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
       - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS}
       # Hetzner S3 Configuration
-      - USE_S3=${USE_S3:-True}
+      - USE_S3=${USE_S3:-False}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_STORAGE_BUCKET_NAME=${AWS_STORAGE_BUCKET_NAME}
@@ -201,7 +201,7 @@ services:
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - REDIS_URL=redis://redis:6379/0
       # Hetzner S3
-      - USE_S3=${USE_S3:-True}
+      - USE_S3=${USE_S3:-False}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_STORAGE_BUCKET_NAME=${AWS_STORAGE_BUCKET_NAME}
@@ -259,7 +259,7 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - REDIS_URL=redis://redis:6379/0
-      - USE_S3=${USE_S3:-True}
+      - USE_S3=${USE_S3:-False}
       # Sentry
       - SENTRY_DSN=${SENTRY_DSN}
       - SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT:-production}
